@@ -1,7 +1,7 @@
 // gpt-term 빌드 스탬프.
 // 크롬은 언팩 확장 파일을 캐시한다. "고쳤는데 왜 그대로지?" 를 추측으로 풀지 않으려고 둔다.
 // 터미널 부팅 줄과 :version 에 찍힌다. 이 값이 안 바뀌면 확장이 다시 로드되지 않은 것이다.
-var GT_BUILD = '2026-09-01 15:40';
+var GT_BUILD = '2026-09-01 16:02';
 
 // gpt-term — 설정 스키마. 콘텐츠 스크립트와 옵션 화면이 같은 정의를 쓴다.
 // 여기가 유일한 출처다. 옵션 화면에 항목을 늘리려면 이 배열만 고치면 된다.
@@ -32,6 +32,8 @@ var GT_SCHEMA = [
   { section: '사이드바', key: 'sidebar.visible', label: '대화 목록 표시', type: 'bool', def: true,
     help: 'Ctrl+B 로도 토글한다.' },
   { section: '사이드바', key: 'sidebar.width', label: '폭 (ch)', type: 'int', def: 30, min: 16, max: 80 },
+  { section: '사이드바', key: 'sidebar.closeOnOpen', label: '대화를 열면 목록 닫기', type: 'bool', def: true,
+    help: '원본과 같은 동작. 목록이 본문 위에 떠 있으므로 고르고 나면 비켜준다. ≡ 로 다시 연다.' },
   { section: '사이드바', key: 'sidebar.groups', label: '고정·프로젝트 그룹 표시', type: 'bool', def: true },
   { section: '사이드바', key: 'sidebar.minColumns', label: '이보다 좁으면 처음에 접어둠 (칸)', type: 'int',
     def: 100, min: 0, max: 400,

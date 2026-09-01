@@ -59,6 +59,7 @@ GT.commands = (function () {
     const n = Number(args[0]);
     if (!lastList.length) return err('먼저 ls 로 목록을 불러와라');
     if (!Number.isInteger(n) || !lastList[n]) return err(`:open <0-${lastList.length - 1}>`);
+    if (GT.config.get('sidebar.closeOnOpen')) GT.sidebar.dismiss();
     GT.navigate.to(lastList[n].href);
   });
 

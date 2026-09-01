@@ -324,6 +324,7 @@ GT.sidebar = (function () {
   function open(r) {
     if (!r || !r.href) return;
     exitFilter();
+    if (GT.config.get('sidebar.closeOnOpen')) dismiss();
     GT.navigate.to(r.href);
   }
 
@@ -424,8 +425,13 @@ GT.sidebar = (function () {
   // 사용자가 손잡이를 눌러 직접 켠 경우에는 폭 규칙보다 그 의사를 우선한다.
   let forcedOpen = false;
 
+  // 대화를 고르면 목록이 비켜난다(원본과 같다). 설정을 끄는 게 아니라 이번만 물러난다 —
+  // config 를 건드리면 다음에 열 때도 안 나온다.
+  let dismissed = false;
+
   function shouldShow() {
     if (!GT.config.get('sidebar.visible')) return false;
+    if (dismissed) return false;
     if (forcedOpen) return true;
     const min = Number(GT.config.get('sidebar.minColumns')) || 0;
     if (!min) return true;
@@ -434,10 +440,23 @@ GT.sidebar = (function () {
     return cols >= min;
   }
 
+  // 이번만 물러난다. 설정은 그대로 둔다.
+  function dismiss() {
+    if (!isOpen()) return false;
+    dismissed = true;
+    forcedOpen = false;
+    GT.tty.syncSidebar();
+    GT.tty.refreshChrome();
+    return true;
+  }
+
   // 켜고 끄는 유일한 경로. 햄버거 손잡이 · Ctrl+B · :sidebar 가 모두 여기로 온다.
   async function toggle(force) {
-    const cur = GT.config.get('sidebar.visible');
-    const next = force === undefined ? !cur : !!force;
+    // DOM 부착 여부가 아니라 '보여야 하는가'로 뒤집는다.
+    // 비켜난 상태(config 는 켜짐, 화면엔 없음)나 폭 때문에 접힌 상태에서
+    // ≡ 를 누르면 열려야 한다. DOM 에 기대면 마운트 타이밍에 흔들린다.
+    const next = force === undefined ? !shouldShow() : !!force;
+    dismissed = false;
     forcedOpen = next;
     await GT.config.set('sidebar.visible', next);
     GT.tty.syncSidebar();
@@ -451,7 +470,7 @@ GT.sidebar = (function () {
   return {
     build, refresh, loadMore, rebuild, draw, shouldShow, toggle, isOpen, closeMenu,
     chats: () => rows.filter((r) => r.kind === 'chat'),
-    enterSelect, exitSelect,
+    enterSelect, exitSelect, dismiss,
     get selecting() { return selecting; },
     enterFilter, exitFilter, toggleGroup,
     get hasMore() { return hasMore; },

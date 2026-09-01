@@ -54,16 +54,19 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
     innerWidth: 600     // 좁은 창 (100칸 미만)
   };
   sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  const nav = [];
   sandbox.GT = {
     config: { get: (k) => cfg[k], set: async (k, v) => { cfg[k] = v; } },
-    tty: { syncSidebar(){}, refreshChrome(){}, focus(){} },
+    tty: { syncSidebar(){}, refreshChrome(){}, focus(){}, shadow: { querySelector: () => null } },
     palette: {},
+    navigate: { to: (href) => nav.push(href) },
     chats: { load: async () => ({ pinned: [], projects: [], chats: [], total: 0, loaded: 0, hasMore: false, source: 'api' }),
              flatten: () => [] }
   };
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync('src/content/sidebar.js', 'utf8'), sandbox, { filename: 'sidebar.js' });
   const S = sandbox.GT.sidebar;
+  sandbox.__nav = nav;
 
   t('좁은 창에서는 기본적으로 접힌다', S.shouldShow() === false);
   await S.toggle(true);
@@ -75,6 +78,63 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   cfg['sidebar.minColumns'] = 0;
   await S.toggle(true);
   t('폭 규칙 0 이면 항상 표시', S.shouldShow() === true);
+}
+
+// --- 3. 대화를 열면 목록이 비켜난다 ---
+{
+  const cfg = { 'sidebar.visible': true, 'sidebar.minColumns': 0, 'font.size': 13, 'sidebar.closeOnOpen': true };
+  const nav = [];
+  const node = () => ({ style:{}, dataset:{}, hidden:false,
+    classList:{add(){},remove(){},toggle(){}}, appendChild(){}, addEventListener(){},
+    querySelector:()=>({ value:'', focus(){} }), remove(){}, textContent:'',
+    getBoundingClientRect:()=>({top:0,left:0,bottom:0,right:0,width:0,height:0}),
+    get isConnected(){ return true; } });
+  const sandbox = {
+    console, Object, Set, Map, Array, Number, String, Boolean, JSON, Math, Promise, Error, Date, setTimeout,
+    document: { createElement: node, querySelectorAll: () => [], querySelector: () => null },
+    location: { pathname: '/' },
+    chrome: { storage: { local: { get: async () => ({}), set: async () => {} } } },
+    innerWidth: 1400
+  };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  sandbox.GT = {
+    config: { get: (k) => cfg[k], set: async (k, v) => { cfg[k] = v; } },
+    tty: { syncSidebar(){}, refreshChrome(){}, focus(){}, ui:{ input:{ value:'' } },
+           shadow: { querySelector: () => null } },
+    palette: {}, navigate: { to: (h) => nav.push(h) },
+    chats: { load: async () => ({ pinned: [], projects: [], chats: [], total: 0, loaded: 0, hasMore: false, source: 'api' }),
+             flatten: () => [] }
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync('src/content/sidebar.js', 'utf8'), sandbox, { filename: 'sidebar.js' });
+  const S = sandbox.GT.sidebar;
+  S.build();
+
+  t('처음엔 보인다', S.shouldShow() === true);
+  const gone = S.dismiss();
+  t('dismiss 가 먹는다', gone === true && S.shouldShow() === false);
+  t('설정은 그대로다 — 다음에도 나와야 한다', cfg['sidebar.visible'] === true);
+
+  await S.toggle();
+  t('비켜난 상태에서 ≡ 를 누르면 열린다', S.shouldShow() === true);
+
+  await S.toggle();
+  t('한 번 더 누르면 닫힌다', S.shouldShow() === false && cfg['sidebar.visible'] === false);
+
+  await S.toggle(true);
+  S.dismiss();
+  t('닫힌 뒤에도 설정은 유지', cfg['sidebar.visible'] === true);
+}
+
+// --- 4. 설정으로 끌 수 있다 ---
+{
+  const sb = fs.readFileSync('src/content/sidebar.js', 'utf8');
+  const d = fs.readFileSync('src/shared/defaults.js', 'utf8');
+  const cmds = fs.readFileSync('src/content/commands.js', 'utf8');
+  t('열 때 닫는 동작이 설정에 걸려 있다', /config\.get\('sidebar\.closeOnOpen'\)\) dismiss\(\)/.test(sb));
+  t('옵션 화면에 항목이 있다', /sidebar\.closeOnOpen/.test(d));
+  t(':open 명령도 같은 동작', /closeOnOpen'\)\) GT\.sidebar\.dismiss\(\)/.test(cmds));
+  t('토글은 DOM 이 아니라 표시 조건으로 뒤집는다', /force === undefined \? !shouldShow\(\)/.test(sb));
 }
 
 let bad = 0;
