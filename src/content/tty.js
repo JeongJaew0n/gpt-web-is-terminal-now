@@ -114,6 +114,24 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     st.appendChild(el('span', 'gt-spacer')); st.appendChild(ui.hint);
     root.appendChild(st);
 
+    // 터미널 아무 데나 클릭하면 입력창이 잡힌다. 진짜 터미널이 그렇게 동작한다.
+    // 다만 두 가지는 건드리지 않는다 —
+    //   · 버튼·링크·다른 입력창을 눌렀을 때 (그쪽 일을 뺏으면 안 된다)
+    //   · 드래그로 텍스트를 고른 직후 (포커스를 옮기면 선택이 날아간다)
+    const CONTROLS = 'input, textarea, select, button, a, [contenteditable="true"]';
+    const hit = (e) => (e.composedPath ? e.composedPath()[0] : e.target);
+    const onControl = (el) => !!(el && el.closest && el.closest(CONTROLS));
+    const picked = () => {
+      const sel = shadow.getSelection ? shadow.getSelection() : document.getSelection();
+      return sel ? String(sel).length : 0;
+    };
+    root.addEventListener('mouseup', (e) => {
+      if (e.button !== 0) return;
+      if (onControl(hit(e))) return;
+      if (picked()) return;
+      focusInput();
+    });
+
     shadow.appendChild(root);
     return root;
   }
@@ -282,6 +300,8 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.burger.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
+  function focusInput() { if (ui.input) ui.input.focus(); }
+
   function setMode(m) {
     mode = m;
     if (ui.mode) { ui.mode.textContent = m; ui.mode.dataset.mode = m; }
@@ -312,6 +332,6 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     show() { document.documentElement.classList.add(HIDE_CLASS); ui.input && ui.input.focus(); },
     hide() { document.documentElement.classList.remove(HIDE_CLASS); },
     visible() { return document.documentElement.classList.contains(HIDE_CLASS); },
-    focus() { ui.input && ui.input.focus(); }
+    focus: focusInput
   };
 })();

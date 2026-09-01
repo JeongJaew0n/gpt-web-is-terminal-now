@@ -247,6 +247,25 @@
         && GT.sidebar.element.isConnected) {
       e.preventDefault();
       GT.sidebar.enterFilter();
+      return;
+    }
+
+    // 입력창을 먼저 클릭하지 않아도 그냥 타이핑하면 들어간다.
+    //
+    // 포커스만 옮기고 기본 동작에 맡기면 첫 글자가 새 포커스로 갈지 브라우저 구현에 달린다.
+    // 그래서 기본 동작을 막고 우리가 직접 한 글자를 넣는다 — 두 번 들어가거나 빠지는 일이 없다.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const from = e.composedPath ? e.composedPath()[0] : e.target;
+    if (from && from.closest && from.closest('input, textarea, select, [contenteditable="true"]')) return;
+    const inp = GT.tty.ui.input;
+    if (!inp) return;
+    if (e.key.length === 1) {
+      e.preventDefault();
+      GT.tty.focus();
+      inp.value += e.key;                 // 방금 포커스했으니 캐럿은 끝이다
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    } else if (e.key === 'Backspace' || e.key === 'Enter') {
+      GT.tty.focus();                     // 파괴적인 키는 포커스만 옮기고 맡긴다
     }
   }, true);
 

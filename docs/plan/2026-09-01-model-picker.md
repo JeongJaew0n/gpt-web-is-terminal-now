@@ -69,10 +69,22 @@ button.__composer-pill[aria-haspopup=menu]   라벨 = 현재 추론 수준 ("중
 
 모델 전환은 하위 메뉴를 거치지 않으므로 **정상 동작한다.**
 
-## 다음에 볼 것
+## TODO — 추론 수준 하위 메뉴 뚫기
 
-- 하위 메뉴를 `elementFromPoint` + 실제 좌표 기반 pointer 이벤트로 여는 방법
-- 추론 수준이 localStorage 나 사용자 설정 API 에 저장되는지 (그렇다면 메뉴를 안 거쳐도 된다)
+**현재 유일하게 사용자가 원본 UI 를 봐야 하는 지점이다.** 나머지는 전부 터미널 안에서 끝난다.
+
+- [ ] **좌표 기반 pointer 이벤트** — `getBoundingClientRect()` 로 트리거의 중심을 구하고
+      `clientX`/`clientY` 를 실어 `pointerover` → `pointermove` → `pointerdown` 을 쏜다.
+      Radix 가 좌표 없는 합성 이벤트를 무시하는 것으로 보인다 `[가정]`.
+      `document.elementFromPoint()` 로 그 좌표에 실제로 트리거가 있는지 먼저 확인할 것 —
+      우리 오버레이가 덮고 있으면 좌표가 엉뚱한 요소를 가리킨다.
+- [ ] **저장소 경로 확인** — 추론 수준이 `localStorage` 나 사용자 설정 API
+      (`/backend-api/settings` 계열)에 저장된다면 메뉴를 아예 안 거쳐도 된다.
+      값을 바꾸고 원본이 그걸 읽는지 확인해야 한다.
+- [ ] 뚫으면 `:effort` 의 `submenu-unavailable` 분기와 안내 문구를 제거한다.
+
+시도해서 실패한 것(반복하지 말 것): `pointerover`/`pointermove`/`pointerenter` 좌표 없이,
+키보드 `ArrowRight`(Radix 표준), `pointerdown`/`pointerup`/`click` 좌표 없이.
 
 ## 회귀 테스트
 

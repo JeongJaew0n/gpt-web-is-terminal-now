@@ -45,6 +45,7 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | `Ctrl` + `` ` `` | 터미널 ↔ 원본 UI 토글 |
 | 툴바 아이콘 | 같은 토글 |
 | `⌘K` / `Ctrl+K` | 명령 팔레트 |
+| 화면 아무 데나 클릭 · 타이핑 | 입력창으로 들어간다 (직접 클릭할 필요 없음) |
 | `Enter` | 전송 (`:` 로 시작하면 명령) |
 | `Shift+Enter` | 줄바꿈 |
 | `Ctrl+C` | 생성 중단 |
@@ -128,6 +129,7 @@ src/options/options.html     설정 화면
 ## 계획
 
 - [좌측 사이드바 (대화 목록 상시 표시)](docs/plan/2026-09-01-sidebar.md) — 동작 확인됨
+- [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) — 모델 전환 완료, **추론 수준 하위 메뉴는 TODO**
 
 ## 알려진 이슈
 
@@ -159,6 +161,7 @@ node test/lifecycle.test.mjs   # 확장 재로드 시 자진 해체
 node test/replay.test.mjs      # 녹화한 실제 스트림을 tap.js 에 재생
 node test/sidebar.test.mjs     # 목록 손잡이와 표시 규칙
 node test/picker.test.mjs      # 모델·추론 수준 선택 (원본 메뉴 조작)
+node test/focus.test.mjs       # 클릭·타이핑이 입력창으로 가는가
 ```
 
 ## 검증 상태
