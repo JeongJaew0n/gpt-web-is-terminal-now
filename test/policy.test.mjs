@@ -95,6 +95,14 @@ const t = (name, ok) => results.push([name, ok]);
   t('대상 0건에서는 경고도 배지도 없다', w.GT.health.warned === false && w.GT.health.reasons.length === 0);
 }
 
+// 10. 렌더 중 fiber 를 정답으로 삼지 않는다 (정적)
+{
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  t('fiber 가 스트림의 접두사면 보류', /streamed\.startsWith\(fiber\)/.test(idx));
+  t('한 번만 다시 본다', /rec\.reverified/.test(idx));
+  t('보류 시 화면을 덮지 않는다', /startsWith\(fiber\)\) \{[\s\S]{0,200}return;/.test(idx));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

@@ -145,11 +145,24 @@
   GT.on('verify', (p) => {
     const rec = p.id && GT.store.state.byId.get(p.id);
     if (!rec || !p.text) return;
+    const streamed = rec.text || '';
+    const fiber = p.text;
+
+    // 원본이 아직 그리는 중이면 fiber 가 스트림보다 짧고, 스트림의 접두사다.
+    // 그걸 정답으로 삼으면 화면이 오히려 짧아지고 드리프트 경고까지 뜬다.
+    // 한 박자 뒤에 한 번만 다시 본다.
+    if (streamed && fiber.length < streamed.length && streamed.startsWith(fiber)) {
+      if (!rec.reverified) {
+        rec.reverified = true;
+        setTimeout(() => GT.toMain('verify', { id: p.id }), 900);
+      }
+      return;
+    }
+
     // fiber 원문이 정답이다. 먼저 화면을 교정하고, 대조는 경고 목적으로만 한다.
-    const streamed = rec.text;
-    rec.text = p.text;
+    rec.text = fiber;
     GT.tty.render();
-    GT.health.reconcile(streamed, p.text);
+    GT.health.reconcile(streamed, fiber);
   });
 
   // -------------------------------------------------------------- 부팅 시퀀스

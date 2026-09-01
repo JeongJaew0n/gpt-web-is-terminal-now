@@ -43,6 +43,7 @@
       this.skipped = [];       // 본문이 아니라고 판단해 건너뛴 content_type
       this.began = false;
       this.orphan = false;     // add 없이 본문이 먼저 온 스트림
+      this.finished = false;
       // 지금 스트림이 다루고 있는 메시지. v1 인코딩에서 /message/… 경로는
       // '가장 최근에 add 된 메시지'를 가리킨다. 그래서 수용 여부를 여기 붙여둔다.
       // 이게 없으면 건너뛴 메시지의 본문 델타가 그대로 새어나온다.
@@ -208,12 +209,19 @@
 
           // 사용자에게 보이는 메시지로 전환
           if (this.current && this.current.id === mid && this.current.accepted) break;  // 이미 이걸 받고 있다
-          this.current = { id: mid, accepted: true, initial: '' };
+
+          // 마커가 본문보다 늦게 오는 스트림이 있다. 그때 무조건 text 를 비우면
+          // 이미 받은 본문이 통째로 날아간다(= 원본과 100% 어긋남).
+          // 직전 대상이 '버리기로 한 것'(cot·숨김·툴)일 때만 버리고, 그 외에는 이어받는다.
+          const drop = !!(this.current && this.current.accepted === false);
+          const carry = drop ? '' : this.text;
+
+          this.current = { id: mid, accepted: true, initial: carry };
           this.messageId = mid;
-          this.text = '';
+          this.text = carry;
           this.began = true;
           this.markerAnchored = true;
-          post('begin', { id: mid, role: 'assistant', model: this.model, text: '', markerAnchored: true });
+          post('begin', { id: mid, role: 'assistant', model: this.model, text: carry, markerAnchored: true });
           break;
         }
         case 'conversation_detail_metadata':
@@ -227,6 +235,10 @@
     }
 
     complete(why) {
+      // message_stream_complete 와 [DONE] 이 둘 다 온다. 한 번만 끝낸다 —
+      // 두 번 끝내면 verify 도 두 번 돌고 빈 스트림 복구도 두 번 걸린다.
+      if (this.finished) return;
+      this.finished = true;
       post('end', {
         id: this.messageId,
         text: this.text,

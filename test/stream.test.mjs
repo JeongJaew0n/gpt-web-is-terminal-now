@@ -182,6 +182,38 @@ const finalText = (evs) => { const d = evs.filter((e) => e.kind === 'delta').pop
   t('중복 marker 무해', kinds(ev).filter((k) => k === 'begin').length === 1 && finalText(ev) === '본문');
 }
 
+// 13. 마커가 본문보다 늦게 온다 — 이미 받은 본문을 버리면 안 된다 (100% 어긋남 회귀)
+{
+  const ev = await collect([...ENC,
+    append('일본의 수도는 '),
+    append('도쿄입니다.'),
+    marker('a1','user_visible_token'),
+    marker('a1','final_channel_token'),
+    COMPLETE]);
+  t('늦은 마커: 본문 보존', finalText(ev) === '일본의 수도는 도쿄입니다.');
+  t('늦은 마커: end 본문도 보존', lastEnd(ev).text === '일본의 수도는 도쿄입니다.');
+  t('늦은 마커: 빈 스트림으로 보고하지 않는다', lastEnd(ev).began === true);
+}
+
+// 14. 다만 버리기로 한 메시지의 본문은 여전히 버린다
+{
+  const ev = await collect([...ENC,
+    marker('c1','cot_token'),
+    append('추론 중이다'),
+    marker('a1','user_visible_token'),
+    append('진짜 답'),
+    COMPLETE]);
+  t('cot 본문은 이어받지 않는다', finalText(ev) === '진짜 답');
+}
+
+// 15. complete 는 한 번만 (stream_complete 와 [DONE] 이 둘 다 와도)
+{
+  const ev = await collect([...ENC,
+    addMsg('a1','assistant','text'), append('본문'),
+    COMPLETE, 'data: [DONE]']);
+  t('end 는 한 번만', ev.filter((e) => e.kind === 'end').length === 1);
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');
