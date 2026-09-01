@@ -1,0 +1,13 @@
+event: delta_encoding
+data: "v1"
+data: {"type":"input_message","input_message":{"id":"3e8ebd6c-acf5-43e7-9aa2-e058dd1c572f","author":{"role":"user","name":null,"metadata":{}},"content":{"content_type":"text","parts":["한 문장으로: 태양계에서 가장 큰 행성은?"]}}}
+event: delta
+data: {"p":"","o":"add","v":{"message":{"id":"148d83bc-bf9d-456f-9547-a6f4f14eb120","author":{"role":"assistant"},"content":{"content_type":"text","parts":[""]},"status":"in_progress","end_turn":null,"recipient":"all","metadata":{"model_slug":"gpt-5-6-thinking","is_visually_hidden_from_conversation":false}}}}
+data: {"type":"message_marker","message_id":"148d83bc-bf9d-456f-9547-a6f4f14eb120","marker":"user_visible_token","event":"first"}
+data: {"type":"message_marker","message_id":"148d83bc-bf9d-456f-9547-a6f4f14eb120","marker":"final_channel_token","event":"first"}
+event: delta
+data: {"p":"/message/content/parts/0","o":"append","v":"태양계에서 가장 큰 행성은 목성입니다."}
+event: delta
+data: {"p":"","o":"patch","v":[{"p":"/message/status","o":"replace","v":"finished_successfully"},{"p":"/message/end_turn","o":"replace","v":true},{"p":"/message/metadata","o":"append","v":{"finish_details":{"type":"stop","stop_tokens":[200002]},"can_save":true,"is_complete":true,"search_result_groups":[]}}]}
+data: {"type":"message_marker","message_id":"148d83bc-bf9d-456f-9547-a6f4f14eb120","marker":"last_token","event":"last"}
+data: {"type":"message_stream_complete"}

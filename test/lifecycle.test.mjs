@@ -1,0 +1,53 @@
+// 확장이 다시 로드되면 고아가 된 콘텐츠 스크립트는 스스로 물러나야 한다.
+// docs/issue/2026-09-01-orphaned-content-script.md 회귀 방지.
+import fs from 'node:fs';
+
+const src = fs.readFileSync('src/content/index.js', 'utf8');
+const results = []; const t = (n, ok) => results.push([n, ok]);
+
+// 1. 추적되지 않는 등록이 남아 있으면 안 된다
+{
+  const rawInterval = [...src.matchAll(/setInterval\(/g)].length;
+  t('setInterval 은 every() 안에서만 쓴다', rawInterval === 1);   // every() 정의 그 자체
+  t('window.addEventListener 직접 호출 없음', !/window\.addEventListener/.test(src));
+  t('every/listen/observe 헬퍼 존재', /const every =/.test(src) && /const listen =/.test(src) && /const observe =/.test(src));
+}
+
+// 2. 무효화 감지와 해체가 있어야 한다
+{
+  t('컨텍스트 생존 확인', /chrome\.runtime && chrome\.runtime\.id/.test(src));
+  t('주기적 감시', /every\(4000/.test(src));
+  t('shutdown 이 disposer 를 모두 실행', /disposers\.forEach/.test(src));
+  t('shutdown 이 tty 를 해체', /GT\.tty\.destroy\(\)/.test(src));
+  t('페이지 이탈에도 정리', /'pagehide'/.test(src));
+  t('중복 shutdown 방지', /if \(gone\) return;/.test(src));
+}
+
+// 3. tty.destroy 는 흔적을 남기지 않아야 한다
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  t('destroy 가 클래스를 뗀다', /destroy\(\)[\s\S]{0,200}classList\.remove\(HIDE_CLASS\)/.test(tty));
+  t('destroy 가 페이지 스타일을 지운다', /destroy\(\)[\s\S]{0,300}gpt-term-page-style/.test(tty));
+  t('destroy 가 호스트를 제거', /destroy\(\)[\s\S]{0,400}host\.remove\(\)/.test(tty));
+}
+
+// 4. 일상 경고를 확장 오류 목록에 쌓지 않는다
+{
+  const health = fs.readFileSync('src/content/health.js', 'utf8');
+  // 주석 속 단어가 아니라 실제 호출만 본다
+  t('health 는 console.warn 을 호출하지 않는다', !/console\.warn\s*\(/.test(health));
+  t('health 는 console.debug 로 남긴다', /console\.debug/.test(health));
+}
+
+// 5. 빌드 스탬프로 staleness 를 눈으로 확인할 수 있어야 한다
+{
+  const d = fs.readFileSync('src/shared/defaults.js', 'utf8');
+  t('GT_BUILD 정의', /var GT_BUILD = '/.test(d));
+  t('부팅 줄에 빌드 표시', /build \$\{GT_BUILD\}/.test(src));
+  t(':version 명령 존재', /def\(':version'/.test(fs.readFileSync('src/content/commands.js','utf8')));
+}
+
+let bad = 0;
+results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
+console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');
+process.exit(bad ? 1 : 0);
