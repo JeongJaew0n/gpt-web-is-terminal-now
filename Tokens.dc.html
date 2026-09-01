@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #3fb950; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">theme/modern-dark.css — 디자인 토큰</div>
+    <div style="display: flex; align-items: center; gap: 14px;"><span style="color: #6e7681;">v0.1.0</span></div>
+  </div>
+
+  <div style="flex: 1; display: flex; min-height: 0;">
+
+    <div style="width: 470px; flex: 0 0 auto; border-right: 1px solid #21262d; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; font-size: 12px;">
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">표면 · 텍스트</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #010409; border: 1px solid #21262d; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--bg-0</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#010409</span><span style="color: #6e7681;">패널 · 뒷면</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #0d1117; border: 1px solid #21262d; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--bg-1</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#0d1117</span><span style="color: #6e7681;">tty 캔버스</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #161b22; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--bg-2</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#161b22</span><span style="color: #6e7681;">상태줄 · 인라인코드</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #21262d; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--bg-3</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#21262d</span><span style="color: #6e7681;">선택 · 경계선</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #30363d; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--border</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#30363d</span><span style="color: #6e7681;">박스 테두리</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #c9d1d9; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--fg</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#c9d1d9</span><span style="color: #6e7681;">본문</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #8b949e; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--fg-dim</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#8b949e</span><span style="color: #6e7681;">보조 · 설명</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #484f58; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--fg-faint</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#484f58</span><span style="color: #6e7681;">메타 · 키힌트</span></div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 4px;">역할색 — 의미가 고정된다</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #3fb950; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--green</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#3fb950</span><span style="color: #6e7681;">프롬프트 · 나 · 성공</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #bc8cff; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--magenta</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#bc8cff</span><span style="color: #6e7681;">모델 · 명령</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #39c5cf; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--cyan</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#39c5cf</span><span style="color: #6e7681;">경로 · 식별자 · 진행중</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #d29922; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--yellow</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#d29922</span><span style="color: #6e7681;">경고 · 미저장</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #f85149; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--red</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#f85149</span><span style="color: #6e7681;">오류 · 파괴적 동작</span></div>
+        <div style="display: flex; align-items: center; gap: 12px;"><span style="width: 26px; height: 18px; background: #58a6ff; flex: 0 0 auto;"></span><span style="width: 118px; color: #39c5cf; flex: 0 0 auto;">--blue</span><span style="width: 74px; color: #8b949e; flex: 0 0 auto;">#58a6ff</span><span style="color: #6e7681;">링크</span></div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 4px;">간격</div>
+      <div style="color: #6e7681; line-height: 1.8;">셀 <span style="color: #8b949e;">7.82 × 21.06px</span> (13px / 1.62) · 여백은 <span style="color: #8b949e;">4px</span> 배수 · 본문 좌우 패딩 <span style="color: #8b949e;">28px</span> · 본문 최대폭 <span style="color: #8b949e;">96ch</span></div>
+
+    </div>
+
+    <div style="flex: 1; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; font-size: 12px; min-width: 0;">
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">타이포 — 단일 모노스페이스</div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">15 / 700</span><span style="font-size: 15px; font-weight: 700; color: #ffffff;">섹션 제목 · Section</span></div>
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">14 / 400</span><span style="font-size: 14px;">입력 프롬프트 — 가장 큰 본문</span></div>
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">13 / 400</span><span style="font-size: 13px;">대화 본문 — 기본 크기</span></div>
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">12.5 / 400</span><span style="font-size: 12.5px; color: #8b949e;">코드 · 목록 · 표</span></div>
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">11.5 / 400</span><span style="font-size: 11.5px; color: #6e7681;">상태줄 · 타임스탬프 · 키 힌트</span></div>
+        <div style="display: flex; align-items: baseline; gap: 14px;"><span style="width: 96px; color: #39c5cf; flex: 0 0 auto;">11 / 400</span><span style="font-size: 11px; color: #484f58; letter-spacing: 0.08em;">SECTION LABEL — 대문자 + 자간</span></div>
+      </div>
+      <div style="color: #6e7681; line-height: 1.7;">JetBrains Mono → SF Mono → Menlo → ui-monospace. 한글은 폴백 폰트가 그리므로 <span style="color: #8b949e;">문자 격자 정렬에 의존하지 않는다</span> — 정렬은 flex 로.</div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 4px;">커서 · 마커</div>
+      <div style="display: flex; gap: 26px; align-items: center;">
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #6e7681;">block</span><span style="display: inline-block; width: 8px; height: 16px; background: #3fb950;"></span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #6e7681;">bar</span><span style="display: inline-block; width: 2px; height: 16px; background: #3fb950;"></span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #6e7681;">underline</span><span style="display: inline-block; width: 8px; height: 2px; background: #3fb950;"></span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #6e7681;">idle</span><span style="display: inline-block; width: 8px; height: 16px; border: 1px solid #3fb950;"></span></span>
+      </div>
+      <div style="display: flex; gap: 24px; align-items: center;">
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #3fb950;">❯</span><span style="color: #6e7681;">내 입력</span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #bc8cff;">⏺</span><span style="color: #6e7681;">응답 완료</span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #39c5cf;">⠴</span><span style="color: #6e7681;">생성 중</span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #d29922;">●</span><span style="color: #6e7681;">미저장</span></span>
+        <span style="display: flex; align-items: center; gap: 8px;"><span style="color: #d29922;">★</span><span style="color: #6e7681;">고정</span></span>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 4px;">상태줄 세그먼트 — 모드가 색이다</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: stretch; height: 22px; background: #161b22; font-size: 11px;">
+          <span style="background: #3fb950; color: #0d1117; font-weight: 700; padding: 0 10px; display: flex; align-items: center; letter-spacing: 0.1em;">INSERT</span>
+          <span style="padding: 0 10px; color: #8b949e; display: flex; align-items: center;">입력 중</span>
+        </div>
+        <div style="display: flex; align-items: stretch; height: 22px; background: #161b22; font-size: 11px;">
+          <span style="background: #8b949e; color: #0d1117; font-weight: 700; padding: 0 10px; display: flex; align-items: center; letter-spacing: 0.1em;">NORMAL</span>
+          <span style="padding: 0 10px; color: #8b949e; display: flex; align-items: center;">탐색 · 스크롤백</span>
+        </div>
+        <div style="display: flex; align-items: stretch; height: 22px; background: #161b22; font-size: 11px;">
+          <span style="background: #bc8cff; color: #0d1117; font-weight: 700; padding: 0 10px; display: flex; align-items: center; letter-spacing: 0.1em;">COMMAND</span>
+          <span style="padding: 0 10px; color: #8b949e; display: flex; align-items: center;">팔레트 열림</span>
+        </div>
+        <div style="display: flex; align-items: stretch; height: 22px; background: #161b22; font-size: 11px;">
+          <span style="background: #39c5cf; color: #0d1117; font-weight: 700; padding: 0 10px; display: flex; align-items: center; letter-spacing: 0.1em;">STREAM</span>
+          <span style="padding: 0 10px; color: #8b949e; display: flex; align-items: center;">응답 수신 중</span>
+        </div>
+        <div style="display: flex; align-items: stretch; height: 22px; background: #161b22; font-size: 11px;">
+          <span style="background: #d29922; color: #0d1117; font-weight: 700; padding: 0 10px; display: flex; align-items: center; letter-spacing: 0.1em;">CONFIG</span>
+          <span style="padding: 0 10px; color: #8b949e; display: flex; align-items: center;">설정 편집</span>
+        </div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 4px;">테마 — 같은 변수 이름, 다른 값</div>
+      <div style="display: flex; gap: 12px;">
+        <div style="flex: 1; border: 1px solid #3fb950; background: #0d1117; padding: 9px 11px; display: flex; flex-direction: column; gap: 5px;">
+          <div style="color: #c9d1d9; font-size: 11.5px;">modern-dark <span style="color: #3fb950;">기본</span></div>
+          <div style="display: flex; gap: 3px;"><span style="width: 15px; height: 15px; background: #0d1117; border: 1px solid #30363d;"></span><span style="width: 15px; height: 15px; background: #c9d1d9;"></span><span style="width: 15px; height: 15px; background: #3fb950;"></span><span style="width: 15px; height: 15px; background: #39c5cf;"></span><span style="width: 15px; height: 15px; background: #bc8cff;"></span></div>
+        </div>
+        <div style="flex: 1; border: 1px solid #21262d; background: #000f04; padding: 9px 11px; display: flex; flex-direction: column; gap: 5px;">
+          <div style="color: #33ff66; font-size: 11.5px;">crt-green</div>
+          <div style="display: flex; gap: 3px;"><span style="width: 15px; height: 15px; background: #000f04; border: 1px solid #143d21;"></span><span style="width: 15px; height: 15px; background: #33ff66;"></span><span style="width: 15px; height: 15px; background: #1f9e42;"></span><span style="width: 15px; height: 15px; background: #0d5525;"></span><span style="width: 15px; height: 15px; background: #143d21;"></span></div>
+        </div>
+        <div style="flex: 1; border: 1px solid #21262d; background: #150e00; padding: 9px 11px; display: flex; flex-direction: column; gap: 5px;">
+          <div style="color: #ffb000; font-size: 11.5px;">amber</div>
+          <div style="display: flex; gap: 3px;"><span style="width: 15px; height: 15px; background: #150e00; border: 1px solid #3d2b00;"></span><span style="width: 15px; height: 15px; background: #ffb000;"></span><span style="width: 15px; height: 15px; background: #c98700;"></span><span style="width: 15px; height: 15px; background: #7a5200;"></span><span style="width: 15px; height: 15px; background: #3d2b00;"></span></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto;">
+    <span style="background: #8b949e; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">TOKENS</span>
+    <span style="padding: 0 12px; color: #8b949e;">modern-dark</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 14px; color: #6e7681;">테마 추가 = CSS 변수 한 벌</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

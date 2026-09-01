@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #39c5cf; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">~/chats/extension-design — 158×38</div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="color: #bc8cff;">gpt-5</span>
+      <span style="color: #39c5cf;">⠴ streaming</span>
+      <span style="color: #8b949e;">14:23</span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: stretch; height: 30px; background: #0d1117; border-bottom: 1px solid #21262d; font-size: 12px; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #c9d1d9; border-right: 1px solid #21262d; box-shadow: inset 0 -2px 0 #39c5cf;">
+      <span style="color: #39c5cf;">1</span><span>extension-design</span><span style="color: #39c5cf;">⠴</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #6e7681; border-right: 1px solid #21262d;"><span>2</span><span>netbackup-vault</span></div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #6e7681; border-right: 1px solid #21262d;"><span>3</span><span>scratch</span></div>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; padding: 0 14px; color: #484f58;">+ :new</div>
+  </div>
+
+  <div style="flex: 1; padding: 22px 28px 0; font-size: 13px; line-height: 1.62; display: flex; flex-direction: column; gap: 18px; overflow: hidden;">
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; gap: 10px; font-size: 11.5px; color: #484f58;">
+        <span style="color: #3fb950;">user@gpt</span><span style="color: #39c5cf;">~/chats/extension-design</span><span style="flex: 1;"></span><span>14:23:11</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <span style="color: #3fb950; flex: 0 0 auto;">❯</span>
+        <span>MutationObserver 로 어떻게 delta 만 뽑아?</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 14px; align-items: center; border: 1px solid #21262d; background: #0d1117; padding: 6px 12px; width: 420px;">
+      <span style="color: #6e7681; font-size: 12px;">⏵</span>
+      <span style="color: #8b949e; font-size: 12px;">thinking</span>
+      <span style="color: #484f58; font-size: 12px;">6.1s · 812 tok</span>
+      <span style="flex: 1;"></span>
+      <span style="color: #484f58; font-size: 11px;">tab 펼치기</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 10px; font-size: 11.5px; align-items: center;">
+        <span style="color: #39c5cf;">⠴ gpt-5</span>
+        <span style="color: #484f58;">·</span><span style="color: #484f58;">8.7s</span>
+        <span style="color: #484f58;">·</span><span style="color: #39c5cf;">61 tok/s</span>
+      </div>
+
+      <div style="display: flex; gap: 14px;">
+        <span style="width: 2px; background: #39c5cf; flex: 0 0 auto;"></span>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 96ch;">
+          <div>델타는 <span style="color: #39c5cf; background: #161b22; padding: 1px 5px;">characterData</span> 뮤테이션의 <span style="color: #39c5cf; background: #161b22; padding: 1px 5px;">oldValue</span> 와 비교해서 뽑습니다. 전체 텍스트를 매번 다시 읽으면 O(n²) 가 되고, 긴 답변에서 눈에 띄게 끊겨요.</div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">·</span><span><span style="color: #7ee787;">characterDataOldValue: true</span> 로 observe</span></div>
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">·</span><span>노드별 마지막 길이를 <span style="color: #39c5cf;">WeakMap</span> 에 캐시</span></div>
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">·</span><span>append 는 rAF 한 프레임에 모아서 flush<span style="display: inline-block; width: 8px; height: 16px; background: #39c5cf; margin-left: 3px; vertical-align: -2px;"></span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <div style="display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: #161b22; border: 1px solid #30363d; font-size: 11.5px; margin-bottom: 4px;">
+      <span style="color: #39c5cf;">⠴</span>
+      <span style="color: #c9d1d9;">응답 생성 중</span>
+      <span style="color: #484f58;">1,193 tok · 8.7s 경과</span>
+      <span style="flex: 1;"></span>
+      <span style="color: #f85149;">^C</span><span style="color: #6e7681;">중단</span>
+      <span style="color: #30363d;">│</span>
+      <span style="color: #6e7681;">^D</span><span style="color: #6e7681;">백그라운드</span>
+    </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #21262d; padding: 10px 28px 12px; flex: 0 0 auto; background: #010409;">
+    <div style="display: flex; gap: 12px; font-size: 11.5px; opacity: 0.45;">
+      <span style="color: #3fb950;">user@gpt</span>
+      <span style="color: #39c5cf;">~/chats/extension-design</span>
+      <span style="color: #bc8cff;">(gpt-5)</span>
+    </div>
+    <div style="display: flex; gap: 10px; font-size: 14px; margin-top: 5px; align-items: baseline; opacity: 0.45;">
+      <span style="color: #6e7681; flex: 0 0 auto;">❯</span>
+      <span style="color: #484f58;">응답 중에는 입력이 큐에 쌓입니다 — enter 로 예약</span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto;">
+    <span style="background: #39c5cf; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">STREAM</span>
+    <span style="padding: 0 12px; color: #8b949e;">13,676 / 128,000</span>
+    <span style="display: flex; align-items: center; gap: 1px; padding-right: 12px;">
+      <span style="width: 9px; height: 9px; background: #39c5cf;"></span>
+      <span style="width: 9px; height: 9px; background: #39c5cf;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+    </span>
+    <span style="color: #30363d;">│</span>
+    <span style="padding: 0 12px; color: #6e7681;">61 tok/s</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 12px; color: #6e7681;">queue 0</span>
+    <span style="padding: 0 14px; color: #f85149;">^C stop</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #3fb950; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">~/chats — 158×38</div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="color: #6e7681;">41 chats</span>
+      <span style="color: #8b949e;">14:25</span>
+    </div>
+  </div>
+
+  <div style="padding: 16px 28px 10px; flex: 0 0 auto; font-size: 13px;">
+    <div style="display: flex; gap: 10px;">
+      <span style="color: #3fb950;">user@gpt</span><span style="color: #6e7681;">:</span><span style="color: #39c5cf;">~</span><span style="color: #6e7681;">$</span>
+      <span>ls <span style="color: #d29922;">-lat</span> ~/chats</span>
+    </div>
+    <div style="color: #6e7681; font-size: 11.5px; margin-top: 6px;">total 41 · 3 pinned · 2 unread</div>
+  </div>
+
+  <div style="flex: 1; display: flex; min-height: 0; border-top: 1px solid #21262d;">
+
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid #21262d;">
+      <div style="display: flex; gap: 0; padding: 6px 28px; font-size: 11px; color: #484f58; background: #010409; border-bottom: 1px solid #21262d;">
+        <span style="width: 52px; flex: 0 0 auto;">mode</span>
+        <span style="width: 74px; flex: 0 0 auto;">model</span>
+        <span style="width: 58px; flex: 0 0 auto; text-align: right;">tok</span>
+        <span style="width: 118px; flex: 0 0 auto; padding-left: 18px;">modified</span>
+        <span style="flex: 1; padding-left: 12px;">name</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; font-size: 12.5px; line-height: 1.9;">
+
+        <div style="display: flex; padding: 3px 28px; background: #161b22; box-shadow: inset 2px 0 0 #3fb950;">
+          <span style="width: 52px; flex: 0 0 auto; color: #d29922;">drwx</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #bc8cff;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #8b949e;">12.4k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/31 14:22</span>
+          <span style="flex: 1; padding-left: 12px; color: #39c5cf; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">extension-design<span style="color: #484f58;">/</span> <span style="color: #d29922;">●</span></span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #bc8cff;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">31.0k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/30 21:41</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">netbackup-vault-실패-조사 <span style="color: #d29922;">★</span></span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #6e7681;">gpt-5-mini</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">2.1k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/30 18:07</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">scratch</span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #bc8cff;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">18.7k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/29 11:52</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">k8s-hpa-튜닝 <span style="color: #d29922;">★</span></span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #bc8cff;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">7.3k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/28 16:30</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">사내-문서-스타일-교정</span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-r--</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #6e7681;">gpt-4o</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">44.2k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/27 09:14</span>
+          <span style="flex: 1; padding-left: 12px; color: #6e7681; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">archive/2026-q2<span style="color: #484f58;">/</span></span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #bc8cff;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">5.6k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/26 22:03</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">mermaid-파싱-에러</span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px;">
+          <span style="width: 52px; flex: 0 0 auto; color: #484f58;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto; color: #6e7681;">gpt-5-mini</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right; color: #6e7681;">1.4k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px; color: #6e7681;">8/26 10:41</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">회의실-예약-스크립트</span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px; color: #484f58;">
+          <span style="width: 52px; flex: 0 0 auto;">-rw-</span>
+          <span style="width: 74px; flex: 0 0 auto;">gpt-5</span>
+          <span style="width: 58px; flex: 0 0 auto; text-align: right;">9.9k</span>
+          <span style="width: 118px; flex: 0 0 auto; padding-left: 18px;">8/25 15:18</span>
+          <span style="flex: 1; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">gitea-runner-트러블슈팅</span>
+        </div>
+
+        <div style="display: flex; padding: 3px 28px; color: #30363d; font-size: 12px;">
+          <span style="width: 302px; flex: 0 0 auto;"></span>
+          <span style="padding-left: 12px;">… 32 more</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="width: 400px; flex: 0 0 auto; display: flex; flex-direction: column; background: #010409; min-width: 0;">
+      <div style="padding: 6px 18px; font-size: 11px; color: #484f58; border-bottom: 1px solid #21262d;">preview — <span style="color: #39c5cf;">extension-design</span></div>
+      <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; font-size: 12px; line-height: 1.65; min-width: 0;">
+
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <div style="display: flex; gap: 10px;"><span style="color: #484f58; width: 74px; flex: 0 0 auto;">created</span><span style="color: #8b949e;">8/31 13:58</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #484f58; width: 74px; flex: 0 0 auto;">messages</span><span style="color: #8b949e;">8</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #484f58; width: 74px; flex: 0 0 auto;">context</span><span style="color: #8b949e;">12,483 / 128k</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #484f58; width: 74px; flex: 0 0 auto;">tags</span><span style="color: #d29922;">#chrome #mv3</span></div>
+        </div>
+
+        <div style="color: #21262d; line-height: 1; overflow: hidden; white-space: nowrap;">──────────────────────────────────────────────</div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; color: #6e7681;">
+          <div style="display: flex; gap: 10px;"><span style="color: #3fb950; flex: 0 0 auto;">❯</span><span>gpt web 을 터미널처럼 보이게 하는…</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #bc8cff; flex: 0 0 auto;">⏺</span><span>MV3 content script 하나면 됩니다. 핵심은 세 가지예요…</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #3fb950; flex: 0 0 auto;">❯</span><span>2번. 델타만 뽑는 게 관건일 것 같은데</span></div>
+          <div style="display: flex; gap: 10px;"><span style="color: #bc8cff; flex: 0 0 auto;">⏺</span><span>characterDataOldValue 와 비교해서 뽑습니다…</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 18px; padding: 7px 28px; font-size: 11.5px; background: #0d1117; border-top: 1px solid #21262d; color: #484f58; flex: 0 0 auto;">
+    <span><span style="color: #8b949e;">↑↓ / jk</span> 이동</span>
+    <span><span style="color: #8b949e;">⏎</span> 열기</span>
+    <span><span style="color: #8b949e;">/</span> 검색</span>
+    <span><span style="color: #8b949e;">p</span> 고정</span>
+    <span><span style="color: #8b949e;">mv</span> 이름변경</span>
+    <span><span style="color: #f85149;">rm</span> 삭제</span>
+    <span style="flex: 1;"></span>
+    <span>sort: <span style="color: #8b949e;">mtime ↓</span></span>
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto;">
+    <span style="background: #8b949e; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">NORMAL</span>
+    <span style="padding: 0 12px; color: #8b949e;">~/chats</span>
+    <span style="color: #30363d;">│</span>
+    <span style="padding: 0 12px; color: #6e7681;">1 / 41</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 12px; color: #6e7681;">⌘K palette</span>
+    <span style="padding: 0 14px; color: #6e7681;">q 뒤로</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

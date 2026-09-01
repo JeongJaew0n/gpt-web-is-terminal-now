@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #3fb950; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">:help render — 마크다운을 tty 로 어떻게 그리는가</div>
+    <div style="display: flex; align-items: center; gap: 14px;"><span style="color: #8b949e;">14:40</span></div>
+  </div>
+
+  <div style="flex: 1; display: flex; gap: 0; min-height: 0;">
+
+    <div style="flex: 1; padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; border-right: 1px solid #21262d; min-width: 0;">
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">코드 블록</div>
+
+      <div style="border: 1px solid #30363d; background: #010409;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11px; color: #6e7681;">
+          <span style="color: #39c5cf;">src/stream.js</span>
+          <span style="flex: 1;"></span>
+          <span>javascript</span><span style="color: #30363d;">│</span><span>14 lines</span>
+        </div>
+        <div style="display: flex; padding: 10px 0; font-size: 12.5px; line-height: 1.62;">
+          <div style="display: flex; flex-direction: column; align-items: flex-end; color: #30363d; padding: 0 12px; flex: 0 0 auto;">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+          </div>
+          <div style="display: flex; flex-direction: column; min-width: 0;">
+            <span><span style="color: #ff7b72;">const</span> seen <span style="color: #ff7b72;">=</span> <span style="color: #ff7b72;">new</span> <span style="color: #79c0ff;">WeakMap</span>()<span style="color: #8b949e;">;</span></span>
+            <span>&nbsp;</span>
+            <span><span style="color: #ff7b72;">function</span> <span style="color: #d2a8ff;">delta</span>(node) <span style="color: #8b949e;">{</span></span>
+            <span>&nbsp;&nbsp;<span style="color: #ff7b72;">const</span> prev <span style="color: #ff7b72;">=</span> seen.<span style="color: #d2a8ff;">get</span>(node) <span style="color: #ff7b72;">??</span> <span style="color: #79c0ff;">0</span><span style="color: #8b949e;">;</span></span>
+            <span>&nbsp;&nbsp;<span style="color: #ff7b72;">const</span> now <span style="color: #ff7b72;">=</span> node.data<span style="color: #8b949e;">;</span></span>
+            <span>&nbsp;&nbsp;seen.<span style="color: #d2a8ff;">set</span>(node, now.length)<span style="color: #8b949e;">;</span></span>
+            <span>&nbsp;&nbsp;<span style="color: #ff7b72;">return</span> now.<span style="color: #d2a8ff;">slice</span>(prev)<span style="color: #8b949e;">;</span>  <span style="color: #6e7681;">// 새로 붙은 부분만</span></span>
+            <span><span style="color: #8b949e;">}</span></span>
+            <span style="color: #30363d;">⋮</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; padding: 6px 12px; background: #0d1117; border-top: 1px solid #21262d; font-size: 11px; color: #484f58;">
+          <span style="color: #30363d;">─────────────</span>
+          <span style="flex: 1;"></span>
+          <span><span style="color: #8b949e;">y</span> yank</span>
+          <span><span style="color: #8b949e;">w</span> write</span>
+          <span><span style="color: #8b949e;">o</span> open</span>
+          <span><span style="color: #8b949e;">f</span> fold</span>
+        </div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 2px;">diff</div>
+
+      <div style="border: 1px solid #30363d; background: #010409; font-size: 12.5px; line-height: 1.62;">
+        <div style="padding: 6px 12px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11px; color: #6e7681;">manifest.json <span style="color: #3fb950;">+2</span> <span style="color: #f85149;">−1</span></div>
+        <div style="display: flex; flex-direction: column; padding: 8px 0;">
+          <div style="display: flex; padding: 0 12px;"><span style="color: #30363d; width: 22px; flex: 0 0 auto;">4</span><span style="color: #6e7681;">&nbsp;&nbsp;"content_scripts": [{</span></div>
+          <div style="display: flex; padding: 0 12px; background: rgba(248,81,73,0.10);"><span style="color: #f85149; width: 22px; flex: 0 0 auto;">−</span><span style="color: #f85149;">&nbsp;&nbsp;&nbsp;&nbsp;"run_at": "document_end"</span></div>
+          <div style="display: flex; padding: 0 12px; background: rgba(63,185,80,0.10);"><span style="color: #3fb950; width: 22px; flex: 0 0 auto;">+</span><span style="color: #3fb950;">&nbsp;&nbsp;&nbsp;&nbsp;"run_at": "document_idle",</span></div>
+          <div style="display: flex; padding: 0 12px; background: rgba(63,185,80,0.10);"><span style="color: #3fb950; width: 22px; flex: 0 0 auto;">+</span><span style="color: #3fb950;">&nbsp;&nbsp;&nbsp;&nbsp;"world": "MAIN"</span></div>
+          <div style="display: flex; padding: 0 12px;"><span style="color: #30363d; width: 22px; flex: 0 0 auto;">7</span><span style="color: #6e7681;">&nbsp;&nbsp;}]</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="flex: 1; padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">표 — box drawing 으로 정렬</div>
+
+      <pre style="margin: 0; font-size: 12.5px; line-height: 1.62; color: #8b949e;">┌──────────────┬───────┬──────────┐
+│ <span style="color: #c9d1d9;">방식</span>         │ <span style="color: #c9d1d9;">지연</span>  │ <span style="color: #c9d1d9;">안정성</span>   │
+├──────────────┼───────┼──────────┤
+│ <span style="color: #39c5cf;">SSE 후킹</span>     │  <span style="color: #3fb950;">4ms</span>  │ <span style="color: #f85149;">낮음</span>     │
+│ <span style="color: #39c5cf;">Mutation</span>     │ <span style="color: #d29922;">16ms</span>  │ <span style="color: #3fb950;">높음</span>     │
+│ <span style="color: #39c5cf;">polling</span>      │ <span style="color: #f85149;">100ms</span> │ <span style="color: #3fb950;">높음</span>     │
+└──────────────┴───────┴──────────┘</pre>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 2px;">인용 · 목록 · 인라인</div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px; font-size: 13px; line-height: 1.62;">
+        <div style="display: flex; gap: 12px;">
+          <span style="width: 2px; background: #30363d; flex: 0 0 auto;"></span>
+          <span style="color: #8b949e;">인용은 gutter 바 + dim 색. 배경 박스를 쓰지 않는다.</span>
+        </div>
+        <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">·</span><span>불릿은 <span style="color: #d29922;">·</span>, 중첩은 <span style="color: #d29922;">▸</span> — 2칸 들여쓰기</span></div>
+        <div style="display: flex; gap: 12px; padding-left: 18px;"><span style="color: #6e7681; flex: 0 0 auto;">▸</span><span style="color: #8b949e;">깊이 2 부터는 dim</span></div>
+        <div><span style="color: #39c5cf; background: #161b22; padding: 1px 5px;">inline code</span> 는 배경 <span style="color: #39c5cf;">#161b22</span> · 링크는 <a href="#">밑줄 없이 blue</a> · <span style="font-weight: 700; color: #ffffff;">강조는 bold + 흰색</span></div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 2px;">시스템 · 오류 출력</div>
+
+      <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; line-height: 1.7;">
+        <div style="display: flex; gap: 12px;"><span style="color: #f85149; width: 62px; flex: 0 0 auto;">[error]</span><span style="color: #f85149;">rate limit — 42초 후 재시도</span></div>
+        <div style="display: flex; gap: 12px;"><span style="color: #d29922; width: 62px; flex: 0 0 auto;">[warn]</span><span style="color: #d29922;">첨부 3.2MB — 컨텍스트 절반을 차지합니다</span></div>
+        <div style="display: flex; gap: 12px;"><span style="color: #6e7681; width: 62px; flex: 0 0 auto;">[info]</span><span style="color: #8b949e;">~/chats/extension-design 저장됨</span></div>
+        <div style="display: flex; gap: 12px;"><span style="color: #484f58; width: 62px; flex: 0 0 auto;">[hint]</span><span style="color: #6e7681;">긴 출력은 <span style="color: #8b949e;">z</span> 로 접습니다</span></div>
+      </div>
+
+      <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em; margin-top: 2px;">tty 로 그릴 수 없는 것</div>
+
+      <div style="border: 1px dashed #30363d; padding: 9px 12px; display: flex; align-items: center; gap: 12px; font-size: 12.5px;">
+        <span style="color: #bc8cff;">▤</span>
+        <span style="color: #8b949e; flex: 1;">이미지 · mermaid · 수식은 자리표시자로 두고</span>
+        <span style="color: #484f58;">o</span><span style="color: #6e7681;">원본 열기</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto;">
+    <span style="background: #8b949e; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">HELP</span>
+    <span style="padding: 0 12px; color: #8b949e;">render</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 12px; color: #6e7681;">전부 텍스트 노드 — 선택·복사 그대로 동작</span>
+    <span style="padding: 0 14px; color: #6e7681;">q 뒤로</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #3fb950; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">~/chats/extension-design — 158×38</div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="color: #bc8cff;">gpt-5</span>
+      <span style="color: #6e7681;">temp 0.7</span>
+      <span style="color: #8b949e;">14:22</span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: stretch; height: 30px; background: #0d1117; border-bottom: 1px solid #21262d; font-size: 12px; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #c9d1d9; border-right: 1px solid #21262d; box-shadow: inset 0 -2px 0 #3fb950;">
+      <span style="color: #3fb950;">1</span><span>extension-design</span><span style="color: #d29922;">●</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #6e7681; border-right: 1px solid #21262d;">
+      <span>2</span><span>netbackup-vault</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px; color: #6e7681; border-right: 1px solid #21262d;">
+      <span>3</span><span>scratch</span>
+    </div>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; align-items: center; padding: 0 14px; color: #484f58;">+ :new</div>
+  </div>
+
+  <div style="flex: 1; display: flex; min-height: 0; overflow: hidden; position: relative;">
+
+    <div style="position: absolute; left: 0; top: 0; bottom: 0; z-index: 2; width: 236px; display: flex; flex-direction: column; background: #010409; border-right: 1px solid #30363d; box-shadow: 6px 0 18px rgba(1,4,9,0.55); font-size: 12.5px;">
+
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; flex: 0 0 auto; color: #484f58; font-size: 11px; letter-spacing: 0.08em; border-bottom: 1px solid #21262d;">
+        <span>CHATS</span>
+        <span style="flex: 1;"></span>
+        <span style="letter-spacing: 0;">/ 검색</span>
+      </div>
+
+      <div style="flex: 1; padding: 6px 0; display: flex; flex-direction: column; min-height: 0;">
+
+        <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px 3px; color: #39c5cf; font-size: 11px;">
+          <span style="color: #484f58;">▾</span><span style="flex: 1;">~/pinned</span><span style="color: #484f58;">2</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">netbackup-vault-실패-조사</span>
+          <span style="color: #d29922; flex: 0 0 auto;">★</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">k8s-hpa-튜닝</span>
+          <span style="color: #d29922; flex: 0 0 auto;">★</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px 3px; color: #39c5cf; font-size: 11px;">
+          <span style="color: #484f58;">▸</span><span style="flex: 1;">~/projects/세무사</span><span style="color: #484f58;">6</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px 3px; color: #39c5cf; font-size: 11px;">
+          <span style="color: #484f58;">▾</span><span style="flex: 1;">~/chats</span><span style="color: #484f58;">10</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px; box-shadow: inset 2px 0 0 #3fb950; background: #161b22;">
+          <span style="width: 8px; flex: 0 0 auto; color: #3fb950;">❯</span>
+          <span style="flex: 1; color: #c9d1d9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">extension-design</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">mermaid-파싱-에러</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">사내-문서-스타일-교정</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">회의실-예약-스크립트</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 2px 12px;">
+          <span style="width: 8px; flex: 0 0 auto;"></span>
+          <span style="flex: 1; color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">gitea-runner-트러블슈팅</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; margin-top: 4px; color: #484f58; font-size: 11.5px; border-top: 1px dashed #21262d;">
+          <span>… 29개 더</span><span style="flex: 1;"></span><span>⏎</span>
+        </div>
+
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; flex: 0 0 auto; border-top: 1px solid #21262d; color: #484f58; font-size: 11px;">
+        <span>12 / 41</span><span style="flex: 1;"></span><span style="color: #3fb950;">api</span>
+      </div>
+
+    </div>
+
+    <div style="flex: 1; padding: 22px 28px 0; font-size: 13px; line-height: 1.62; display: flex; flex-direction: column; gap: 20px; overflow: hidden; min-width: 0;">
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; gap: 10px; font-size: 11.5px; color: #484f58;">
+        <span style="color: #3fb950;">user@gpt</span><span style="color: #39c5cf;">~/chats/extension-design</span><span style="flex: 1;"></span><span>14:19:02</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <span style="color: #3fb950; flex: 0 0 auto;">❯</span>
+        <span style="max-width: 92ch;">gpt web 을 터미널처럼 보이게 하는 크롬 익스텐션 만들고 싶어</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 10px; font-size: 11.5px; align-items: center;">
+        <span style="color: #bc8cff;">⏺ gpt-5</span>
+        <span style="color: #484f58;">·</span><span style="color: #484f58;">2.4s</span>
+        <span style="color: #484f58;">·</span><span style="color: #484f58;">1,204 tok</span>
+        <span style="flex: 1;"></span>
+        <span style="color: #484f58;">[y]ank  [r]etry  [e]dit</span>
+      </div>
+
+      <div style="display: flex; gap: 14px;">
+        <span style="width: 2px; background: #bc8cff; opacity: 0.45; flex: 0 0 auto;"></span>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 92ch;">
+          <div>MV3 content script 하나면 됩니다. 핵심은 세 가지예요.</div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding-left: 2px;">
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">1.</span><span>원본 DOM 을 숨기고 <span style="color: #39c5cf; background: #161b22; padding: 1px 5px;">shadow root</span> 안에 tty 를 마운트</span></div>
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">2.</span><span>스트리밍 델타를 스크롤백에 append — 렌더는 rAF 로 배치</span></div>
+            <div style="display: flex; gap: 12px;"><span style="color: #d29922; flex: 0 0 auto;">3.</span><span>입력은 프록시 — 원본 composer 로 forward 후 submit</span></div>
+          </div>
+
+          <div style="border: 1px solid #21262d; background: #010409; width: 620px;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 5px 12px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11px; color: #6e7681;">
+              <span style="color: #39c5cf;">manifest.json</span>
+              <span style="flex: 1;"></span>
+              <span>json</span><span style="color: #30363d;">│</span><span>12 lines</span>
+            </div>
+            <div style="display: flex; padding: 9px 0; font-size: 12.5px; line-height: 1.55;">
+              <div style="display: flex; flex-direction: column; align-items: flex-end; color: #30363d; padding: 0 12px; flex: 0 0 auto; user-select: none;">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="color: #8b949e;">{</span>
+                <span><span style="color: #79c0ff;">&nbsp;&nbsp;"manifest_version"</span><span style="color: #8b949e;">: </span><span style="color: #d29922;">3</span><span style="color: #8b949e;">,</span></span>
+                <span><span style="color: #79c0ff;">&nbsp;&nbsp;"name"</span><span style="color: #8b949e;">: </span><span style="color: #7ee787;">"gpt-term"</span><span style="color: #8b949e;">,</span></span>
+                <span><span style="color: #79c0ff;">&nbsp;&nbsp;"content_scripts"</span><span style="color: #8b949e;">: [{ </span><span style="color: #484f58;">…</span><span style="color: #8b949e;"> }]</span></span>
+                <span style="color: #8b949e;">}</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 16px; padding: 5px 12px; background: #0d1117; border-top: 1px solid #21262d; font-size: 11px; color: #484f58;">
+              <span style="flex: 1;"></span>
+              <span><span style="color: #6e7681;">y</span> yank</span>
+              <span><span style="color: #6e7681;">w</span> write</span>
+              <span><span style="color: #6e7681;">o</span> open</span>
+            </div>
+          </div>
+
+          <div>어느 것부터 볼까요?</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; gap: 10px; font-size: 11.5px; color: #484f58;">
+        <span style="color: #3fb950;">user@gpt</span><span style="color: #39c5cf;">~/chats/extension-design</span><span style="flex: 1;"></span><span>14:21:40</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <span style="color: #3fb950; flex: 0 0 auto;">❯</span>
+        <span style="max-width: 92ch;">2번. 델타만 뽑는 게 관건일 것 같은데</span>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #21262d; padding: 10px 28px 12px; flex: 0 0 auto; background: #0d1117;">
+    <div style="display: flex; gap: 12px; font-size: 11.5px;">
+      <span style="color: #3fb950;">user@gpt</span>
+      <span style="color: #39c5cf;">~/chats/extension-design</span>
+      <span style="color: #bc8cff;">(gpt-5)</span>
+      <span style="color: #d29922;">✱ 2 attached</span>
+    </div>
+    <div style="display: flex; gap: 10px; font-size: 14px; margin-top: 5px; align-items: baseline;">
+      <span style="color: #3fb950; flex: 0 0 auto;">❯</span>
+      <span>MutationObserver 로 어떻게 delta 만<span style="display: inline-block; width: 8px; height: 16px; background: #3fb950; margin-left: 3px; vertical-align: -2px;"></span></span>
+    </div>
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto;">
+    <span style="background: #3fb950; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">INSERT</span>
+    <span style="padding: 0 12px; color: #8b949e;">12,483 / 128,000</span>
+    <span style="display: flex; align-items: center; gap: 1px; padding-right: 12px;">
+      <span style="width: 9px; height: 9px; background: #3fb950;"></span>
+      <span style="width: 9px; height: 9px; background: #3fb950;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+      <span style="width: 9px; height: 9px; background: #21262d;"></span>
+    </span>
+    <span style="color: #30363d;">│</span>
+    <span style="padding: 0 12px; color: #6e7681;">msg 8</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 12px; color: #6e7681;">⌘K palette</span>
+    <span style="padding: 0 12px; color: #6e7681;">^B sidebar</span>
+    <span style="padding: 0 12px; color: #6e7681;">:w save</span>
+    <span style="padding: 0 14px; color: #6e7681;">^C stop</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #010409; font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+    a { color: #58a6ff; } a:hover { color: #79c0ff; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 800px; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+
+  <div style="display: flex; align-items: center; gap: 16px; height: 34px; padding: 0 14px; background: #161b22; border-bottom: 1px solid #21262d; font-size: 11.5px; color: #6e7681; flex: 0 0 auto;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 8px; height: 8px; background: #3fb950; display: block;"></span>
+      <span style="color: #8b949e;">gpt-term</span>
+    </div>
+    <div style="flex: 1; text-align: center; color: #8b949e;">~/chats/extension-design — 158×38</div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="color: #bc8cff;">gpt-5</span>
+      <span style="color: #8b949e;">14:26</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; padding: 22px 28px; font-size: 13px; line-height: 1.62; display: flex; flex-direction: column; gap: 18px; opacity: 0.22;">
+    <div style="display: flex; gap: 10px;"><span style="color: #3fb950;">❯</span><span>MutationObserver 로 어떻게 delta 만 뽑아?</span></div>
+    <div style="display: flex; gap: 14px;">
+      <span style="width: 2px; background: #bc8cff; flex: 0 0 auto;"></span>
+      <div style="display: flex; flex-direction: column; gap: 10px; max-width: 96ch;">
+        <div>델타는 characterData 뮤테이션의 oldValue 와 비교해서 뽑습니다. 전체 텍스트를</div>
+        <div>매번 다시 읽으면 O(n²) 가 되고, 긴 답변에서 눈에 띄게 끊겨요.</div>
+        <div>노드별 마지막 길이를 WeakMap 에 캐시하고, append 는 rAF 한 프레임에 모아서</div>
+        <div>flush 합니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; inset: 34px 0 0 0; background: #010409; opacity: 0.55;"></div>
+
+  <div style="position: absolute; left: 268px; top: 96px; width: 744px; border: 1px solid #30363d; background: #0d1117; box-shadow: 0 24px 64px rgba(1,4,9,0.8); display: flex; flex-direction: column;">
+
+    <div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid #21262d; background: #161b22;">
+      <span style="color: #bc8cff; font-size: 14px;">:</span>
+      <span style="font-size: 14px;">mod<span style="display: inline-block; width: 8px; height: 16px; background: #bc8cff; margin-left: 2px; vertical-align: -2px;"></span></span>
+      <span style="flex: 1;"></span>
+      <span style="font-size: 11px; color: #484f58;">6 / 61</span>
+    </div>
+
+    <div style="display: flex; min-height: 0;">
+
+      <div style="width: 452px; flex: 0 0 auto; display: flex; flex-direction: column; border-right: 1px solid #21262d; padding: 6px 0;">
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px; background: #21262d; box-shadow: inset 2px 0 0 #bc8cff;">
+          <span style="color: #bc8cff; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:<span style="color: #39c5cf;">mod</span>e<span style="color: #39c5cf;">l</span> <span style="color: #6e7681;">&lt;name&gt;</span></span>
+          <span style="font-size: 12px; color: #8b949e; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">모델 전환</span>
+          <span style="font-size: 11px; color: #bc8cff; flex: 0 0 auto;">gpt-5</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px;">
+          <span style="color: #30363d; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:<span style="color: #39c5cf;">mod</span>e <span style="color: #6e7681;">&lt;kind&gt;</span></span>
+          <span style="font-size: 12px; color: #6e7681; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">출력 모드 — code / prose / json</span>
+          <span style="font-size: 11px; color: #484f58; flex: 0 0 auto;">prose</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px;">
+          <span style="color: #30363d; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:the<span style="color: #39c5cf;">m</span>e <span style="color: #39c5cf;">o</span><span style="color: #39c5cf;">d</span>ern-dark</span>
+          <span style="font-size: 12px; color: #6e7681; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">테마 전환</span>
+          <span style="font-size: 11px; color: #484f58; flex: 0 0 auto;">현재</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px;">
+          <span style="color: #30363d; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:<span style="color: #39c5cf;">mod</span>el-info</span>
+          <span style="font-size: 12px; color: #6e7681; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">현재 모델 상세 · 요금 · 한도</span>
+          <span style="font-size: 11px; color: #484f58; flex: 0 0 auto;"></span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px;">
+          <span style="color: #30363d; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:<span style="color: #39c5cf;">m</span>em<span style="color: #39c5cf;">o</span>ry <span style="color: #39c5cf;">d</span>ump</span>
+          <span style="font-size: 12px; color: #6e7681; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">기억에 저장된 항목 덤프</span>
+          <span style="font-size: 11px; color: #484f58; flex: 0 0 auto;">14 items</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 5px 14px;">
+          <span style="color: #30363d; flex: 0 0 auto;">❯</span>
+          <span style="font-size: 12.5px; width: 160px; flex: 0 0 auto;">:<span style="color: #39c5cf;">mod</span>e diff</span>
+          <span style="font-size: 12px; color: #6e7681; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">두 응답을 나란히 비교</span>
+          <span style="font-size: 11px; color: #484f58; flex: 0 0 auto;"></span>
+        </div>
+
+        <div style="padding: 8px 14px 4px; color: #30363d; font-size: 11px;">──  이하 55개 숨김  ──</div>
+
+      </div>
+
+      <div style="width: 290px; flex: 0 0 auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; background: #010409; font-size: 12px;">
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">USAGE</div>
+          <div style="color: #c9d1d9;">:model <span style="color: #6e7681;">&lt;name&gt;</span></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">인자 자동완성 <span style="color: #30363d;">⇥</span></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 2px;">
+            <div style="display: flex; gap: 8px; background: #161b22; padding: 2px 6px; margin: 0 -6px;">
+              <span style="color: #bc8cff; flex: 1;">gpt-5</span><span style="color: #6e7681;">128k</span><span style="color: #d29922;">★</span>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 2px 0;">
+              <span style="color: #8b949e; flex: 1;">gpt-5-mini</span><span style="color: #484f58;">64k</span><span style="color: #010409;">★</span>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 2px 0;">
+              <span style="color: #8b949e; flex: 1;">gpt-5-thinking</span><span style="color: #484f58;">200k</span><span style="color: #010409;">★</span>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 2px 0;">
+              <span style="color: #8b949e; flex: 1;">gpt-4o</span><span style="color: #484f58;">128k</span><span style="color: #010409;">★</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="color: #484f58; font-size: 11px; letter-spacing: 0.08em;">비고</div>
+          <div style="color: #6e7681; line-height: 1.6;">전환은 현재 탭에만 적용됩니다. 전역 기본값은 <span style="color: #39c5cf;">:config model</span>.</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px; padding: 7px 14px; border-top: 1px solid #21262d; background: #161b22; font-size: 11px; color: #484f58;">
+      <span><span style="color: #8b949e;">↑↓</span> 이동</span>
+      <span><span style="color: #8b949e;">⏎</span> 실행</span>
+      <span><span style="color: #8b949e;">⇥</span> 인자 완성</span>
+      <span><span style="color: #8b949e;">^R</span> 히스토리</span>
+      <span style="flex: 1;"></span>
+      <span><span style="color: #8b949e;">esc</span> 닫기</span>
+    </div>
+
+  </div>
+
+  <div style="display: flex; align-items: center; height: 26px; font-size: 11.5px; background: #161b22; border-top: 1px solid #21262d; flex: 0 0 auto; position: relative;">
+    <span style="background: #bc8cff; color: #0d1117; font-weight: 700; padding: 0 12px; height: 100%; display: flex; align-items: center; letter-spacing: 0.1em;">COMMAND</span>
+    <span style="padding: 0 12px; color: #8b949e;">extension-design</span>
+    <span style="flex: 1;"></span>
+    <span style="padding: 0 14px; color: #6e7681;">esc 닫기</span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
