@@ -136,6 +136,16 @@ GT.theme = (function () {
 .gt-sb-empty { padding: 10px 12px; color: var(--gt-fg-faint); font-size: 11.5px; }
 .gt-sb-foot { display: flex; align-items: center; gap: 8px; padding: 5px 12px; flex: 0 0 auto;
   border-top: 1px solid var(--gt-bg-3); color: var(--gt-fg-faint); font-size: 11px; }
+.gt-sb-check { flex: 0 0 auto; color: var(--gt-fg-faint); }
+.gt-sb-row[data-checked="1"] { background: var(--gt-bg-2); }
+.gt-sb-row[data-checked="1"] .gt-sb-check { color: var(--gt-green); }
+.gt-sb-row[data-checked="1"] .gt-sb-title { color: var(--gt-fg); }
+.gt-sb-act { cursor: default; padding: 1px 6px; border: 1px solid var(--gt-bg-3); color: var(--gt-fg-dim); }
+.gt-sb-act:hover { color: var(--gt-fg); border-color: var(--gt-border); }
+.gt-sb-act.danger { color: var(--gt-red); }
+.gt-sb-act.danger:hover { background: var(--gt-red); color: var(--gt-bg-1); border-color: var(--gt-red); }
+.gt-sb-warn { color: var(--gt-red); }
+.gt-sb-busy { color: var(--gt-cyan); }
 .gt-sb-src[data-stale="1"] { color: var(--gt-yellow); }
 .gt-sb-src[data-bad="1"] { color: var(--gt-red); }
 

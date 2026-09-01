@@ -20,6 +20,12 @@ GT.sidebar = (function () {
   let loading = false;
   let collapsed = new Set();
 
+  // 다중 선택. 원본에는 없는 기능이라 기본은 꺼져 있고, 메뉴나 :select 로 들어간다.
+  let selecting = false;
+  let selected = new Set();
+  let armed = false;      // 삭제 확인 단계
+  let busy = '';          // 진행 중 표시
+
   async function loadCollapsed() {
     try {
       const got = await chrome.storage.local.get(COLLAPSED_KEY);
@@ -78,18 +84,29 @@ GT.sidebar = (function () {
       const row = el('div', 'gt-sb-row');
       if (isSel) row.dataset.sel = '1';
       if (isCur) row.dataset.cur = '1';
-      row.appendChild(el('span', 'gt-sb-mark', isCur ? '❯' : ' '));
+      if (selecting && selected.has(r.id)) row.dataset.checked = '1';
+      if (selecting) {
+        row.appendChild(el('span', 'gt-sb-check', selected.has(r.id) ? '[×]' : '[ ]'));
+      } else {
+        row.appendChild(el('span', 'gt-sb-mark', isCur ? '❯' : ' '));
+      }
       const t = el('span', 'gt-sb-title');
       if (r._hits && GT.palette.highlight) t.appendChild(GT.palette.highlight(r.title, r._hits));
       else t.textContent = r.title;
       row.appendChild(t);
       if (r.pinned) row.appendChild(el('span', 'gt-sb-pin', '★'));
-      const dots = el('span', 'gt-sb-dots', '⋯');
-      dots.title = '대화 메뉴';
-      dots.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); menu(r, dots); });
-      row.appendChild(dots);
-      row.addEventListener('mousedown', (e) => { e.preventDefault(); open(r); });
-      row.addEventListener('contextmenu', (e) => { e.preventDefault(); menu(r, row); });
+      if (!selecting) {
+        const dots = el('span', 'gt-sb-dots', '⋯');
+        dots.title = '대화 메뉴';
+        dots.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); menu(r, dots); });
+        row.appendChild(dots);
+        row.addEventListener('contextmenu', (e) => { e.preventDefault(); menu(r, row); });
+      }
+      row.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (selecting) { togglePick(r.id); return; }
+        open(r);
+      });
       listEl.appendChild(row);
     });
 
@@ -115,6 +132,7 @@ GT.sidebar = (function () {
     }
 
     footEl.textContent = '';
+    if (selecting) { drawActions(); return; }
     const n = chatRows().length;
     footEl.appendChild(el('span', null, query ? `${n} / ${loaded}` : `${loaded} / ${total}`));
     footEl.appendChild(el('span', 'gt-spacer'));
@@ -155,6 +173,8 @@ GT.sidebar = (function () {
     };
 
     // 모달을 띄우지 않는다. 입력줄에 명령을 채워주고 편집하게 한다 — 터미널이 그렇게 동작한다.
+    act('선택 모드', () => enterSelect(rec.id));
+
     act('이름 바꾸기', () => {
       const inp = GT.tty.ui.input;
       inp.value = `:rename ${rec.id.slice(0, 8)} ${rec.title}`;
@@ -213,6 +233,92 @@ GT.sidebar = (function () {
       };
       GT.tty.shadow.addEventListener('mousedown', away, true);
     }, 0);
+  }
+
+  // ---------------------------------------------------------------- 다중 선택
+  function togglePick(id) {
+    if (selected.has(id)) selected.delete(id); else selected.add(id);
+    armed = false;
+    draw();
+  }
+
+  function enterSelect(seedId) {
+    selecting = true; armed = false; busy = '';
+    selected = new Set(seedId ? [seedId] : []);
+    closeMenu(); draw();
+  }
+
+  function exitSelect() {
+    selecting = false; armed = false; busy = '';
+    selected.clear(); draw();
+  }
+
+  const pickedRecords = () => chatRows().filter((r) => selected.has(r.id));
+
+  function drawActions() {
+    const n = selected.size;
+    if (busy) { footEl.appendChild(el('span', 'gt-sb-busy', busy)); return; }
+
+    const act = (label, cls, fn) => {
+      const b = el('span', 'gt-sb-act ' + (cls || ''), label);
+      b.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+      footEl.appendChild(b);
+      return b;
+    };
+
+    if (armed) {
+      footEl.appendChild(el('span', 'gt-sb-warn', `${n}개 · 되돌릴 수 없다`));
+      footEl.appendChild(el('span', 'gt-spacer'));
+      act('정말 삭제', 'danger', doRemove);
+      act('취소', '', () => { armed = false; draw(); });
+      return;
+    }
+
+    footEl.appendChild(el('span', null, `${n}개 선택`));
+    footEl.appendChild(el('span', 'gt-spacer'));
+    if (n) {
+      act('삭제', 'danger', () => { armed = true; draw(); });
+      act('보관', '', doArchive);
+    }
+    act('취소', '', exitSelect);
+  }
+
+  async function doArchive() {
+    const recs = pickedRecords();
+    if (!recs.length) return;
+    busy = `보관 중 0/${recs.length}`; draw();
+    let ok = 0; const bad = [];
+    for (let i = 0; i < recs.length; i += 1) {
+      try { await GT.convops.archive(recs[i].id, true); ok += 1; }
+      catch (e) { bad.push(recs[i].title); }
+      busy = `보관 중 ${i + 1}/${recs.length}`; draw();
+    }
+    GT.tty.system('info', `보관 ${ok}건${bad.length ? ` · 실패 ${bad.length}건: ${bad.join(', ')}` : ''}`);
+    exitSelect();
+    await refresh();
+  }
+
+  async function doRemove() {
+    const recs = pickedRecords();
+    if (!recs.length) return;
+
+    // 무엇을 지웠는지 스크롤백에 남긴다. 되돌릴 수 없으니 기록이라도 있어야 한다.
+    const listing = document.createDocumentFragment();
+    listing.appendChild(el('div', null, `${recs.length}개를 삭제한다 — 되돌릴 수 없다`));
+    recs.forEach((r) => listing.appendChild(el('div', 'gt-dim', `  ${r.id.slice(0, 8)}  ${r.title}`)));
+    GT.tty.system('warn', null, listing);
+
+    busy = `삭제 중 0/${recs.length}`; draw();
+    const res = await GT.convops.removeMany(recs.map((r) => r.id), (i, n) => { busy = `삭제 중 ${i}/${n}`; draw(); });
+
+    const openId = currentId();
+    GT.tty.system(res.failed.length ? 'warn' : 'info',
+      `삭제 ${res.done.length}건${res.failed.length ? ` · 실패 ${res.failed.length}건` : ''}`);
+    res.failed.forEach((f) => GT.tty.system('error', `  ${String(f.id).slice(0, 8)} — ${f.error}`));
+
+    exitSelect();
+    if (openId && res.done.includes(openId)) GT.navigate.newChat();
+    await refresh();
   }
 
   function open(r) {
@@ -345,6 +451,8 @@ GT.sidebar = (function () {
   return {
     build, refresh, loadMore, rebuild, draw, shouldShow, toggle, isOpen, closeMenu,
     chats: () => rows.filter((r) => r.kind === 'chat'),
+    enterSelect, exitSelect,
+    get selecting() { return selecting; },
     enterFilter, exitFilter, toggleGroup,
     get hasMore() { return hasMore; },
     get filtering() { return filtering; },

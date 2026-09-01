@@ -241,6 +241,7 @@
     if (!GT.tty.visible()) return;
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); GT.commands.openPalette(); return; }
     if (e.key === 'b' && e.ctrlKey) { e.preventDefault(); GT.sidebar.toggle(); return; }
+    if (e.key === 'Escape' && GT.sidebar.selecting) { e.preventDefault(); GT.sidebar.exitSelect(); return; }
     // 입력창이 비어 있을 때만 '/' 를 사이드바 검색으로 가로챈다.
     if (e.key === '/' && !e.metaKey && !e.ctrlKey && !GT.sidebar.filtering
         && GT.tty.ui.input && GT.tty.ui.input.value === '' && GT.sidebar.element

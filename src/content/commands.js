@@ -119,6 +119,13 @@ GT.commands = (function () {
     if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
   });
 
+  def(':select', '대화 다중 선택 모드 (원본에 없는 기능)', () => {
+    if (!GT.sidebar.isOpen()) return err('사이드바를 먼저 열어라 (^B)');
+    if (GT.sidebar.selecting) { GT.sidebar.exitSelect(); return info('선택 모드 종료'); }
+    GT.sidebar.enterSelect();
+    info('행을 클릭해 고르고, 아래 버튼으로 삭제·보관한다. esc 로 나간다');
+  });
+
   def(':sidebar', '사이드바 — on | off | toggle | more | width <n> | clear-cache', async (args) => {
     const a = (args[0] || 'toggle').toLowerCase();
     if (a === 'more') {

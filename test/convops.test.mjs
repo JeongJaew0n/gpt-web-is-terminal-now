@@ -11,7 +11,8 @@ t('모달을 띄우지 않는다', !/\bprompt\(|\bconfirm\(|\balert\(/.test(sb +
 t('삭제는 yes 없이는 실행 안 된다', /!== 'yes'\)/.test(cmds));
 t('삭제 전에 대상을 보여준다', /대상: \$\{c\.title\}/.test(cmds));
 t('메뉴의 삭제는 두 번 눌러야 한다', /armed/.test(sb));
-t('미검증 표시', /\[미검증\]/.test(ops));
+t('삭제가 되돌릴 수 없음을 코드에 명시', /되돌릴 수 없다/.test(ops));
+t('미검증 표시가 남아 있지 않다', !/\[미검증\]/.test(ops));
 t('공유·프로젝트 이동은 다루지 않는다고 명시', /unsupported/.test(ops) && /공유하기/.test(ops));
 t('이름 바꾸기는 입력줄에 명령을 채운다', /:rename \$\{rec\.id\.slice/.test(sb));
 
@@ -43,6 +44,48 @@ t('이름 바꾸기는 입력줄에 명령을 채운다', /:rename \$\{rec\.id\.
 
   t('id 를 URL 인코딩한다', (await C.rename('a/b', 'x'), calls[5].url.includes('a%2Fb')));
   t('불리언을 강제한다', (await C.pin('abc', 'truthy'), calls[6].body.is_starred === true));
+}
+
+// --- 다중 삭제: 하나가 실패해도 끝까지 간다 ---
+{
+  const seen = [];
+  const sandbox = { console, Object, Array, JSON, Promise, Error, String, Number, Boolean, encodeURIComponent };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  sandbox.GT = { oai: { patch: async (url) => {
+    const id = url.split('/').pop();
+    seen.push(id);
+    if (id === 'bad') throw new Error('500');
+    if (id === 'soft') return { success: false };
+    return { success: true };
+  } } };
+  vm.createContext(sandbox);
+  vm.runInContext(ops, sandbox, { filename: 'convops.js' });
+  const C = sandbox.GT.convops;
+
+  const steps = [];
+  const res = await C.removeMany(['a', 'bad', 'b', 'soft', 'c'], (i, n) => steps.push(`${i}/${n}`));
+
+  t('실패해도 멈추지 않는다', seen.length === 5);
+  t('성공 3건', res.done.length === 3 && res.done.join(',') === 'a,b,c');
+  t('실패 2건을 사유와 함께', res.failed.length === 2
+    && res.failed[0].id === 'bad' && res.failed[0].error === '500'
+    && res.failed[1].id === 'soft');
+  t('진행 상황을 보고한다', steps.length === 5 && steps[4] === '5/5');
+  t('순차로 부른다', seen.join(',') === 'a,bad,b,soft,c');
+}
+
+// --- 선택 UI ---
+{
+  const sbSrc = fs.readFileSync('src/content/sidebar.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  t('선택 모드는 기본 꺼짐', /let selecting = false/.test(sbSrc));
+  t('체크박스를 그린다', /\[×\]|\[ \]/.test(sbSrc));
+  t('삭제는 두 단계(armed)', /if \(armed\)/.test(sbSrc) && /정말 삭제/.test(sbSrc));
+  t('무엇을 지우는지 스크롤백에 남긴다', /되돌릴 수 없다`\)\);/.test(sbSrc) || /삭제한다 — 되돌릴 수 없다/.test(sbSrc));
+  t('진행 상황 표시', /삭제 중 \$\{i\}\/\$\{n\}/.test(sbSrc));
+  t('실패 건을 개별로 보고', /res\.failed\.forEach/.test(sbSrc));
+  t('esc 로 빠져나온다', /GT\.sidebar\.selecting.*exitSelect|selecting\) \{ e\.preventDefault\(\); GT\.sidebar\.exitSelect/.test(idx));
+  t('선택 중에는 행 클릭이 이동이 아니라 토글', /if \(selecting\) \{ togglePick/.test(sbSrc));
 }
 
 let bad = 0;
