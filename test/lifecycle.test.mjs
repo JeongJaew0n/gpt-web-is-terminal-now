@@ -19,7 +19,8 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('주기적 감시', /every\(4000/.test(src));
   t('shutdown 이 disposer 를 모두 실행', /disposers\.forEach/.test(src));
   t('shutdown 이 tty 를 해체', /GT\.tty\.destroy\(\)/.test(src));
-  t('페이지 이탈에도 정리', /'pagehide'/.test(src));
+  t('pagehide 로는 해체하지 않는다', !/listen\(window, 'pagehide'/.test(src));
+  t('pagehide 를 쓰지 않는 이유가 적혀 있다', /bfcache/.test(src));
   t('중복 shutdown 방지', /if \(gone\) return;/.test(src));
 }
 
@@ -45,6 +46,14 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('GT_BUILD 정의', /var GT_BUILD = '/.test(d));
   t('부팅 줄에 빌드 표시', /build \$\{GT_BUILD\}/.test(src));
   t(':version 명령 존재', /def\(':version'/.test(fs.readFileSync('src/content/commands.js','utf8')));
+}
+
+// 6. 물러날 때 조용히 사라지지 않는다
+{
+  t('물러남을 알린다', /notifyGone/.test(src));
+  t('원본 UI 라는 걸 명시', /지금 보이는 건 원본 UI/.test(src));
+  t('새로고침하라고 안내', /새로고침해라/.test(src));
+  t('알림은 한 번만', /getElementById\('gpt-term-gone'\)\) return/.test(src));
 }
 
 let bad = 0;

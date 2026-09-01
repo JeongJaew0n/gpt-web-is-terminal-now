@@ -84,6 +84,30 @@
     disposers.length = 0;
     try { GT.tty.destroy(); } catch (_) {}
     console.debug('[gpt-term] 물러남:', why, '— 페이지를 새로고침하면 새 코드로 다시 붙는다');
+    notifyGone(why);
+  }
+
+  // 조용히 사라지면 원본 UI 가 그대로 보이는데, 그게 터미널인 줄 알고
+  // "왜 안 되지?" 를 헤매게 된다. 실제로 그렇게 헷갈린 적이 있다.
+  // 작게, 그러나 눈에 보이게 알린다.
+  function notifyGone(why) {
+    if (document.getElementById('gpt-term-gone')) return;
+    const box = document.createElement('div');
+    box.id = 'gpt-term-gone';
+    box.setAttribute('style', [
+      'position:fixed', 'right:16px', 'bottom:16px', 'z-index:2147483647',
+      'background:#161b22', 'color:#c9d1d9', 'border:1px solid #d29922',
+      'padding:10px 14px', 'font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace',
+      'display:flex', 'gap:12px', 'align-items:center', 'max-width:420px'
+    ].join(';'));
+    const txt = document.createElement('div');
+    txt.textContent = `gpt-term 이 물러났다 (${why}). 지금 보이는 건 원본 UI 다 — 페이지를 새로고침해라.`;
+    const close = document.createElement('button');
+    close.textContent = '닫기';
+    close.setAttribute('style', 'background:none;border:1px solid #30363d;color:#8b949e;font:inherit;padding:2px 8px;cursor:pointer;flex:0 0 auto');
+    close.addEventListener('click', () => box.remove());
+    box.appendChild(txt); box.appendChild(close);
+    (document.body || document.documentElement).appendChild(box);
   }
 
   const contextAlive = () => {
@@ -283,7 +307,10 @@
     }
   }, true);
 
-  listen(window, 'pagehide', () => shutdown('페이지 이탈'));
+  // pagehide 에서는 해체하지 않는다.
+  // 진짜 언로드면 어차피 문서가 사라지므로 정리할 이유가 없고,
+  // bfcache 로 들어간 것이라면 페이지가 되살아나는데 우리는 이미 자폭한 뒤다.
+  // 해체는 '확장이 다시 로드됐다'는 신호 하나에만 반응한다.
 
   // 사이드바 — 최초 로드, 대화 전환 시 갱신, 창 크기 변화 시 표시 여부 재계산
   if (GT.sidebar.shouldShow()) GT.sidebar.refresh();
