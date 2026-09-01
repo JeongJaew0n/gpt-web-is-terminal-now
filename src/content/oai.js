@@ -42,5 +42,19 @@ GT.oai = (function () {
     return r.json();
   }
 
-  return { get, forget() { token = null; at = 0; } };
+  async function patch(path, body, opts) {
+    const retry = !(opts && opts.noRetry);
+    const t = await getToken();
+    const r = await fetch(path, {
+      method: 'PATCH',
+      headers: { accept: 'application/json', 'content-type': 'application/json', Authorization: 'Bearer ' + t },
+      credentials: 'include',
+      body: JSON.stringify(body || {})
+    });
+    if (r.status === 401 && retry) { token = null; return patch(path, body, { noRetry: true }); }
+    if (!r.ok) throw new Error(String(r.status));
+    return r.json();
+  }
+
+  return { get, patch, forget() { token = null; at = 0; } };
 })();

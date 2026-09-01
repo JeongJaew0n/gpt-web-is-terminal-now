@@ -119,6 +119,20 @@ GT.theme = (function () {
   text-overflow: ellipsis; white-space: nowrap; }
 .gt-sb-row[data-cur="1"] .gt-sb-title { color: var(--gt-fg); }
 .gt-sb-pin { color: var(--gt-yellow); flex: 0 0 auto; }
+.gt-sb-dots { color: var(--gt-fg-faint); flex: 0 0 auto; padding: 0 2px; opacity: 0; cursor: default; }
+.gt-sb-row:hover .gt-sb-dots { opacity: 1; }
+.gt-sb-dots:hover { color: var(--gt-fg); }
+.gt-ctx {
+  position: absolute; z-index: 12; min-width: 176px;
+  background: var(--gt-bg-1); border: 1px solid var(--gt-border);
+  box-shadow: 0 12px 32px rgba(1,4,9,0.75); padding: 4px 0; font-size: 12.5px;
+}
+.gt-ctx-item { padding: 4px 12px; color: var(--gt-fg-dim); cursor: default; white-space: nowrap; }
+.gt-ctx-item:hover { background: var(--gt-bg-3); color: var(--gt-fg); }
+.gt-ctx-item[data-danger="1"] { color: var(--gt-red); }
+.gt-ctx-item[data-armed="1"] { background: var(--gt-red); color: var(--gt-bg-1); }
+.gt-ctx-note { padding: 6px 12px 2px; margin-top: 4px; border-top: 1px solid var(--gt-bg-3);
+  color: var(--gt-fg-faint); font-size: 11px; }
 .gt-sb-empty { padding: 10px 12px; color: var(--gt-fg-faint); font-size: 11.5px; }
 .gt-sb-foot { display: flex; align-items: center; gap: 8px; padding: 5px 12px; flex: 0 0 auto;
   border-top: 1px solid var(--gt-bg-3); color: var(--gt-fg-faint); font-size: 11px; }

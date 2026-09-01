@@ -62,6 +62,63 @@ GT.commands = (function () {
     GT.navigate.to(lastList[n].href);
   });
 
+  // 대화 조작 — 원본 "..." 메뉴에 해당한다.
+  // 대상은 ls 번호 또는 대화 id 앞자리로 지정한다.
+  function findChat(key) {
+    if (key == null || key === '') return null;
+    const n = Number(key);
+    if (Number.isInteger(n) && lastList[n]) return lastList[n];
+    const pool = lastList.concat(GT.sidebar.chats ? GT.sidebar.chats() : []);
+    return pool.find((c) => c.id && c.id.startsWith(String(key)))
+      || pool.find((c) => (c.title || '').toLowerCase().includes(String(key).toLowerCase()))
+      || null;
+  }
+
+  const needTarget = (key) => {
+    const c = findChat(key);
+    if (!c) err(`대상을 못 찾았다: ${key} — ls 번호나 id 앞자리로 지정해라`);
+    return c;
+  };
+
+  def(':rename', '이름 바꾸기 — :rename <n|id> <새 이름>', async (args) => {
+    const c = needTarget(args[0]); if (!c) return;
+    const name = args.slice(1).join(' ').trim();
+    if (!name) return err(':rename <n|id> <새 이름>');
+    await GT.convops.rename(c.id, name);
+    info(`이름 변경: ${name}`);
+    if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
+  });
+
+  def(':pin', '고정 — :pin <n|id> [off]', async (args) => {
+    const c = needTarget(args[0]); if (!c) return;
+    const on = String(args[1] || '').toLowerCase() !== 'off';
+    await GT.convops.pin(c.id, on);
+    info(on ? `고정: ${c.title}` : `고정 해제: ${c.title}`);
+    if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
+  });
+
+  def(':archive', '보관 — :archive <n|id> [off]', async (args) => {
+    const c = needTarget(args[0]); if (!c) return;
+    const on = String(args[1] || '').toLowerCase() !== 'off';
+    await GT.convops.archive(c.id, on);
+    info(on ? `보관: ${c.title}` : `보관 해제: ${c.title}`);
+    if (on && location.pathname === '/c/' + c.id) GT.navigate.newChat();
+    if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
+  });
+
+  // 삭제는 되돌릴 수 없다. 확인 없이는 실행하지 않는다.
+  def(':rm', '삭제 — :rm <n|id> yes', async (args) => {
+    const c = needTarget(args[0]); if (!c) return;
+    if (String(args[1] || '').toLowerCase() !== 'yes') {
+      warn(`되돌릴 수 없다. 지우려면: :rm ${c.id.slice(0, 8)} yes`);
+      return info(`대상: ${c.title}`);
+    }
+    await GT.convops.remove(c.id);
+    warn(`삭제 요청: ${c.title}`);
+    if (location.pathname === '/c/' + c.id) GT.navigate.newChat();
+    if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
+  });
+
   def(':sidebar', '사이드바 — on | off | toggle | more | width <n> | clear-cache', async (args) => {
     const a = (args[0] || 'toggle').toLowerCase();
     if (a === 'more') {

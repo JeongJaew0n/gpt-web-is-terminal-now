@@ -84,7 +84,12 @@ GT.sidebar = (function () {
       else t.textContent = r.title;
       row.appendChild(t);
       if (r.pinned) row.appendChild(el('span', 'gt-sb-pin', '★'));
+      const dots = el('span', 'gt-sb-dots', '⋯');
+      dots.title = '대화 메뉴';
+      dots.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); menu(r, dots); });
+      row.appendChild(dots);
       row.addEventListener('mousedown', (e) => { e.preventDefault(); open(r); });
+      row.addEventListener('contextmenu', (e) => { e.preventDefault(); menu(r, row); });
       listEl.appendChild(row);
     });
 
@@ -120,6 +125,94 @@ GT.sidebar = (function () {
 
     filterEl.hidden = !filtering;
     if (filtering) filterEl.querySelector('input').value = query;
+  }
+
+  // 원본 사이드바의 "..." 에 해당한다. 동작은 백엔드를 직접 부른다(GT.convops).
+  let menuEl = null;
+
+  function closeMenu() {
+    if (menuEl) { menuEl.remove(); menuEl = null; }
+  }
+
+  function menu(rec, anchor) {
+    closeMenu();
+    const box = el('div', 'gt-ctx');
+    const rect = anchor.getBoundingClientRect();
+    const host = GT.tty.shadow.querySelector('.gt-root').getBoundingClientRect();
+    box.style.top = Math.round(rect.bottom - host.top + 2) + 'px';
+    box.style.left = Math.round(rect.left - host.left) + 'px';
+
+    const act = (label, fn, danger) => {
+      const it = el('div', 'gt-ctx-item', label);
+      if (danger) it.dataset.danger = '1';
+      it.addEventListener('mousedown', async (e) => {
+        e.preventDefault(); e.stopPropagation();
+        closeMenu();
+        try { await fn(); } catch (err) { GT.tty.system('error', `실패: ${err.message}`); }
+      });
+      box.appendChild(it);
+      return it;
+    };
+
+    // 모달을 띄우지 않는다. 입력줄에 명령을 채워주고 편집하게 한다 — 터미널이 그렇게 동작한다.
+    act('이름 바꾸기', () => {
+      const inp = GT.tty.ui.input;
+      inp.value = `:rename ${rec.id.slice(0, 8)} ${rec.title}`;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      GT.tty.focus();
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+      GT.tty.system('info', '이름을 고치고 Enter');
+    });
+
+    act(rec.pinned ? '고정 해제' : '채팅 고정', async () => {
+      await GT.convops.pin(rec.id, !rec.pinned);
+      GT.tty.system('info', rec.pinned ? '고정 해제됨' : '고정됨');
+      await refresh();
+    });
+
+    act('아카이브에 보관', async () => {
+      await GT.convops.archive(rec.id, true);
+      GT.tty.system('info', `보관됨 — :archive ${rec.id.slice(0, 8)} off 로 되돌린다`);
+      if (currentId() === rec.id) GT.navigate.newChat();
+      await refresh();
+    });
+
+    // 삭제는 되돌릴 수 없다. 한 번 더 누르게 한다.
+    const del = act('삭제', () => {}, true);
+    del.addEventListener('mousedown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (del.dataset.armed) return;
+      del.dataset.armed = '1';
+      del.textContent = '정말 삭제? 한 번 더';
+      setTimeout(() => { if (del.isConnected) { del.dataset.armed = ''; del.textContent = '삭제'; } }, 4000);
+      const once = async (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        del.removeEventListener('mousedown', once);
+        closeMenu();
+        try {
+          await GT.convops.remove(rec.id);
+          GT.tty.system('warn', `삭제 요청: ${rec.title}`);
+          if (currentId() === rec.id) GT.navigate.newChat();
+          await refresh();
+        } catch (err) { GT.tty.system('error', `삭제 실패: ${err.message}`); }
+      };
+      setTimeout(() => del.addEventListener('mousedown', once), 0);
+    }, true);
+
+    const note = el('div', 'gt-ctx-note', '공유·프로젝트 이동은 :q 로 원본에서');
+    box.appendChild(note);
+
+    GT.tty.shadow.querySelector('.gt-root').appendChild(box);
+    menuEl = box;
+    setTimeout(() => {
+      const away = (e) => {
+        if (menuEl && !menuEl.contains(e.composedPath ? e.composedPath()[0] : e.target)) {
+          closeMenu();
+          GT.tty.shadow.removeEventListener('mousedown', away, true);
+        }
+      };
+      GT.tty.shadow.addEventListener('mousedown', away, true);
+    }, 0);
   }
 
   function open(r) {
@@ -250,7 +343,8 @@ GT.sidebar = (function () {
   const isOpen = () => !!root && root.isConnected;
 
   return {
-    build, refresh, loadMore, rebuild, draw, shouldShow, toggle, isOpen,
+    build, refresh, loadMore, rebuild, draw, shouldShow, toggle, isOpen, closeMenu,
+    chats: () => rows.filter((r) => r.kind === 'chat'),
     enterFilter, exitFilter, toggleGroup,
     get hasMore() { return hasMore; },
     get filtering() { return filtering; },

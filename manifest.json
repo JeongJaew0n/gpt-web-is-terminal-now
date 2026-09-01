@@ -43,6 +43,7 @@
         "src/content/store.js",
         "src/content/chats.js",
         "src/content/conversation.js",
+        "src/content/convops.js",
         "src/content/markdown.js",
         "src/content/theme.js",
         "src/content/tty.js",
