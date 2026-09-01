@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "gpt-term",
+  "version": "0.1.0",
+  "description": "ChatGPT 웹을 터미널 TUI 로 재구성한다. 개인용 언팩 확장.",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*"
+  ],
+  "action": {
+    "default_title": "gpt-term 켜기/끄기"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false,
+      "js": [
+        "src/main/tap.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "run_at": "document_start",
+      "world": "ISOLATED",
+      "all_frames": false,
+      "js": [
+        "src/shared/defaults.js",
+        "src/content/protocol.js",
+        "src/content/config.js",
+        "src/content/oai.js",
+        "src/content/store.js",
+        "src/content/chats.js",
+        "src/content/conversation.js",
+        "src/content/markdown.js",
+        "src/content/theme.js",
+        "src/content/tty.js",
+        "src/content/palette.js",
+        "src/content/sidebar.js",
+        "src/content/compose.js",
+        "src/content/navigate.js",
+        "src/content/commands.js",
+        "src/content/health.js",
+        "src/content/index.js"
+      ]
+    }
+  ],
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  }
+}
