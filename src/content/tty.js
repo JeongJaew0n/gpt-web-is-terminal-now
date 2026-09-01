@@ -125,6 +125,17 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       const sel = shadow.getSelection ? shadow.getSelection() : document.getSelection();
       return sel ? String(sel).length : 0;
     };
+    // 목록은 본문 위에 떠 있다. 바깥을 누르면 비켜난다 — 오버레이의 기본 동작이다.
+    // 목록 자신·손잡이·메뉴·팔레트를 누른 것은 '바깥'이 아니다.
+    const INSIDE_OVERLAY = '.gt-sidebar, .gt-burger, .gt-ctx, .gt-palette, .gt-scrim';
+    root.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      if (!GT.sidebar || !GT.sidebar.isOpen || !GT.sidebar.isOpen()) return;
+      const el = hit(e);
+      if (el && el.closest && el.closest(INSIDE_OVERLAY)) return;
+      GT.sidebar.dismiss();
+    });
+
     root.addEventListener('mouseup', (e) => {
       if (e.button !== 0) return;
       if (onControl(hit(e))) return;

@@ -156,6 +156,24 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t(':health 가 찍는다', /사이드바: 표시=/.test(cmds));
 }
 
+// --- 7. 본문을 누르면 목록이 비켜난다 (오버레이 기본 동작) ---
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  const i = tty.indexOf("root.addEventListener('mousedown'");
+  const block = tty.slice(i, i + 500);
+
+  t('본문 mousedown 에서 dismiss 한다', /GT\.sidebar\.dismiss\(\)/.test(block));
+  t('열려 있을 때만 동작', /isOpen\(\)\) return;/.test(block));
+  t('좌클릭만', /e\.button !== 0\) return;/.test(block));
+  t('목록 자신을 누른 건 바깥이 아니다', /\.gt-sidebar/.test(tty) && /INSIDE_OVERLAY/.test(block));
+  t('손잡이를 누른 것도 제외', /\.gt-burger/.test(tty.slice(tty.indexOf('INSIDE_OVERLAY'), tty.indexOf('INSIDE_OVERLAY') + 160)));
+  t('메뉴·팔레트도 제외', /gt-ctx/.test(tty) && /gt-palette/.test(tty));
+  t('shadow 를 뚫고 실제 대상을 본다', /hit\(e\)/.test(block));
+  t('Escape 로도 닫힌다', /Escape' && GT\.sidebar\.isOpen\(\)/.test(idx));
+  t('팔레트가 열려 있으면 Escape 는 팔레트 몫', /!GT\.palette\.isOpen\(\)/.test(idx));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');
