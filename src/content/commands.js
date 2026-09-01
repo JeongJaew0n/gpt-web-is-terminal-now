@@ -111,10 +111,45 @@ GT.commands = (function () {
     } catch (e) { err(String(e.message || e)); }
   });
 
-  def(':model', '현재 모델 — 전환은 아직 원본 UI 에서', () => {
+  def(':model', '모델 — 인자 없으면 목록, :model <n|이름> 으로 전환', async (args) => {
     const last = [...GT.store.state.messages].reverse().find((m) => m.model);
-    info(last ? `현재 응답 모델: ${last.model}` : '아직 응답이 없어 모델을 알 수 없다');
-    warn('모델 전환은 v1 미구현이다. :q 로 원본 UI 에서 바꾼 뒤 돌아오면 된다.');
+    if (!GT.picker.available()) {
+      return err('원본의 모델 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
+    }
+    if (!args.length) {
+      const list = await GT.picker.models();
+      if (!list || !list.length) return err('모델 목록을 읽지 못했다');
+      GT.tty.system('info', null, table(list.map((m) => [String(m.index), m.label, m.current ? '● 현재' : ''])));
+      if (last) info(`직전 응답 모델 슬러그: ${last.model}`);
+      return info(':model <번호|이름> 으로 전환한다');
+    }
+    const r = await GT.picker.chooseModel(args.join(' '));
+    if (r.ok) return info(`모델 → ${r.picked}`);
+    if (r.reason === 'no-match') return err(`일치하는 모델이 없다. 가능: ${(r.had || []).join(', ')}`);
+    err(`전환 실패 (${r.reason})`);
+  });
+
+  def(':effort', '추론 수준 — 인자 없으면 현재값, :effort <n|이름> 으로 전환', async (args) => {
+    if (!GT.picker.available()) {
+      return err('원본의 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
+    }
+    const cur = GT.picker.current().effort;
+    if (!args.length) {
+      info(`현재 추론 수준: ${cur || '알 수 없음'}`);
+      const list = await GT.picker.efforts();
+      if (!list) {
+        return warn('하위 메뉴를 열지 못했다 — 원본이 합성 이벤트로는 안 열어준다. :q 로 원본에서 바꿔라');
+      }
+      GT.tty.system('info', null, table(list.map((t, i) => [String(i), t, t === cur ? '● 현재' : ''])));
+      return info(':effort <번호|이름> 으로 전환한다');
+    }
+    const r = await GT.picker.chooseEffort(args.join(' '));
+    if (r.ok) return info(`추론 수준 → ${r.picked}`);
+    if (r.reason === 'submenu-unavailable') {
+      return warn('하위 메뉴를 열지 못했다 — :q 로 원본 UI 에서 바꿔라');
+    }
+    if (r.reason === 'no-match') return err(`일치 없음. 가능: ${(r.had || []).join(', ')}`);
+    err(`전환 실패 (${r.reason})`);
   });
 
   def(':w', '대화를 마크다운으로 클립보드에 복사', async () => {

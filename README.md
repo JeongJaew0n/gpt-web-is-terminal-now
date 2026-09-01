@@ -53,7 +53,7 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | `Ctrl` + `B` | 같은 토글 |
 | `/` (입력창이 빈 상태) | 사이드바 검색 |
 
-명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:theme <name>` `:config` `:set <k> <v>` `:model` `:w` `:health` `:options` `clear` `:q` `:reload`
+명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `clear` `:q` `:reload`
 
 ## 배지
 
@@ -137,7 +137,7 @@ src/options/options.html     설정 화면
 
 ## 아직 안 된 것
 
-- 모델 전환 (`:model` 은 현재 모델만 보여준다)
+- 모델 전환 (`:model` `:effort` 은 현재 모델만 보여준다)
 - 탭(여러 대화 동시) — 현재 대화 하나만
 - 메시지 편집 · 재생성 · 분기
 - 첨부 · 이미지 업로드
@@ -158,6 +158,7 @@ node test/stream.test.mjs      # SSE 판별 — 추론·툴·숨김 본문이 �
 node test/lifecycle.test.mjs   # 확장 재로드 시 자진 해체
 node test/replay.test.mjs      # 녹화한 실제 스트림을 tap.js 에 재생
 node test/sidebar.test.mjs     # 목록 손잡이와 표시 규칙
+node test/picker.test.mjs      # 모델·추론 수준 선택 (원본 메뉴 조작)
 ```
 
 ## 검증 상태

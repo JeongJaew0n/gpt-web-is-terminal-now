@@ -49,6 +49,7 @@
         "src/content/palette.js",
         "src/content/sidebar.js",
         "src/content/compose.js",
+        "src/content/picker.js",
         "src/content/navigate.js",
         "src/content/commands.js",
         "src/content/health.js",
