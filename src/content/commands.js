@@ -250,6 +250,11 @@ GT.commands = (function () {
     if (rs.length) rs.forEach((r) => warn(r)); else info('경고 없음');
     const sup = GT.store.state.superseded;
     info(`대화 목록 출처: ${GT.sidebar.source || GT.chats.source || '미조회'}`);
+    const sb = GT.sidebar.state ? GT.sidebar.state() : null;
+    if (sb) {
+      info(`사이드바: 표시=${sb.visible} 붙음=${sb.attached} 비켜남=${sb.dismissed} `
+        + `직접켬=${sb.forcedOpen} 열면닫기=${sb.closeOnOpen} 선택모드=${sb.selecting} 행=${sb.rows}`);
+    }
     info(`onBreak = ${GT.config.get('onBreak')} · 드리프트 임계 ${GT.config.get('drift.threshold')}%`);
     const orph = GT.store.state.orphanDeltas;
     if (orph) info(`add 없이 도착한 본문 델타 ${orph}건`);

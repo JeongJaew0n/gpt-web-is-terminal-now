@@ -137,6 +137,25 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('토글은 DOM 이 아니라 표시 조건으로 뒤집는다', /force === undefined \? !shouldShow\(\)/.test(sb));
 }
 
+// --- 5. 보이지 않는 컨트롤이 클릭을 가로채면 안 된다 ---
+{
+  const css = fs.readFileSync('src/content/theme.js', 'utf8');
+  const i = css.indexOf('.gt-sb-dots {');
+  const block = css.slice(i, css.indexOf('}', i));
+  t('숨은 ⋯ 는 클릭을 받지 않는다', /pointer-events:\s*none/.test(block));
+  t('행에 마우스를 올리면 받는다', /\.gt-sb-row:hover \.gt-sb-dots \{[^}]*pointer-events:\s*auto/.test(css));
+  t('왜 그런지 주석에 남겼다', /가로챈다/.test(css));
+}
+
+// --- 6. 상태를 한 줄로 볼 수 있어야 한다 (재현 안 될 때) ---
+{
+  const sb = fs.readFileSync('src/content/sidebar.js', 'utf8');
+  const cmds = fs.readFileSync('src/content/commands.js', 'utf8');
+  t('사이드바 상태를 노출한다', /state: \(\) => \(\{/.test(sb));
+  t('dismissed·forcedOpen 을 포함', /dismissed, forcedOpen, selecting/.test(sb));
+  t(':health 가 찍는다', /사이드바: 표시=/.test(cmds));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

@@ -471,6 +471,12 @@ GT.sidebar = (function () {
     build, refresh, loadMore, rebuild, draw, shouldShow, toggle, isOpen, closeMenu,
     chats: () => rows.filter((r) => r.kind === 'chat'),
     enterSelect, exitSelect, dismiss,
+    state: () => ({
+      visible: GT.config.get('sidebar.visible'),
+      closeOnOpen: GT.config.get('sidebar.closeOnOpen'),
+      dismissed, forcedOpen, selecting,
+      attached: isOpen(), rows: chatRows().length, source
+    }),
     get selecting() { return selecting; },
     enterFilter, exitFilter, toggleGroup,
     get hasMore() { return hasMore; },

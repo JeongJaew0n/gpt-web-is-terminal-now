@@ -119,8 +119,12 @@ GT.theme = (function () {
   text-overflow: ellipsis; white-space: nowrap; }
 .gt-sb-row[data-cur="1"] .gt-sb-title { color: var(--gt-fg); }
 .gt-sb-pin { color: var(--gt-yellow); flex: 0 0 auto; }
-.gt-sb-dots { color: var(--gt-fg-faint); flex: 0 0 auto; padding: 0 2px; opacity: 0; cursor: default; }
-.gt-sb-row:hover .gt-sb-dots { opacity: 1; }
+/* 보이지 않는 동안에는 클릭도 받지 않는다.
+   opacity:0 만 주면 자리는 그대로 차지한 채 클릭을 가로챈다 —
+   행 오른쪽을 눌렀는데 대화가 안 열리고 메뉴가 뜨는 원인이었다. */
+.gt-sb-dots { color: var(--gt-fg-faint); flex: 0 0 auto; padding: 0 2px;
+  opacity: 0; pointer-events: none; cursor: default; }
+.gt-sb-row:hover .gt-sb-dots { opacity: 1; pointer-events: auto; }
 .gt-sb-dots:hover { color: var(--gt-fg); }
 .gt-ctx {
   position: absolute; z-index: 12; min-width: 176px;
