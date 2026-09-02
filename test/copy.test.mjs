@@ -13,6 +13,12 @@ function makeDom() {
       },
       set textContent(v) { this._text = String(v); this.children = []; },
       appendChild(c) { this.children.push(c); return c; },
+      replaceChild(next, old) {
+        const i = this.children.indexOf(old);
+        if (i < 0) throw new Error('replaceChild: 없는 자식');
+        this.children[i] = next;
+        return old;
+      },
       setAttribute(k, v) { this.attrs[k] = v; },
       addEventListener(type, fn) { (this.listeners[type] = this.listeners[type] || []).push(fn); },
       fire(type, ev) { (this.listeners[type] || []).forEach((f) => f(ev || { preventDefault(){}, stopPropagation(){} })); },
@@ -32,6 +38,7 @@ function makeDom() {
   };
   return {
     createElement: mk,
+    createElementNS: (ns, tag) => { const n = mk(tag); n.ns = ns; return n; },
     createTextNode: (t) => ({ tag: '#text', children: [], textContent: t, find: () => null, all: (p, a) => a || [] }),
     createDocumentFragment: () => mk('#frag')
   };
@@ -52,6 +59,17 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 const isBtn = (n) => n.tag === 'button' && /gt-copy/.test(n.className);
 const wait = () => new Promise((r) => setTimeout(r, 0));
 
+// 버튼 안의 svg 를 path 개수와 모양으로 구분한다.
+function iconKind(b) {
+  const svg = b.children.find((c) => c.tag === 'svg');
+  if (!svg) return null;
+  const ds = svg.children.map((p) => p.attrs.d || '');
+  if (ds.length === 2 && /a1\.3 1\.3/.test(ds[0])) return 'copy';
+  if (ds.length === 1) return 'ok';
+  if (ds.length === 2) return 'fail';
+  return null;
+}
+
 // --- 코드블록에 버튼이 붙는다 ---
 {
   const copied = [];
@@ -64,8 +82,21 @@ const wait = () => new Promise((r) => setTimeout(r, 0));
   await wait();
   t('코드 본문을 그대로 복사한다', copied[0] === 'const a = 1;\nconst b = 2;');
   t('울타리(```)는 빼고 복사한다', !/```/.test(copied[0]));
-  t('성공하면 라벨이 바뀐다', btns[0].textContent === '복사됨');
+  t('성공하면 아이콘이 체크로 바뀐다', iconKind(btns[0]) === 'ok');
   t('상태를 dataset 으로 표시', btns[0].dataset.state === 'ok');
+  t('스크린리더용 이름도 바뀐다', btns[0].attrs['aria-label'] === '복사됨');
+}
+
+// --- 글자가 아니라 아이콘이다 ---
+{
+  const M = load({ copy: () => Promise.resolve(true) });
+  const b = M.render('```\nx\n```').all(isBtn)[0];
+  t('버튼에 글자를 넣지 않는다', b.textContent === '');
+  t('처음엔 복사 아이콘', iconKind(b) === 'copy');
+  t('아이콘은 그려서 만든다', b.children[0].ns === 'http://www.w3.org/2000/svg');
+  t('색은 글자색을 따라간다', b.children[0].children.every((p) => p.attrs.stroke === 'currentColor'));
+  t('아이콘은 보조기술에서 숨긴다', b.children[0].attrs['aria-hidden'] === 'true');
+  t('이름은 버튼이 갖는다', b.attrs['aria-label'] === '복사' && b.title === '복사');
 }
 
 // --- 코드블록이 여럿이면 각자 자기 것만 ---
@@ -91,19 +122,20 @@ const wait = () => new Promise((r) => setTimeout(r, 0));
   const M = load({ copy: () => Promise.resolve(false) });
   const b = M.render('```\nx\n```').all(isBtn)[0];
   b.fire('click'); await wait();
-  t('실패하면 실패라고 보여준다', b.textContent === '복사 실패' && b.dataset.state === 'fail');
+  t('실패하면 실패라고 보여준다', iconKind(b) === 'fail' && b.dataset.state === 'fail');
+  t('실패도 이름으로 알린다', b.attrs['aria-label'] === '복사 실패');
 }
 {
   const M = load({ copy: () => Promise.reject(new Error('nope')) });
   const b = M.render('```\nx\n```').all(isBtn)[0];
   b.fire('click'); await wait();
-  t('예외가 터져도 화면이 멈추지 않는다', b.textContent === '복사 실패');
+  t('예외가 터져도 화면이 멈추지 않는다', iconKind(b) === 'fail');
 }
 {
   const M = load({});                       // tty.copy 가 아직 없는 순간
   const b = M.render('```\nx\n```').all(isBtn)[0];
   b.fire('click'); await wait();
-  t('copy 가 없어도 던지지 않는다', b.textContent === '복사 실패');
+  t('copy 가 없어도 던지지 않는다', iconKind(b) === 'fail');
 }
 
 // --- 누른 순간의 값을 집는다 ---
@@ -139,6 +171,7 @@ const wait = () => new Promise((r) => setTimeout(r, 0));
   t('copy 를 밖으로 내보낸다', /system, copy,/.test(tty));
   t('스트리밍 중에는 버튼을 안 단다', /!m\.streaming && \(m\.text/.test(tty));
   t('안 보일 때는 클릭도 안 먹는다', /\.gt-meta \.gt-copy \{ opacity: 0; pointer-events: none; \}/.test(css));
+  t('버튼은 정사각형 아이콘 칸', /width: 21px; height: 21px/.test(css));
 }
 
 let bad = 0;

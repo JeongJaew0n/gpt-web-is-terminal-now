@@ -59,23 +59,65 @@ GT.markdown = (function () {
 
   // ------------------------------------------------------------------- block
 
+  // 아이콘은 글리프 대신 그린다. 폰트에 없는 문자에 기대지 않는다 (tty 의 손잡이와 같은 규칙).
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const ICON = {
+    copy: [
+      'M5 4H2.8a1.3 1.3 0 0 0-1.3 1.3v6.4A1.3 1.3 0 0 0 2.8 13h4.9A1.3 1.3 0 0 0 9 11.7V9',
+      'M6.3 1.5h4.9a1.3 1.3 0 0 1 1.3 1.3v4.9A1.3 1.3 0 0 1 11.2 9H6.3A1.3 1.3 0 0 1 5 7.7V2.8a1.3 1.3 0 0 1 1.3-1.3z'
+    ],
+    ok: ['M2.6 7.4 5.7 10.5 11.4 3.9'],
+    fail: ['M3.6 3.6 10.4 10.4', 'M10.4 3.6 3.6 10.4']
+  };
+
+  function icon(kind) {
+    const s = document.createElementNS(SVG_NS, 'svg');
+    s.setAttribute('viewBox', '0 0 14 14');
+    s.setAttribute('width', '13');
+    s.setAttribute('height', '13');
+    s.setAttribute('fill', 'none');
+    s.setAttribute('aria-hidden', 'true');
+    ICON[kind].forEach((d) => {
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.2');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      s.appendChild(path);
+    });
+    return s;
+  }
+
   // 복사 버튼. 누른 순간의 원문을 가져오도록 함수를 받는다 —
   // 스트리밍 중 노드를 재사용해도 옛 본문을 붙여넣지 않는다.
+  // 글자가 없으므로 상태는 아이콘과 aria-label 로 알린다.
   function copyBtn(getText, label) {
-    const text = label || '복사';
-    const b = el('button', 'gt-copy', text);
+    const name = label || '복사';
+    const b = el('button', 'gt-copy');
     b.type = 'button';
-    b.title = '클립보드로 복사';
+    let cur = icon('copy');
+    b.appendChild(cur);
+
+    const show = (kind, text) => {
+      const next = icon(kind);
+      b.replaceChild(next, cur);
+      cur = next;
+      b.title = text;
+      b.setAttribute('aria-label', text);
+    };
+    show('copy', name);
+
     b.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const done = (ok) => {
-        b.textContent = ok ? '복사됨' : '복사 실패';
         b.dataset.state = ok ? 'ok' : 'fail';
+        show(ok ? 'ok' : 'fail', ok ? '복사됨' : '복사 실패');
         setTimeout(() => {
           if (!b.isConnected) return;
-          b.textContent = text;
           delete b.dataset.state;
+          show('copy', name);
         }, 1200);
       };
       let p;

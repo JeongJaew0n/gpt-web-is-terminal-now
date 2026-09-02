@@ -222,12 +222,13 @@ GT.theme = (function () {
 
 /* ---- 복사 버튼 ---- */
 .gt-copy {
-  font: inherit; font-size: 11px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; padding: 0; flex: 0 0 auto;
   color: var(--gt-fg-faint); background: transparent;
-  border: 1px solid var(--gt-border); border-radius: 3px;
-  padding: 3px 8px; cursor: pointer; flex: 0 0 auto;
+  border: 1px solid var(--gt-border); border-radius: 3px; cursor: pointer;
   opacity: 0.55; transition: opacity 90ms linear, color 90ms linear, border-color 90ms linear;
 }
+.gt-copy svg { display: block; }
 .gt-copy:hover { opacity: 1; color: var(--gt-fg); border-color: var(--gt-fg-faint); }
 .gt-copy:focus-visible { opacity: 1; outline: 1px solid var(--gt-cyan); outline-offset: 1px; }
 .gt-copy[data-state="ok"] { opacity: 1; color: var(--gt-green); border-color: var(--gt-green); }
