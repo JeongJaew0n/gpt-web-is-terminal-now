@@ -60,7 +60,7 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | `⌥` + `=` / `-` / `0` | 글씨 크게 / 작게 / 기본값 |
 | `/` (입력창이 빈 상태) | 사이드바 검색 |
 
-명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:mv` `:share` `:select` `clear` `:q` `:reload`
+명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename [@<n|id>] <새 이름>` `:pin` `:archive` `:rm` `:mv` `:share` `:select` `clear` `:q` `:reload`
 
 `:` 로 시작하면 입력줄 위에 후보가 뜨고 `Tab` 으로 완성한다. 인자도 완성된다 —
 `:theme ⇥` 는 테마 이름을, `:set ⇥` 은 설정 키를, `:mv 3 ⇥` 는 프로젝트 이름을 준다.

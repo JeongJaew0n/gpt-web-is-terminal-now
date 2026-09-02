@@ -66,8 +66,11 @@ GT.commands = (function () {
 
   // 대화 조작 — 원본 "..." 메뉴에 해당한다.
   // 대상은 ls 번호 또는 대화 id 앞자리로 지정한다.
-  function findChat(key) {
-    if (key == null || key === '') return null;
+  function findChat(raw) {
+    // '@3' · '@6a97' 처럼 앞에 @ 를 붙여도 된다.
+    // 이름과 섞일 수 있는 명령(:rename)에서 대상임을 분명히 하려고 쓴다.
+    const key = String(raw == null ? '' : raw).replace(/^@/, '');
+    if (key === '') return null;
     const n = Number(key);
     if (Number.isInteger(n) && lastList[n]) return lastList[n];
     const pool = lastList.concat(GT.sidebar.chats ? GT.sidebar.chats() : []);
@@ -82,12 +85,30 @@ GT.commands = (function () {
     return c;
   };
 
-  def(':rename', '이름 바꾸기 — :rename <n|id> <새 이름>', async (args) => {
-    const c = needTarget(args[0]); if (!c) return;
-    const name = args.slice(1).join(' ').trim();
-    if (!name) return err(':rename <n|id> <새 이름>');
-    await GT.convops.rename(c.id, name);
+  def(':rename', '이름 바꾸기 — :rename <새 이름> (지금 대화) · :rename @<n|id> <새 이름>', async (args) => {
+    if (!args.length) return err(':rename <새 이름>  ·  다른 대화면 :rename @<n|id> <새 이름>');
+
+    // 기본은 지금 보고 있는 대화다.
+    // 대상을 다른 대화로 지정하려면 @ 를 붙인다 — 안 그러면 이름의 첫 낱말과 구분할 수 없다
+    // (':rename 3 단계 계획' 이 3번 대화인지 '3 단계 계획' 이라는 이름인지 알 수 없다).
+    let target = null;
+    let words = args;
+    if (/^@/.test(args[0])) {
+      target = needTarget(args[0]);
+      if (!target) return;
+      words = args.slice(1);
+    }
+
+    const name = words.join(' ').trim();
+    if (!name) return err('새 이름이 필요하다');
+
+    const id = target ? target.id : GT.conversation.idFromPath();
+    if (!id) return err('대화를 연 다음에 쓰거나, :rename @<n|id> <새 이름> 으로 지정해라');
+
+    await GT.convops.rename(id, name);
     info(`이름 변경: ${name}`);
+    // 지금 대화면 상단바 제목도 바로 바꾼다
+    if (id === GT.conversation.idFromPath()) GT.store.setTitle(name);
     if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
   });
 

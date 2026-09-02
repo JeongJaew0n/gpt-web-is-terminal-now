@@ -187,7 +187,7 @@ GT.sidebar = (function () {
 
     act('이름 바꾸기', () => {
       const inp = GT.tty.ui.input;
-      inp.value = `:rename ${rec.id.slice(0, 8)} ${rec.title}`;
+      inp.value = `:rename @${rec.id.slice(0, 8)} ${rec.title}`;
       inp.dispatchEvent(new Event('input', { bubbles: true }));
       GT.tty.focus();
       inp.setSelectionRange(inp.value.length, inp.value.length);

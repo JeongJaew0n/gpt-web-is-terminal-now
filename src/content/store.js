@@ -115,6 +115,12 @@ GT.store = (function () {
       return { mode: 'merge', kept: missing.length, gained };
     },
 
+    // 이름을 바꾸면 다음 수확을 기다리지 않고 상단바를 바로 고친다.
+    setTitle(t) {
+      state.conversationTitle = String(t || '');
+      emit('title');
+    },
+
     userSent(text, id) {
       state.slotId = null;        // 새 턴이 열린다
       state.pendingThinking = 0;
