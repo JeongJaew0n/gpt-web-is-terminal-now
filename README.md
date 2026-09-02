@@ -14,7 +14,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 464](https://img.shields.io/badge/테스트-464_케이스-22C55E)
+![테스트 475](https://img.shields.io/badge/테스트-475_케이스-22C55E)
 
 </div>
 
@@ -278,7 +278,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>22개 파일 · 464 케이스</b></summary>
+<summary><b>22개 파일 · 475 케이스</b></summary>
 
 <br>
 
@@ -304,7 +304,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `complete` | 28 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
 | `copy` | 29 | 복사 버튼 — 누른 순간의 원문을 집는가, 실패를 삼키지 않는가 |
-| `route` | 18 | 대화를 옮기면 이전 제목·본문이 남지 않는가 · esc 우선순위 |
+| `route` | 29 | 대화를 옮기면 이전 제목·본문이 남지 않는가 · 수확이 제목을 덮지 않는가 · esc 우선순위 |
 | `ime` | 15 | 한글 조합 중 Enter 를 전송으로 받지 않는가 |
 
 </details>
@@ -341,7 +341,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 |---|---|
 | 문법 검사 | 전체 파일 `node --check` 통과 |
 | 로드 시점 예외 | 없음 (`test/load.test.mjs` — 20개 모듈) |
-| 순수 로직 | 464 케이스 통과 (위 표) |
+| 순수 로직 | 475 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

@@ -108,7 +108,12 @@ GT.commands = (function () {
     await GT.convops.rename(id, name);
     info(`이름 변경: ${name}`);
     // 지금 대화면 상단바 제목도 바로 바꾼다
-    if (id === GT.conversation.idFromPath()) GT.store.setTitle(name);
+    if (id === GT.conversation.idFromPath()) {
+      GT.store.setTitle(name);
+      // 브라우저 탭 제목은 원본이 자기 상태에서 그린다. API 로 바꾼 건 원본이 모르니
+      // 새로고침 전까지 옛 이름이 남는다. 우리가 직접 맞춰준다.
+      document.title = name;
+    }
     if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
   });
 

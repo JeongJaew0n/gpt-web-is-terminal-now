@@ -74,13 +74,20 @@ GT.store = (function () {
     //      스트림으로 받은 메시지도 이 규칙 덕에 살아남는다(DOM 에 뜨기 전에 수확이 돌 수 있다).
     applyHarvest(messages, meta) {
       const path = meta && meta.path;
-      if (meta && meta.title) state.conversationTitle = meta.title;
 
       if (path && path !== state.path) {
         state.path = path;
-        this.replaceAll(messages, meta);
+        this.replaceAll(messages, meta);      // 대화가 바뀌는 자리. 제목도 여기서 세운다
         return { mode: 'replace', kept: 0, gained: messages.length };
       }
+
+      // 같은 대화 안에서는 제목을 덮지 않는다.
+      //
+      // 수확의 제목 출처는 document.title 이고, 그건 원본 UI 가 자기 상태에서 그린 값이다.
+      // :rename 은 백엔드 API 로 바꾸므로 원본은 그 사실을 모른다 — 덮게 두면
+      // 이름을 바꾼 뒤 메시지를 한 번 주고받는 순간 옛 이름으로 되돌아간다.
+      // 우리가 아직 아무것도 모를 때만 채운다(새 대화의 자동 제목 생성이 이 경우다).
+      if (meta && meta.title && !state.conversationTitle) state.conversationTitle = meta.title;
       if (path) state.path = path;
 
       const incoming = new Set(messages.map((m) => m.id).filter(Boolean));
