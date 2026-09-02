@@ -111,8 +111,23 @@ GT.chats = (function () {
     try { await chrome.storage.local.set({ [CACHE_KEY]: { at: Date.now(), ...payload } }); } catch (_) {}
   }
 
+  // 프로젝트별로 따로 읽어온 적이 있는지. 첫 페이지에 안 걸린 프로젝트는 비어 보인다.
+  const loaded = new Set();
+
+  // 대화가 하나도 안 걸린 프로젝트도 목록에 보여야 한다.
+  // group() 은 acc.items 만 보므로, 아는 프로젝트를 빈 그룹으로 채워 넣는다.
+  const withEmptyProjects = (g) => {
+    const have = new Set(g.projects.map((p) => p.id));
+    acc.projects.forEach((p) => {
+      if (have.has(p.id)) return;
+      g.projects.push({ id: p.id, name: p.name, items: [] });
+    });
+    g.projects.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    return g;
+  };
+
   const shaped = () => ({
-    ...group(acc.items, acc.projects),
+    ...withEmptyProjects(group(acc.items, acc.projects)),
     total: acc.total,
     loaded: acc.items.length,
     hasMore: acc.items.length < acc.total,
@@ -121,6 +136,7 @@ GT.chats = (function () {
 
   async function load() {
     acc = { items: [], projects: [], total: 0, offset: 0 };
+    loaded.clear();
     try {
       const got = await fromApi(PAGE, 0);
       // 인증이 없으면 200 이면서 items 만 빈다. 빈 목록을 성공으로 오해하지 않도록
@@ -173,8 +189,22 @@ GT.chats = (function () {
     try { await chrome.storage.local.remove(CACHE_KEY); return true; } catch (_) { return false; }
   }
 
+  // 한 프로젝트의 대화를 이어 읽는다. 항목이 gizmo_id 를 들고 오므로 group() 이 알아서 묶는다.
+  async function loadProject(gizmoId) {
+    if (!gizmoId) return shaped();
+    const j = await GT.oai.get(`/backend-api/gizmos/${encodeURIComponent(gizmoId)}/conversations?limit=${PAGE}`);
+    const seen = new Set(acc.items.map((c) => c.id));
+    const fresh = (j.items || []).filter((c) => c && !seen.has(c.id))
+      .map((c) => ({ ...c, gizmo_id: c.gizmo_id || gizmoId }));
+    acc.items = acc.items.concat(fresh);
+    loaded.add(gizmoId);
+    return shaped();
+  }
+
   return {
-    load, more, group, flatten, clearCache,
+    load, more, group, flatten, clearCache, loadProject,
+    isProjectLoaded: (id) => loaded.has(id),
+    projects: () => acc.projects.slice(),
     get source() { return lastSource; },
     get state() { return shaped(); }
   };

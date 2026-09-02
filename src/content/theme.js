@@ -150,6 +150,11 @@ GT.theme = (function () {
 .gt-sb-act.danger:hover { background: var(--gt-red); color: var(--gt-bg-1); border-color: var(--gt-red); }
 .gt-sb-warn { color: var(--gt-red); }
 .gt-sb-busy { color: var(--gt-cyan); }
+.gt-sb-resize {
+  position: absolute; top: 0; right: -3px; bottom: 0; width: 6px;
+  cursor: col-resize; z-index: 5;
+}
+.gt-sb-resize:hover { background: var(--gt-cyan); opacity: 0.35; }
 .gt-sb-src[data-stale="1"] { color: var(--gt-yellow); }
 .gt-sb-src[data-bad="1"] { color: var(--gt-red); }
 

@@ -53,11 +53,13 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | 좌측 상단 손잡이(≡) | 대화 목록 접기/펼치기 |
 | 본문 아무 데나 클릭 · `Esc` | 목록이 비켜난다 (오버레이 바깥 클릭) |
 | 목록에서 대화 선택 | 목록이 비켜난다 (설정으로 끌 수 있음) |
+| 목록 오른쪽 가장자리 드래그 | 폭 조절 (더블클릭 = 기본값) |
+| 프로젝트 헤더 클릭 | 접기/펴기 — 처음 펼 때 그 안의 대화를 읽어온다 |
 | `Ctrl` + `B` | 같은 토글 |
 | `⌥` + `=` / `-` / `0` | 글씨 크게 / 작게 / 기본값 |
 | `/` (입력창이 빈 상태) | 사이드바 검색 |
 
-명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:select` `clear` `:q` `:reload`
+명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:mv` `:share` `:select` `clear` `:q` `:reload`
 
 ## 배지
 

@@ -49,9 +49,26 @@ GT.convops = (function () {
       return { done, failed };
     },
 
-    // 원본 메뉴에는 있지만 여기서는 다루지 않는 것:
-    //   공유하기      — 대화를 공개 링크로 만든다. 공개는 원본의 확인 절차를 거치는 게 맞다
-    //   프로젝트로 이동 — 프로젝트 선택 UI 와 미검증 엔드포인트가 필요하다
-    unsupported: ['공유하기', '프로젝트로 이동']
+    // 프로젝트로 이동 / 빼기.
+    //
+    // 실측(2026-09-02): 넣기는 `{gizmo_id: '<id>'}` 로 되는데
+    // **빼기는 `null` 이 아니라 빈 문자열이다.** null 은 200 success 를 주고도 실제로는 안 지워진다.
+    // 조용히 실패하는 종류라 반드시 결과를 다시 읽어 확인한다.
+    async moveToProject(id, gizmoId) {
+      const ok = await patch(id, { gizmo_id: gizmoId ? String(gizmoId) : '' });
+      if (!ok) return { ok: false, reason: 'rejected' };
+      const conv = await GT.oai.get(`${url(id)}`).catch(() => null);
+      const now = conv ? conv.gizmo_id || null : undefined;
+      const want = gizmoId || null;
+      if (now !== undefined && now !== want) {
+        return { ok: false, reason: 'not-applied', now };
+      }
+      return { ok: true, gizmoId: want };
+    },
+
+    // 공유하기는 API 로 하지 않는다.
+    // 대화를 **공개 링크**로 만드는 동작이라, 우리 UI 의 한 번 클릭으로 공개되면 안 된다.
+    // 원본 헤더의 공유 버튼을 눌러 ChatGPT 자신의 확인 대화상자를 띄운다.
+    SHARE_BUTTON: '[data-testid="share-chat-button"]'
   };
 })();

@@ -127,6 +127,58 @@ GT.commands = (function () {
     info('행을 클릭해 고르고, 아래 버튼으로 삭제·보관한다. esc 로 나간다');
   });
 
+  def(':mv', '프로젝트로 이동 — :mv <n|id> <프로젝트|none>', async (args) => {
+    const c = needTarget(args[0]); if (!c) return;
+    const projects = GT.chats.projects ? GT.chats.projects() : [];
+    const want = args.slice(1).join(' ').trim();
+
+    if (!want) {
+      if (!projects.length) return err('프로젝트 목록이 비었다 — ls 로 목록을 먼저 불러와라');
+      GT.tty.system('info', null, table(projects.map((p, i) => [String(i), p.name, ''])));
+      return info(`:mv ${args[0]} <번호|이름>  ·  빼려면 :mv ${args[0]} none`);
+    }
+
+    let gid = '';
+    if (!/^(none|없음|-)$/i.test(want)) {
+      const n = Number(want);
+      const p = (Number.isInteger(n) && projects[n])
+        || projects.find((x) => x.name.toLowerCase().includes(want.toLowerCase()));
+      if (!p) return err(`일치하는 프로젝트가 없다. 가능: ${projects.map((x) => x.name).join(', ')}`);
+      gid = p.id;
+    }
+
+    const r = await GT.convops.moveToProject(c.id, gid);
+    if (!r.ok) {
+      return err(r.reason === 'not-applied'
+        ? '요청은 받아들여졌는데 실제로 안 바뀌었다 — 원본이 바뀌었을 수 있다'
+        : `이동 실패 (${r.reason})`);
+    }
+    const name = gid ? (projects.find((x) => x.id === gid) || {}).name : null;
+    info(name ? `${c.title} → ${name}` : `${c.title} → 프로젝트에서 뺐다`);
+    if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
+  });
+
+  // 공유는 공개 링크를 만든다. API 로 곧장 만들지 않고 원본 대화상자를 띄운다 —
+  // 무엇이 공개되는지 ChatGPT 자신의 확인 절차를 거치게 한다.
+  def(':share', '공유 — 원본 공유 대화상자를 연다', async (args) => {
+    const c = args.length ? needTarget(args[0]) : null;
+    if (args.length && !c) return;
+    const id = c ? c.id : GT.conversation.idFromPath();
+    if (!id) return err('공유할 대화를 특정하지 못했다 — :share <n|id>');
+
+    if (location.pathname !== '/c/' + id) {
+      GT.navigate.to('/c/' + id);
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+    const btn = document.querySelector(GT.convops.SHARE_BUTTON);
+    if (!btn) return err('원본의 공유 버튼을 찾지 못했다 — 창이 좁으면 숨겨진다');
+
+    // 대화상자는 원본 UI 위에 뜬다. 터미널을 덮어둔 채로는 보이지 않는다.
+    GT.tty.hide();
+    btn.click();
+    warn('원본 공유 대화상자를 열었다 — 링크를 만들면 대화가 공개된다. 끝나면 ^` 로 돌아온다');
+  });
+
   def(':sidebar', '사이드바 — on | off | toggle | more | width <n> | clear-cache', async (args) => {
     const a = (args[0] || 'toggle').toLowerCase();
     if (a === 'more') {

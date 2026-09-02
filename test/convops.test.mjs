@@ -13,7 +13,8 @@ t('삭제 전에 대상을 보여준다', /대상: \$\{c\.title\}/.test(cmds));
 t('메뉴의 삭제는 두 번 눌러야 한다', /armed/.test(sb));
 t('삭제가 되돌릴 수 없음을 코드에 명시', /되돌릴 수 없다/.test(ops));
 t('미검증 표시가 남아 있지 않다', !/\[미검증\]/.test(ops));
-t('공유·프로젝트 이동은 다루지 않는다고 명시', /unsupported/.test(ops) && /공유하기/.test(ops));
+t('공유는 API 로 하지 않는다고 명시', /공개 링크/.test(ops) && /SHARE_BUTTON/.test(ops));
+t('프로젝트 빼기는 빈 문자열임을 주석에 남겼다', /이 아니라 빈 문자열/.test(ops));
 t('이름 바꾸기는 입력줄에 명령을 채운다', /:rename \$\{rec\.id\.slice/.test(sb));
 
 // --- 동작: 가짜 oai 로 ---
@@ -86,6 +87,34 @@ t('이름 바꾸기는 입력줄에 명령을 채운다', /:rename \$\{rec\.id\.
   t('실패 건을 개별로 보고', /res\.failed\.forEach/.test(sbSrc));
   t('esc 로 빠져나온다', /GT\.sidebar\.selecting.*exitSelect|selecting\) \{ e\.preventDefault\(\); GT\.sidebar\.exitSelect/.test(idx));
   t('선택 중에는 행 클릭이 이동이 아니라 토글', /if \(selecting\) \{ togglePick/.test(sbSrc));
+}
+
+// --- 프로젝트 이동: null 이 아니라 빈 문자열 ---
+{
+  const calls = [];
+  let gizmo = null;
+  const sandbox = { console, Object, Array, JSON, Promise, Error, String, Number, Boolean, encodeURIComponent };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  sandbox.GT = { oai: {
+    patch: async (url, body) => { calls.push(body); if ('gizmo_id' in body) gizmo = body.gizmo_id || null; return { success: true }; },
+    get: async () => ({ gizmo_id: gizmo })
+  } };
+  vm.createContext(sandbox);
+  vm.runInContext(ops, sandbox, { filename: 'convops.js' });
+  const C = sandbox.GT.convops;
+
+  const into = await C.moveToProject('abc', 'g-p-1');
+  t('넣기: gizmo_id 를 보낸다', calls[0].gizmo_id === 'g-p-1' && into.ok === true);
+
+  const out = await C.moveToProject('abc', null);
+  t('빼기: null 이 아니라 빈 문자열', calls[1].gizmo_id === '');
+  t('빼기 성공', out.ok === true && out.gizmoId === null);
+
+  // 서버가 200 을 주고도 실제로 안 바뀌는 경우 — null 로 빼려 할 때 실제로 그랬다
+  gizmo = 'g-p-1';
+  sandbox.GT.oai.patch = async () => ({ success: true });      // 값은 그대로 둔다
+  const stuck = await C.moveToProject('abc', null);
+  t('반영 안 되면 성공이라 하지 않는다', stuck.ok === false && stuck.reason === 'not-applied');
 }
 
 let bad = 0;

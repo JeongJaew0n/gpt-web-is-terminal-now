@@ -37,10 +37,20 @@ GT.sidebar = (function () {
     try { await chrome.storage.local.set({ [COLLAPSED_KEY]: [...collapsed] }); } catch (_) {}
   }
 
-  function toggleGroup(key) {
-    if (collapsed.has(key)) collapsed.delete(key); else collapsed.add(key);
+  async function toggleGroup(key) {
+    const opening = collapsed.has(key);
+    if (opening) collapsed.delete(key); else collapsed.add(key);
     saveCollapsed();
     rebuild();
+
+    // 프로젝트를 처음 펼치면 그 안의 대화를 그때 읽어온다.
+    // 첫 페이지(40개)에 안 걸린 프로젝트는 비어 보이기 때문이다.
+    const gid = key.startsWith('p:') ? key.slice(2) : null;
+    if (!opening || !gid || GT.chats.isProjectLoaded(gid)) return;
+    busy = '프로젝트 읽는 중…'; draw();
+    try { absorb(await GT.chats.loadProject(gid)); }
+    catch (e) { GT.tty.system('warn', `프로젝트를 읽지 못했다: ${e.message}`); }
+    busy = ''; draw();
   }
 
   const currentId = () => {
@@ -219,8 +229,18 @@ GT.sidebar = (function () {
       setTimeout(() => del.addEventListener('mousedown', once), 0);
     }, true);
 
-    const note = el('div', 'gt-ctx-note', '공유·프로젝트 이동은 :q 로 원본에서');
-    box.appendChild(note);
+    act('프로젝트로 이동', () => {
+      const inp = GT.tty.ui.input;
+      inp.value = `:mv ${rec.id.slice(0, 8)} `;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      GT.tty.focus();
+      inp.setSelectionRange(inp.value.length, inp.value.length);
+      GT.tty.system('info', '프로젝트 이름을 이어 쓰고 Enter (빼려면 none) — :mv 만 쳐도 목록이 나온다');
+    });
+
+    // 공유는 공개 링크를 만드는 동작이다. 우리 UI 에서 한 번 클릭으로 공개되면 안 된다.
+    // 원본의 공유 대화상자를 띄워 ChatGPT 자신의 확인 절차를 거치게 한다.
+    act('공유하기', () => GT.commands.run(`:share ${rec.id.slice(0, 8)}`));
 
     GT.tty.shadow.querySelector('.gt-root').appendChild(box);
     menuEl = box;
@@ -382,6 +402,8 @@ GT.sidebar = (function () {
 
     footEl = el('div', 'gt-sb-foot');
     root.appendChild(footEl);
+
+    root.appendChild(resizeHandle());
     return root;
   }
 
@@ -398,6 +420,51 @@ GT.sidebar = (function () {
   function rebuild() {
     absorb(GT.chats.state);
     draw();
+  }
+
+  // 오른쪽 가장자리를 끌어 폭을 바꾼다.
+  // 설정은 ch 단위인데 드래그는 px 이므로, 실제 글자 폭을 재서 환산한다
+  // (font-size × 0.6 같은 어림값은 폰트가 바뀌면 어긋난다).
+  function charWidth() {
+    const probe = el('span', null, '0'.repeat(20));
+    probe.setAttribute('style', 'position:absolute;visibility:hidden;white-space:pre');
+    root.appendChild(probe);
+    const w = probe.getBoundingClientRect().width / 20;
+    probe.remove();
+    return w > 0 ? w : (Number(GT.config.get('font.size')) || 13) * 0.6;
+  }
+
+  function resizeHandle() {
+    const h = el('div', 'gt-sb-resize');
+    h.title = '드래그로 폭 조절 · 더블클릭으로 기본값';
+    h.addEventListener('mousedown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const cw = charWidth();
+      const startX = e.clientX;
+      const startW = root.getBoundingClientRect().width;
+      const rootEl = GT.tty.shadow.querySelector('.gt-root');
+
+      const move = (ev) => {
+        const px = Math.max(cw * 16, Math.min(cw * 80, startW + (ev.clientX - startX)));
+        rootEl.style.setProperty('--gt-sb-w', px + 'px');   // 끌리는 동안은 즉시 반영
+      };
+      const up = async (ev) => {
+        window.removeEventListener('mousemove', move, true);
+        window.removeEventListener('mouseup', up, true);
+        const px = Math.max(cw * 16, Math.min(cw * 80, startW + (ev.clientX - startX)));
+        rootEl.style.removeProperty('--gt-sb-w');           // 설정값이 다시 이기게 되돌린다
+        await GT.config.set('sidebar.width', Math.round(px / cw));
+        GT.tty.applyConfig(GT.config.all);
+      };
+      window.addEventListener('mousemove', move, true);
+      window.addEventListener('mouseup', up, true);
+    });
+    h.addEventListener('dblclick', async (e) => {
+      e.preventDefault();
+      await GT.config.reset('sidebar.width');
+      GT.tty.applyConfig(GT.config.all);
+    });
+    return h;
   }
 
   async function refresh() {
