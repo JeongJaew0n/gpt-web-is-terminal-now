@@ -202,6 +202,8 @@
   GT.tty.mount(cfg);
   GT.store.onChange(() => GT.tty.render());
   GT.config.onChange((c) => { GT.tty.applyConfig(c); GT.tty.render(); });
+  // 추론 수준이 바뀌는 동안 상단바가 즉시 따라오게 한다 (1초 틱을 기다리지 않는다)
+  if (GT.picker && GT.picker.onChange) GT.picker.onChange(() => GT.tty.renderChrome());
 
   function cleanTitle(t) {
     return String(t || '').replace(/\s*[-–—]\s*ChatGPT\s*$/i, '').replace(/^ChatGPT$/i, '');

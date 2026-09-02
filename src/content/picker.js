@@ -160,14 +160,44 @@ GT.picker = (function () {
     return items().find((e) => e.getAttribute('role') === 'menuitem' && label(e));
   }
 
-  // 상단바가 매 렌더마다 메뉴를 열 수는 없다. 마지막으로 확인한 라벨만 들고 있는다.
+  // 상단바 표시용 상태.
+  //
+  // 메뉴가 닫혀 있을 때 pill 의 라벨이 곧 현재 추론 수준이다 — 메뉴를 열 필요가 없다.
+  // 메뉴가 열려 있는 동안에는 라벨이 '추론 수준' 으로 바뀌므로 그때는 마지막 값을 쓴다.
   let lastEffort = null;
+  let pending = null;              // 바꾸는 중일 때 {from}
+  const listeners = [];
+  const notify = () => listeners.forEach((f) => { try { f(); } catch (_) {} });
   const remember = (st) => { if (st && st.label) lastEffort = st.label; return st; };
+
+  // 메뉴를 열지 않고 읽는다. 매 초 렌더에서 불려도 될 만큼 싸다.
+  function effortLabel() {
+    const p = pill();
+    if (!p) return null;
+    if (items().length) return lastEffort;         // 메뉴가 열려 있으면 라벨을 못 믿는다
+    const t = (p.textContent || '').trim();
+    if (t) lastEffort = t;
+    return lastEffort;
+  }
 
   return {
     current, models, chooseModel, available: () => !!pill(),
     effort: async () => remember(await effort()),
-    setEffort: async (t) => { const r = await setEffort(t); if (r && r.ok) lastEffort = r.label; return r; },
+    async setEffort(t) {
+      pending = { from: effortLabel() };
+      notify();
+      try {
+        const r = await setEffort(t);
+        if (r && r.ok) lastEffort = r.label;
+        return r;
+      } finally {
+        pending = null;
+        notify();
+      }
+    },
+    effortLabel,
+    get pending() { return pending; },
+    onChange(fn) { listeners.push(fn); },
     get lastEffort() { return lastEffort; }
   };
 })();

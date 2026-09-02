@@ -65,6 +65,8 @@ GT.theme = (function () {
 .gt-dot { width: 8px; height: 8px; display: block; background: var(--gt-green); }
 .gt-dot[data-state="stream"] { background: var(--gt-cyan); }
 .gt-dot[data-state="broken"] { background: var(--gt-red); }
+.gt-effort[data-pending="1"] { color: var(--gt-cyan); }
+
 .gt-title { flex: 1; text-align: center; color: var(--gt-fg-dim);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gt-tabbar {

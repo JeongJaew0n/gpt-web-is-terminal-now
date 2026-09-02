@@ -61,6 +61,8 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 
 명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:mv` `:share` `:select` `clear` `:q` `:reload`
 
+상단바 오른쪽에 모델과 추론 수준이 뜬다. 바꾸는 동안에는 `⠴ 중간 →` 로 표시된다.
+
 ## 배지
 
 | 배지 | 뜻 |

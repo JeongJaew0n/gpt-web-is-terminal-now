@@ -276,7 +276,6 @@ GT.commands = (function () {
     }
 
     if (!args.length) {
-      info('추론 수준 읽는 중…');
       const cur = await GT.picker.effort();
       if (!cur) return err('추론 수준을 읽지 못했다 — :health 확인');
       info(`추론 수준: ${cur.label} (${cur.index + 1}/${cur.steps})`);
@@ -293,8 +292,7 @@ GT.commands = (function () {
     else if (/^\d+$/.test(a)) want = Number(a);
     else return err(':effort <0-2 | 낮음|중간|높음 | + | ->');
 
-    // 원본 메뉴를 열고 화살표로 옮기는 방식이라 몇 초 걸린다. 먼저 알린다.
-    info('추론 수준 바꾸는 중… (원본 메뉴를 조작한다)');
+    // 진행 상태는 상단바가 보여준다(⠴ 중간 →). 스크롤백에 남기지 않는다.
     const r = await GT.picker.setEffort(want);
     if (r.ok) {
       return info(r.noop ? `이미 ${r.label}` : `추론 수준 → ${r.label} (${r.index + 1}/${r.steps})`);

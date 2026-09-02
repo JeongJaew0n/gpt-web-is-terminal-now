@@ -76,7 +76,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     brand.appendChild(ui.dot); brand.appendChild(el('span', 'gt-dim', 'gpt-term'));
     ui.title = el('div', 'gt-title', '~');
     ui.model = el('span', null, ''); ui.model.style.color = 'var(--gt-magenta)';
-    ui.effort = el('span', 'gt-dim', '');
+    ui.effort = el('span', 'gt-dim gt-effort', '');
     ui.clock = el('span', 'gt-dim', '');
     const right = el('div'); right.style.display = 'flex'; right.style.gap = '14px'; right.style.alignItems = 'center';
     right.appendChild(ui.model); right.appendChild(ui.effort); right.appendChild(ui.clock);
@@ -320,10 +320,17 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.title.textContent = `${s.path}${s.conversationTitle ? ' — ' + s.conversationTitle : ''}`;
     const last = [...s.messages].reverse().find((m) => m.model);
     ui.model.textContent = last ? last.model : '';
-    // 추론 수준은 원본 컴포저의 pill 이 정본이다. 우리가 따로 들고 있지 않는다.
-    // 추론 수준은 메뉴를 열어야 정확히 읽힌다. 렌더마다 열 수는 없으니
-    // 마지막으로 확인한 값을 보여주고, :effort 가 갱신한다.
-    ui.effort.textContent = GT.picker && GT.picker.lastEffort ? '· ' + GT.picker.lastEffort : '';
+    // 추론 수준. 원본 pill 의 라벨이 정본이라 메뉴를 열지 않고 읽는다.
+    // 바꾸는 중에는 스크롤백에 글을 남기는 대신 여기에 상태로 보여준다.
+    if (GT.picker && GT.picker.available()) {
+      const p = GT.picker.pending;
+      const label = GT.picker.effortLabel();
+      ui.effort.textContent = p ? `· ⠴ ${p.from || ''} →` : (label ? '· ' + label : '');
+      ui.effort.dataset.pending = p ? '1' : '0';
+    } else {
+      ui.effort.textContent = '';
+      ui.effort.dataset.pending = '0';
+    }
     ui.clock.textContent = new Date().toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
     ui.tabs.textContent = '';

@@ -160,6 +160,41 @@ function world(opt) {
   t('focus() 로 포커스를 뺏지 않는다', !/item\.focus\(\)/.test(src2));
 }
 
+// --- 상단바 표시: 메뉴를 열지 않고 읽고, 바꾸는 동안 상태를 알린다 ---
+{
+  const { P } = world();
+  t('메뉴를 열지 않고 현재값을 읽는다', P.effortLabel() === '중간');
+  t('평소에는 pending 없음', P.pending === null);
+
+  const seen = [];
+  P.onChange(() => seen.push(P.pending ? 'pending:' + (P.pending.from || '') : 'idle'));
+  await P.setEffort(2);
+  t('시작과 끝에 알린다', seen.length === 2);
+  t('시작은 pending, 끝은 idle', seen[0].startsWith('pending:') && seen[1] === 'idle');
+  t('pending 에 이전 값이 담긴다', seen[0] === 'pending:중간');
+  t('끝나면 pending 이 비워진다', P.pending === null);
+}
+
+// --- 실패해도 pending 이 남지 않는다 ---
+{
+  const { P } = world({ noSlider: true });
+  await P.setEffort(1);
+  t('실패해도 pending 정리', P.pending === null);
+}
+
+// --- 배선 (정적) ---
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  const cmds2 = fs.readFileSync('src/content/commands.js', 'utf8');
+  const css = fs.readFileSync('src/content/theme.js', 'utf8');
+  t('상단바가 pending 을 그린다', /GT\.picker\.pending/.test(tty) && /dataset\.pending/.test(tty));
+  t('바꾸는 중에는 색이 다르다', /\.gt-effort\[data-pending="1"\]/.test(css));
+  t('상단바가 메뉴 없이 라벨을 읽는다', /GT\.picker\.effortLabel\(\)/.test(tty));
+  t('변화가 오면 즉시 다시 그린다', /GT\.picker\.onChange\(\(\) => GT\.tty\.renderChrome\(\)\)/.test(idx));
+  t('스크롤백에 "바꾸는 중" 을 남기지 않는다', !/추론 수준 바꾸는 중/.test(cmds2));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');
