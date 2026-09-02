@@ -77,6 +77,16 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.title = el('div', 'gt-title', '~');
     ui.model = el('span', null, ''); ui.model.style.color = 'var(--gt-magenta)';
     ui.effort = el('span', 'gt-dim gt-effort', '');
+    ui.effort.title = '추론 수준 바꾸기';
+    ui.effort.addEventListener('mousedown', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (!GT.picker || !GT.picker.available() || GT.picker.pending) return;
+      const st = GT.picker.effortChoices();
+      popup(ui.effort, st.map((c) => ({
+        label: c.label, hint: c.current ? '● 현재' : '', current: c.current,
+        onPick: () => { if (!c.current) GT.picker.setEffort(c.index); }
+      })));
+    });
     ui.clock = el('span', 'gt-dim', '');
     const right = el('div'); right.style.display = 'flex'; right.style.gap = '14px'; right.style.alignItems = 'center';
     right.appendChild(ui.model); right.appendChild(ui.effort); right.appendChild(ui.clock);
@@ -387,6 +397,44 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.burger.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
+  // 작은 선택 팝업. 사이드바 컨텍스트 메뉴와 같은 모양을 쓴다.
+  let popupEl = null;
+  function closePopup() { if (popupEl) { popupEl.remove(); popupEl = null; } }
+
+  function popup(anchor, rows) {
+    closePopup();
+    if (!root) return;
+    const box = el('div', 'gt-ctx');
+    const a = anchor.getBoundingClientRect();
+    const host = root.getBoundingClientRect();
+    box.style.top = Math.round(a.bottom - host.top + 4) + 'px';
+    // 오른쪽 끝에 붙은 앵커라 오른쪽 정렬이 자연스럽다
+    box.style.right = Math.round(host.right - a.right) + 'px';
+
+    rows.forEach((r) => {
+      const it = el('div', 'gt-ctx-item');
+      it.appendChild(el('span', null, r.label));
+      if (r.hint) { const h = el('span', 'gt-ctx-hint', r.hint); it.appendChild(h); }
+      if (r.current) it.dataset.current = '1';
+      it.addEventListener('mousedown', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        closePopup();
+        try { r.onPick(); } catch (err) { system('error', String(err.message || err)); }
+      });
+      box.appendChild(it);
+    });
+
+    root.appendChild(box);
+    popupEl = box;
+    setTimeout(() => {
+      const away = (e) => {
+        const t = e.composedPath ? e.composedPath()[0] : e.target;
+        if (popupEl && !popupEl.contains(t)) { closePopup(); shadow.removeEventListener('mousedown', away, true); }
+      };
+      shadow.addEventListener('mousedown', away, true);
+    }, 0);
+  }
+
   function focusInput() { if (ui.input) ui.input.focus(); }
 
   function setMode(m) {
@@ -405,7 +453,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get ui() { return ui; },
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
-    applyConfig, syncSidebar, refreshChrome, renderChrome,
+    applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup,
     render, setMode, system,
     clearSystem() { systemLog.length = 0; render(); },
     // 확장이 다시 로드되면 이 스크립트는 고아가 된다. 그때 화면에서 완전히 물러난다.

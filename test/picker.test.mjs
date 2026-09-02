@@ -10,7 +10,14 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter((l) => !/^\
 // --- 정적 ---
 {
   t('Radix 는 pointer 이벤트로 연다', /pointerdown/.test(src) && /pointerup/.test(src));
-  t('로케일 라벨을 로직에 쓰지 않는다', !/중간|빠름|높음/.test(code));
+  // 원본 라벨과 문자열로 대조하면 언어가 바뀌는 순간 깨진다.
+  // 반면 자리 이름(낮음·중간·높음)을 '표시용'으로 쓰는 것은 우리 UI 라 무관하다.
+  // 그래서 존재 여부가 아니라 **비교에 쓰였는지**를 본다.
+  t('로케일 라벨로 비교하지 않는다',
+    !/===\s*['"](?:중간|빠름|높음|낮음)['"]/.test(code)
+    && !/['"](?:중간|빠름|높음|낮음)['"]\s*===/.test(code)
+    && !/includes\(\s*['"](?:중간|빠름|높음|낮음)['"]/.test(code));
+  t('자리 이름은 표시용 표에만 있다', /POSITIONS = \{/.test(code));
   t('추론 항목은 슬라이더 보유로 식별한다', /querySelector\('\[role="slider"\]'\)/.test(src));
   t('화살표 키로 조작한다', /ArrowRight/.test(src) && /ArrowLeft/.test(src));
   t('모델은 menuitemradio 로 식별', /menuitemradio/.test(src));
@@ -49,8 +56,11 @@ function world(opt) {
                     if (k === 'ArrowLeft' && slider.pos > 0) slider.pos--; sync(); }
   });
 
+  // 실제 페이지에서는 pill 라벨이 슬라이더를 따라간다. 스텁도 그래야 한다 —
+  // 고정해두면 '현재 위치'가 안 따라오는 걸 못 잡는다.
   const pillEl = {
-    className: '__composer-pill x', textContent: '중간',
+    className: '__composer-pill x',
+    get textContent() { return LABELS[slider.pos]; },
     getAttribute: (k) => (k === 'aria-haspopup' ? 'menu' : null),
     click(){ state.open = true; }, dispatchEvent(){ return true; }, focus(){}
   };
@@ -193,6 +203,35 @@ function world(opt) {
   t('상단바가 메뉴 없이 라벨을 읽는다', /GT\.picker\.effortLabel\(\)/.test(tty));
   t('변화가 오면 즉시 다시 그린다', /GT\.picker\.onChange\(\(\) => GT\.tty\.renderChrome\(\)\)/.test(idx));
   t('스크롤백에 "바꾸는 중" 을 남기지 않는다', !/추론 수준 바꾸는 중/.test(cmds2));
+}
+
+// --- 상단바에서 고를 수 있어야 한다 ---
+{
+  const { P } = world();
+  const c0 = P.effortChoices();
+  t('단계 수만큼 준다', c0.length === 3);
+  t('아직 안 본 자리는 자리 이름으로', c0[0].label === '낮음' && c0[2].label === '높음');
+  t('현재는 아직 모른다 (라벨을 본 적이 없다)', c0.every((c) => !c.current));
+
+  await P.effort();                       // 한 번 읽으면 현재 위치의 라벨을 배운다
+  const c1 = P.effortChoices();
+  t('본 라벨은 실제 값으로', c1[1].label === '중간');
+  t('현재 표시', c1[1].current === true && !c1[0].current);
+
+  await P.setEffort(2);                   // 옮기면 그 자리의 라벨도 배운다
+  const c2 = P.effortChoices();
+  t('옮긴 자리의 라벨도 배운다', c2[2].label === 'Thinking');
+  t('현재가 따라 옮겨간다', c2[2].current === true);
+}
+
+// --- 배선 ---
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  t('상단바 표시를 누르면 팝업', /effort\.addEventListener\('mousedown'/.test(tty));
+  t('팝업이 effortChoices 를 쓴다', /GT\.picker\.effortChoices\(\)/.test(tty));
+  t('바꾸는 중에는 다시 안 연다', /GT\.picker\.pending\) return;/.test(tty));
+  t('현재 항목을 고르면 아무 일도 안 한다', /if \(!c\.current\) GT\.picker\.setEffort/.test(tty));
+  t('팝업은 바깥 클릭으로 닫힌다', /shadow\.addEventListener\('mousedown', away, true\)/.test(tty));
 }
 
 let bad = 0;

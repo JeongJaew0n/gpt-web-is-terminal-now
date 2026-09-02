@@ -136,6 +136,11 @@ GT.theme = (function () {
 .gt-ctx-item { padding: 4px 12px; color: var(--gt-fg-dim); cursor: default; white-space: nowrap; }
 .gt-ctx-item:hover { background: var(--gt-bg-3); color: var(--gt-fg); }
 .gt-ctx-item[data-danger="1"] { color: var(--gt-red); }
+.gt-ctx-item[data-current="1"] { color: var(--gt-fg); }
+.gt-ctx-item { display: flex; gap: 14px; }
+.gt-ctx-hint { margin-left: auto; color: var(--gt-green); }
+.gt-effort { cursor: default; }
+.gt-effort:hover { color: var(--gt-fg); }
 .gt-ctx-item[data-armed="1"] { background: var(--gt-red); color: var(--gt-bg-1); }
 .gt-ctx-note { padding: 6px 12px 2px; margin-top: 4px; border-top: 1px solid var(--gt-bg-3);
   color: var(--gt-fg-faint); font-size: 11px; }

@@ -122,6 +122,7 @@ GT.picker = (function () {
     if (!(await open())) return null;
     const state = readEffort(effortItem());
     await close();
+    if (state) { if (state.steps) steps = state.steps; learn(state.index, state.label); }
     return state;
   }
 
@@ -148,6 +149,8 @@ GT.picker = (function () {
       await wait(140);
     }
     const after = readEffort(item);
+    if (after) { if (after.steps) steps = after.steps; learn(after.index, after.label); }
+    learn(cur.index, cur.label);
     await close();
     if (!after || after.index !== want) {
       return { ok: false, reason: 'no-move', from: cur.index, to: after ? after.index : null };
@@ -166,6 +169,11 @@ GT.picker = (function () {
   // 메뉴가 열려 있는 동안에는 라벨이 '추론 수준' 으로 바뀌므로 그때는 마지막 값을 쓴다.
   let lastEffort = null;
   let pending = null;              // 바꾸는 중일 때 {from}
+  // 슬라이더 단계 수와, 지금까지 본 위치별 라벨.
+  // 라벨은 그 위치가 '현재'가 되어야 알 수 있다 — 알아내려고 값을 옮길 수는 없으니
+  // 본 것만 기억하고 나머지는 자리 이름으로 대신한다.
+  let steps = 3;
+  const seenLabels = {};
   const listeners = [];
   const notify = () => listeners.forEach((f) => { try { f(); } catch (_) {} });
   const remember = (st) => { if (st && st.label) lastEffort = st.label; return st; };
@@ -179,6 +187,22 @@ GT.picker = (function () {
     if (t) lastEffort = t;
     return lastEffort;
   }
+
+  // 상단바 팝업이 쓸 목록. 메뉴를 열지 않고 만든다.
+  // 3단계면 자리 이름(낮음·중간·높음)을 기본으로 쓰고, 실제로 본 라벨이 있으면 그걸 보여준다.
+  const POSITIONS = { 3: ['낮음', '중간', '높음'] };
+  function effortChoices() {
+    const cur = effortLabel();
+    const curIdx = Object.keys(seenLabels).find((k) => seenLabels[k] === cur);
+    const names = POSITIONS[steps];
+    return Array.from({ length: steps }, (_, i) => ({
+      index: i,
+      label: seenLabels[i] || (names ? names[i] : String(i)),
+      current: curIdx != null ? Number(curIdx) === i : false
+    }));
+  }
+
+  const learn = (i, label) => { if (label && i != null) { seenLabels[i] = label; } };
 
   return {
     current, models, chooseModel, available: () => !!pill(),
@@ -195,7 +219,8 @@ GT.picker = (function () {
         notify();
       }
     },
-    effortLabel,
+    effortLabel, effortChoices,
+    get steps() { return steps; },
     get pending() { return pending; },
     onChange(fn) { listeners.push(fn); },
     get lastEffort() { return lastEffort; }
