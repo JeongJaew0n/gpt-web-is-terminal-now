@@ -356,7 +356,9 @@ GT.commands = (function () {
   function parse(line) {
     const t = line.trim();
     if (!t) return null;
-    const isCmd = t.startsWith(':') || /^(ls|clear|help)\b/.test(t);
+    // ':' 없이 명령으로 받는 건 여기 목록뿐이다. 레지스트리에 없는 이름을 넣으면
+    // 평범한 대화가 '알 수 없는 명령' 으로 막힌다 — clear 가 그랬다.
+    const isCmd = t.startsWith(':') || /^(ls|help)\b/.test(t);
     if (!isCmd) return null;
     const parts = t.split(/\s+/);
     let name = parts[0];

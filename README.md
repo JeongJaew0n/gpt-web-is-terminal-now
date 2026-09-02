@@ -14,7 +14,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 395](https://img.shields.io/badge/테스트-395_케이스-22C55E)
+![테스트 402](https://img.shields.io/badge/테스트-402_케이스-22C55E)
 
 </div>
 
@@ -278,7 +278,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>19개 파일 · 395 케이스</b></summary>
+<summary><b>19개 파일 · 402 케이스</b></summary>
 
 <br>
 
@@ -301,7 +301,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
-| `complete` | 21 | 명령·인자 자동완성 |
+| `complete` | 28 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
 
 </details>
@@ -338,7 +338,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 |---|---|
 | 문법 검사 | 전체 파일 `node --check` 통과 |
 | 로드 시점 예외 | 없음 (`test/load.test.mjs` — 20개 모듈) |
-| 순수 로직 | 395 케이스 통과 (위 표) |
+| 순수 로직 | 402 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

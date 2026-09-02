@@ -24,6 +24,20 @@ const C = load();
 const results = []; const t = (n, ok) => results.push([n, ok]);
 const names = C.registry.map((c) => c.name);
 
+// --- parse: ':' 없이 받는 이름은 전부 레지스트리에 있어야 한다 ---
+{
+  // 없는 이름을 명령으로 인식하면 그 낱말로 시작하는 대화가 통째로 막힌다.
+  const bare = ['ls', 'help'];
+  bare.forEach((w) => {
+    const p = C.parse(w);
+    t(`'${w}' 는 명령으로 인식된다`, !!p);
+    t(`'${w}' 는 레지스트리에 있다`, !!p && names.includes(p.name));
+  });
+  t("'clear' 는 더 이상 명령이 아니다", C.parse('clear') === null);
+  t("'clear' 로 시작하는 문장은 대화로 간다", C.parse('clear 를 영어로 뭐라고 해?') === null);
+  t('평범한 문장은 명령이 아니다', C.parse('오늘 날씨 어때') === null);
+}
+
 // --- 명령 이름 ---
 {
   const r = C.complete(':the');
