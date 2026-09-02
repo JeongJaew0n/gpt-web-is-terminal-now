@@ -130,6 +130,36 @@ function world(opt) {
   t('실패 사유를 밝힌다', r.ok === false && r.reason === 'no-slider');
 }
 
+// --- 상대 이동을 내부에서 푼다 (메뉴를 두 번 열지 않으려고) ---
+{
+  const { P, slider } = world();
+  slider.keys.length = 0;
+  const up = await P.setEffort('+');
+  t("'+' 를 직접 받는다", up.ok === true && up.index === 2);
+  t("'+' 는 ArrowRight 한 번", slider.keys.join(',') === 'ArrowRight');
+
+  slider.keys.length = 0;
+  const down = await P.setEffort('-');
+  t("'-' 도 받는다", down.ok === true && down.index === 1);
+}
+
+// --- 이미 그 값이면 움직이지 않는다 ---
+{
+  const { P, slider } = world();
+  slider.keys.length = 0;
+  const same = await P.setEffort(1);      // 시작이 1
+  t('같은 값이면 키를 안 쏜다', slider.keys.length === 0);
+  t('noop 으로 알린다', same.ok === true && same.noop === true);
+}
+
+// --- 닫힘을 단정하지 않는다 ---
+{
+  const src2 = fs.readFileSync('src/content/picker.js', 'utf8');
+  t('close() 가 결과를 돌려준다', /return !items\(\)\.length;/.test(src2));
+  t('합성 Escape 로 안 닫힌다는 사실을 주석에 남겼다', /합성 Escape 로는 이 메뉴가 닫히지 않는다/.test(src2));
+  t('focus() 로 포커스를 뺏지 않는다', !/item\.focus\(\)/.test(src2));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

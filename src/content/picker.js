@@ -40,11 +40,15 @@ GT.picker = (function () {
     return false;
   }
 
+  // 합성 Escape 로는 이 메뉴가 닫히지 않는다 (2026-09-02 실측 — 슬라이더를 건드리지 않아도 마찬가지).
+  // 다만 우리 오버레이 안에서 일어나는 사용자의 다음 '진짜' 클릭이 페이지까지 전파되어 그때 닫힌다.
+  // 그래서 시도는 하되 닫혔다고 단정하지 않는다.
   async function close() {
-    for (let i = 0; i < 3 && items().length; i += 1) {
+    for (let i = 0; i < 2 && items().length; i += 1) {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       await wait(120);
     }
+    return !items().length;
   }
 
   const label = (el) => (el.textContent || '').trim();
@@ -121,6 +125,8 @@ GT.picker = (function () {
     return state;
   }
 
+  // target: 숫자(절대 위치) 또는 '+' / '-' (상대). 상대까지 여기서 풀어야
+  // 메뉴를 한 번만 열고 끝낼 수 있다 — 열 때마다 1초 가까이 걸린다.
   async function setEffort(target) {
     if (!(await open())) return { ok: false, reason: 'menu-not-found' };
     const item = effortItem();
@@ -128,17 +134,18 @@ GT.picker = (function () {
     const cur = readEffort(item);
     if (!cur || cur.index == null || !cur.steps) { await close(); return { ok: false, reason: 'unreadable' }; }
 
-    const want = Math.max(0, Math.min(cur.steps - 1, Number(target)));
-    if (!Number.isFinite(want)) { await close(); return { ok: false, reason: 'bad-target' }; }
+    const rel = target === '+' ? cur.index + 1 : target === '-' ? cur.index - 1 : Number(target);
+    if (!Number.isFinite(rel)) { await close(); return { ok: false, reason: 'bad-target' }; }
+    const want = Math.max(0, Math.min(cur.steps - 1, rel));
+    if (want === cur.index) { await close(); return { ok: true, index: cur.index, label: cur.label, steps: cur.steps, noop: true }; }
 
     const key = want > cur.index ? 'ArrowRight' : 'ArrowLeft';
     const n = Math.abs(want - cur.index);
-    item.focus();
     for (let i = 0; i < n; i += 1) {
       item.dispatchEvent(new KeyboardEvent('keydown', {
         key, bubbles: true, cancelable: true, composed: true
       }));
-      await wait(250);
+      await wait(140);
     }
     const after = readEffort(item);
     await close();

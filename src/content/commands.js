@@ -274,28 +274,31 @@ GT.commands = (function () {
     if (!GT.picker.available()) {
       return err('원본의 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
     }
-    const cur = await GT.picker.effort();
-    if (!cur) return err('추론 수준을 읽지 못했다 — :health 확인');
 
     if (!args.length) {
+      info('추론 수준 읽는 중…');
+      const cur = await GT.picker.effort();
+      if (!cur) return err('추론 수준을 읽지 못했다 — :health 확인');
       info(`추론 수준: ${cur.label} (${cur.index + 1}/${cur.steps})`);
       return info(':effort 0 · 1 · 2 또는 낮음/중간/높음, +/- 로 한 칸씩');
     }
 
     // 라벨은 로케일을 타므로 이름은 별칭으로만 받고 실제 이동은 인덱스로 한다.
-    const ALIAS = { '낮음': 0, 'low': 0, 'instant': 0, '중간': 1, 'mid': 1, 'medium': 1,
-                    '높음': 2, 'high': 2, 'thinking': 2 };
+    const ALIAS = { '낮음': 0, low: 0, instant: 0, '중간': 1, mid: 1, medium: 1,
+                    '높음': 2, high: 2, thinking: 2 };
     const a = String(args[0]).toLowerCase();
     let want;
-    if (a === '+') want = cur.index + 1;
-    else if (a === '-') want = cur.index - 1;
+    if (a === '+' || a === '-') want = a;
     else if (Object.prototype.hasOwnProperty.call(ALIAS, a)) want = ALIAS[a];
     else if (/^\d+$/.test(a)) want = Number(a);
-    else return err(`:effort <0-${cur.steps - 1} | 낮음|중간|높음 | + | ->`);
+    else return err(':effort <0-2 | 낮음|중간|높음 | + | ->');
 
-    if (want === cur.index) return info(`이미 ${cur.label}`);
+    // 원본 메뉴를 열고 화살표로 옮기는 방식이라 몇 초 걸린다. 먼저 알린다.
+    info('추론 수준 바꾸는 중… (원본 메뉴를 조작한다)');
     const r = await GT.picker.setEffort(want);
-    if (r.ok) return info(`추론 수준 → ${r.label} (${r.index + 1}/${r.steps})`);
+    if (r.ok) {
+      return info(r.noop ? `이미 ${r.label}` : `추론 수준 → ${r.label} (${r.index + 1}/${r.steps})`);
+    }
     if (r.reason === 'no-move') return err(`움직이지 않았다 (${r.from} → ${r.to}). 원본이 바뀌었을 수 있다`);
     err(`전환 실패 (${r.reason})`);
   });
