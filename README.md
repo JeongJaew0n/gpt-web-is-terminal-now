@@ -347,6 +347,9 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |
 | fiber 마크다운 원문 수확 | 실제 페이지에서 확인 |
 | 사이드바 · 모델/추론 수준 전환 · 자동완성 · 스크롤백 | 언팩 로드 후 실제 페이지에서 확인 |
+| 한글 조합 중 Enter 를 흘려보내는가 | 실측 — 조합 중 Enter 는 아무 일도 안 하고, 이어진 Enter 에서만 실행 |
+| `:rename` 이 새로고침 없이 탭 이름에 반영되는가 | 언팩 로드 후 실제 페이지에서 확인 |
+| 원본이 우리가 쓴 `document.title` 을 되돌리지 않는가 | 실측 — 대화 페이지에서 14초 관찰, 되돌리지 않았다 |
 
 <div align="center">
 <br>
