@@ -4,6 +4,12 @@
   "version": "0.1.0",
   "description": "ChatGPT 웹을 터미널 TUI 로 재구성한다. 개인용 언팩 확장.",
   "minimum_chrome_version": "111",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "storage"
   ],
@@ -11,10 +17,20 @@
     "https://chatgpt.com/*"
   ],
   "action": {
-    "default_title": "gpt-term 켜기/끄기"
+    "default_title": "gpt-term 켜기/끄기",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "background": {
     "service_worker": "src/background/service-worker.js"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
   },
   "content_scripts": [
     {
@@ -58,9 +74,5 @@
         "src/content/index.js"
       ]
     }
-  ],
-  "options_ui": {
-    "page": "src/options/options.html",
-    "open_in_tab": true
-  }
+  ]
 }
