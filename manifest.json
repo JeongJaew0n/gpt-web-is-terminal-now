@@ -45,6 +45,7 @@
         "src/content/conversation.js",
         "src/content/convops.js",
         "src/content/markdown.js",
+        "src/content/renderplan.js",
         "src/content/theme.js",
         "src/content/tty.js",
         "src/content/palette.js",

@@ -134,6 +134,8 @@ src/options/options.html     설정 화면
 - [대화 조작 (이름·고정·보관·삭제)](docs/plan/2026-09-01-conversation-ops.md) — 4/6 + 다중 선택 삭제, 공유·프로젝트 이동은 TODO
 - [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) — 모델·추론 수준 모두 동작
 
+- [스크롤백 렌더 개선](docs/plan/2026-09-02-scrollback-render.md) — 구현됨, 브라우저 확인 대기
+
 ## 알려진 이슈
 
 `docs/issue/` 에 조사·수정 기록이 있다 → [목록](docs/issue/README.md)
@@ -166,6 +168,7 @@ node test/sidebar.test.mjs     # 목록 손잡이와 표시 규칙
 node test/picker.test.mjs      # 모델·추론 수준 선택 (원본 메뉴 조작)
 node test/focus.test.mjs       # 클릭·타이핑이 입력창으로 가는가
 node test/convops.test.mjs     # 대화 조작 — 되돌릴 수 없는 것은 확인 후에만
+node test/renderplan.test.mjs  # 스크롤백 재구성 서명·재사용
 ```
 
 ## 검증 상태

@@ -1,0 +1,64 @@
+// gpt-term — 스크롤백 재구성 계획. 순수 함수만 둔다.
+//
+// 스크롤백을 매번 통째로 다시 그리면 선택 앵커가 사라진다
+// (docs/issue/2026-09-02-selection-lost-on-rerender.md).
+// 그래서 '무엇이 바뀌었는지'를 먼저 계산하고 바뀐 것만 갈아끼운다.
+//
+// 여기가 순수 함수인 이유: 서명에 필드를 빠뜨리면 낡은 내용이 화면에 남는데,
+// 그 증상은 조용해서 알아채기 어렵다. DOM 없이 직접 검사할 수 있어야 한다.
+GT.renderplan = (function () {
+  'use strict';
+
+  // 렌더가 읽는 값을 전부 넣는다.
+  // 길이만으로는 부족하다 — fiber 교정처럼 길이가 같고 내용만 바뀌는 경우가 실제로 있었다.
+  // 전체 해시는 긴 대화에서 매 틱 비용이 되므로 길이 + 앞뒤 8자로 대신한다.
+  // 시각(at)은 넣지 않는다. 넣으면 상대 시각이 바뀔 때마다 블록이 교체되어
+  // 선택을 다시 깨뜨린다 — 시각은 노드를 유지한 채 자리에서 갱신한다.
+  //
+  // 구분자 대신 JSON 으로 묶는다. 본문에 어떤 문자가 들어와도 경계가 흐려지지 않는다.
+  function signature(m, ctx) {
+    const c = ctx || {};
+    const t = typeof m.text === 'string' ? m.text : '';
+    return JSON.stringify([
+      m.role,
+      t.length,
+      t.slice(0, 8),
+      t.length > 8 ? t.slice(-8) : '',
+      m.streaming ? 1 : 0,
+      m.model || '',
+      m.thinking || 0,
+      m.parts ? m.parts.length : -1,
+      c.epoch || 0,          // 설정 변경. 개별 추적 대신 하나로 묶는다
+      c.path || ''           // 메타 줄에 경로가 찍힌다
+    ]);
+  }
+
+  // prev: [{key, sig}]  지금 붙어 있는 것
+  // next: [{key, sig}]  붙어 있어야 하는 것 (순서 포함)
+  //
+  // keep   = 노드를 그대로 쓴다 (선택이 살아남는 지점)
+  // create = 새로 만든다
+  // remove = 더 이상 필요 없다
+  function reconcile(prev, next) {
+    const prevSig = new Map((prev || []).map((p) => [p.key, p.sig]));
+    const ops = (next || []).map((n, index) => ({
+      key: n.key,
+      index,
+      op: prevSig.has(n.key) && prevSig.get(n.key) === n.sig ? 'keep' : 'create'
+    }));
+    const wanted = new Set((next || []).map((n) => n.key));
+    const remove = (prev || []).filter((p) => !wanted.has(p.key)).map((p) => p.key);
+    return { ops, remove };
+  }
+
+  // 아무것도 손댈 필요가 없는가. 순서까지 같아야 한다.
+  function unchanged(plan, prev) {
+    if (plan.remove.length) return false;
+    if (plan.ops.some((o) => o.op !== 'keep')) return false;
+    const prevKeys = (prev || []).map((p) => p.key);
+    if (prevKeys.length !== plan.ops.length) return false;
+    return plan.ops.every((o, i) => prevKeys[i] === o.key);
+  }
+
+  return { signature, reconcile, unchanged };
+})();

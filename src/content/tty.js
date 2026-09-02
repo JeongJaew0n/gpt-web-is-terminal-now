@@ -11,7 +11,12 @@ GT.tty = (function () {
   let host = null, shadow = null, root = null, varStyle = null;
   const ui = {};
   let mode = 'NORMAL';
+  // key -> {el, sig, at}. 서명이 같으면 노드를 그대로 쓴다 —
+  // 손대지 않은 블록에 걸린 선택이 살아남는 지점이다.
+  const pool = new Map();
+  let epoch = 0;
   const systemLog = [];
+  let sysSeq = 0;
 
   // 원본 UI 를 덮는 스타일은 page document 에 있어야 한다(shadow root 밖).
   function pageStyle() {
@@ -149,6 +154,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
 
   function applyConfig(cfg) {
     if (!varStyle) return;
+    epoch += 1;              // 렌더 결과가 달라질 수 있다. 다음 렌더에서 전부 다시 만든다
     varStyle.textContent = GT.theme.vars(cfg);
     syncSidebar();
     root.classList.toggle('gt-scanlines', !!cfg.scanlines);
@@ -176,7 +182,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     const p = el('span', null, GT.store.state.path); p.style.color = 'var(--gt-cyan)';
     meta.appendChild(u); meta.appendChild(p);
     meta.appendChild(el('span', 'gt-spacer'));
-    meta.appendChild(el('span', null, stamp(m.at)));
+    meta.appendChild(el('span', 'gt-stamp', stamp(m.at)));
     const line = el('div', 'gt-user-line');
     line.appendChild(el('span', 'gt-prompt-mark', '❯'));
     const body = el('span'); body.style.whiteSpace = 'pre-wrap'; body.style.wordBreak = 'break-word';
@@ -195,10 +201,10 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     meta.appendChild(head);
     if (m.streaming) {
       meta.appendChild(el('span', 'gt-faint', '·'));
-      meta.appendChild(el('span', 'gt-faint', `${GT.store.elapsed().toFixed(1)}s`));
+      meta.appendChild(el('span', 'gt-faint gt-elapsed', `${GT.store.elapsed().toFixed(1)}s`));
     }
     meta.appendChild(el('span', 'gt-spacer'));
-    meta.appendChild(el('span', 'gt-faint', stamp(m.at)));
+    meta.appendChild(el('span', 'gt-faint gt-stamp', stamp(m.at)));
 
     const shell = el('div', 'gt-assistant');
     // 추론 과정 자체는 원본이 본문으로 주지 않는다. 있었다는 사실만 한 줄로 남긴다.
@@ -244,16 +250,71 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
 
   let stickBottom = true;
 
-  function render() {
+  // 스크롤백은 바뀐 것만 갈아끼운다.
+  // 통째로 다시 그리면 선택 앵커가 사라진다 (docs/issue/2026-09-02-…).
+  function renderScrollback() {
+    const s = GT.store.state;
+    const ctx = { epoch, path: s.path };
+
+    const next = [];
+    s.messages.forEach((m, i) => {
+      // id 가 없다고 건너뛰면 그 메시지가 화면에서 조용히 사라진다.
+      // 위치 기반 키로라도 반드시 그린다.
+      const key = m.id ? 'm:' + m.id : 'i:' + i;
+      next.push({ key, sig: GT.renderplan.signature(m, ctx), m });
+    });
+    systemLog.forEach((rec) => {
+      next.push({ key: 's:' + rec.id, sig: JSON.stringify(['sys', rec.id, epoch]), rec });
+    });
+
+    const prev = [...pool.entries()].map(([key, v]) => ({ key, sig: v.sig }));
+    const plan = GT.renderplan.reconcile(prev, next);
+    if (GT.renderplan.unchanged(plan, prev)) return false;
+
+    plan.remove.forEach((key) => {
+      const rec = pool.get(key);
+      if (rec && rec.el.parentElement) rec.el.remove();
+      pool.delete(key);
+    });
+
+    next.forEach((n, i) => {
+      let rec = pool.get(n.key);
+      if (!rec || rec.sig !== n.sig) {
+        const node = n.m
+          ? (n.m.role === 'user' ? turnUser(n.m) : turnAssistant(n.m))
+          : systemRow(n.rec);
+        if (rec && rec.el.parentElement) rec.el.remove();
+        rec = { el: node, sig: n.sig, at: n.m ? n.m.at : null };
+        pool.set(n.key, rec);
+      }
+      const cur = ui.scroll.children[i];
+      if (cur !== rec.el) ui.scroll.insertBefore(rec.el, cur || null);
+    });
+
+    while (ui.scroll.children.length > next.length) ui.scroll.lastElementChild.remove();
+    return true;
+  }
+
+  // 시각과 경과시간은 노드를 갈아끼우지 않고 자리에서 고친다.
+  // 서명에 넣으면 1분마다 블록이 교체되어 선택을 다시 깨뜨린다.
+  function refreshTimes() {
+    pool.forEach((rec) => {
+      if (rec.at == null) return;
+      const st = rec.el.querySelector('.gt-stamp');
+      if (st) { const v = stamp(rec.at); if (st.textContent !== v) st.textContent = v; }
+    });
+    if (GT.store.state.streamingId) {
+      const rec = pool.get('m:' + GT.store.state.streamingId);
+      const e = rec && rec.el.querySelector('.gt-elapsed');
+      if (e) e.textContent = `${GT.store.elapsed().toFixed(1)}s`;
+    }
+  }
+
+  // 상단바·탭·입력줄 메타·상태줄. 싸므로 매 틱 돌아도 된다.
+  function renderChrome() {
     if (!root) return;
     const s = GT.store.state;
-    stickBottom = ui.scroll.scrollTop + ui.scroll.clientHeight >= ui.scroll.scrollHeight - 40;
-
-    ui.scroll.textContent = '';
-    s.messages.forEach((m) => {
-      ui.scroll.appendChild(m.role === 'user' ? turnUser(m) : turnAssistant(m));
-    });
-    systemLog.forEach((rec) => ui.scroll.appendChild(systemRow(rec)));
+    refreshTimes();
 
     // chrome
     ui.title.textContent = `${s.path}${s.conversationTitle ? ' — ' + s.conversationTitle : ''}`;
@@ -289,7 +350,14 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     refreshChrome();
     setMode(s.streamingId ? 'STREAM' : mode === 'STREAM' ? 'NORMAL' : mode);
 
-    if (stickBottom) ui.scroll.scrollTop = ui.scroll.scrollHeight;
+  }
+
+  function render() {
+    if (!root) return;
+    stickBottom = ui.scroll.scrollTop + ui.scroll.clientHeight >= ui.scroll.scrollHeight - 40;
+    const changed = renderScrollback();
+    renderChrome();
+    if (changed && stickBottom) ui.scroll.scrollTop = ui.scroll.scrollHeight;
   }
 
   // 설정과 창 폭에 따라 사이드바를 붙이거나 뗀다.
@@ -320,7 +388,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
   }
 
   function system(level, text, node) {
-    systemLog.push({ level, text, node });
+    systemLog.push({ id: ++sysSeq, level, text, node });
     if (systemLog.length > 60) systemLog.shift();
     render();
   }
@@ -330,7 +398,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get ui() { return ui; },
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
-    applyConfig, syncSidebar, refreshChrome,
+    applyConfig, syncSidebar, refreshChrome, renderChrome,
     render, setMode, system,
     clearSystem() { systemLog.length = 0; render(); },
     // 확장이 다시 로드되면 이 스크립트는 고아가 된다. 그때 화면에서 완전히 물러난다.
@@ -339,6 +407,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       const st = document.getElementById('gpt-term-page-style');
       if (st) st.remove();
       if (host) host.remove();
+      pool.clear();
       host = null; shadow = null; root = null;
     },
     show() { document.documentElement.classList.add(HIDE_CLASS); ui.input && ui.input.focus(); },

@@ -10,7 +10,7 @@
   'use strict';
   const missing = [];
   if (typeof GT === 'undefined') missing.push('GT (protocol.js)');
-  else ['config', 'oai', 'store', 'chats', 'conversation', 'convops', 'markdown', 'theme', 'tty', 'palette', 'sidebar', 'compose', 'picker', 'navigate', 'commands', 'health']
+  else ['config', 'oai', 'store', 'chats', 'conversation', 'convops', 'markdown', 'renderplan', 'theme', 'tty', 'palette', 'sidebar', 'compose', 'picker', 'navigate', 'commands', 'health']
     .forEach((k) => { if (!GT[k]) missing.push('GT.' + k); });
   if (typeof GT_DEFAULTS === 'undefined') missing.push('GT_DEFAULTS (shared/defaults.js)');
   if (!missing.length) return;
@@ -201,7 +201,7 @@
 
   GT.tty.mount(cfg);
   GT.store.onChange(() => GT.tty.render());
-  GT.config.onChange((c) => GT.tty.applyConfig(c));
+  GT.config.onChange((c) => { GT.tty.applyConfig(c); GT.tty.render(); });
 
   function cleanTitle(t) {
     return String(t || '').replace(/\s*[-–—]\s*ChatGPT\s*$/i, '').replace(/^ChatGPT$/i, '');
@@ -346,7 +346,8 @@
       GT.sidebar.draw();                 // 현재 대화 강조를 옮긴다
     }
   });
-  every(1000, () => { if (GT.tty.visible()) GT.tty.render(); });
+  // 이 틱의 목적은 시계와 경과시간이다. 본문을 갈아엎을 이유가 없다.
+  every(1000, () => { if (GT.tty.visible()) GT.tty.renderChrome(); });
 
   // 확장이 다시 로드됐는지 지켜본다. 감지되면 조용히 물러난다.
   every(4000, () => { if (!contextAlive()) shutdown('확장이 다시 로드됨'); });
