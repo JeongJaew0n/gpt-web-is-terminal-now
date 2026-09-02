@@ -271,7 +271,18 @@
   input.addEventListener('focus', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'INSERT'));
   input.addEventListener('blur', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'NORMAL'));
 
+  // IME(한글) 조합 중에는 이 핸들러가 아무것도 하지 않는다.
+  //
+  // 조합 중의 Enter 는 '보내기' 가 아니라 '조합을 확정' 하는 키다.
+  // 그걸 전송으로 받으면 마지막 글자가 아직 입력값에 없는 상태로 실행되고,
+  // 우리가 입력줄을 비운 뒤에 확정된 글자가 빈 줄에 남는다.
+  //   ':rename 안뇽' + Enter → ':rename 안' 이 실행되고 입력줄에 '뇽' 이 남는다
+  // 실측: 조합 중 Enter 가 평범한 Enter 와 똑같이 명령을 실행했다.
+  // e.isComposing 이 정본이고, keyCode 229 는 이를 안 채우는 브라우저용 보험이다.
+  const composing = (e) => e.isComposing || e.keyCode === 229;
+
   input.addEventListener('keydown', async (e) => {
+    if (composing(e)) return;
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       const next = GT.commands.applyCompletion(input.value);
@@ -301,8 +312,12 @@
     }
   });
 
+  // 조합이 끝난 값으로 후보를 다시 계산한다.
+  input.addEventListener('compositionend', () => { autosize(); refreshSuggest(); });
+
   // 전역 키
   listen(window, 'keydown', (e) => {
+    if (composing(e)) return;
     if (e.key === '`' && e.ctrlKey) { e.preventDefault(); toggle(); return; }
     if (!GT.tty.visible()) return;
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); GT.commands.openPalette(); return; }
