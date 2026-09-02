@@ -278,6 +278,19 @@
     if (!GT.tty.visible()) return;
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); GT.commands.openPalette(); return; }
     if (e.key === 'b' && e.ctrlKey) { e.preventDefault(); GT.sidebar.toggle(); return; }
+
+    // 글씨 크기. ⌘/Ctrl +/- 는 브라우저 가속키라 콘텐츠 스크립트가 못 막는다.
+    // 그래서 Alt(⌥) 조합을 쓴다 — 브라우저가 쓰지 않고, 입력 처리에서도 이미 제외된다.
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      // e.key 로 보면 안 된다 — macOS 에서 ⌥= 는 '≠', ⌥- 는 '–', ⌥0 은 'º' 로 온다.
+      // e.code 는 물리 키라 레이아웃과 수정키의 영향을 받지 않는다.
+      const zoom = {
+        Equal: '+', NumpadAdd: '+',
+        Minus: '-', NumpadSubtract: '-',
+        Digit0: 'reset', Numpad0: 'reset'
+      }[e.code];
+      if (zoom) { e.preventDefault(); GT.commands.run(':font ' + zoom); return; }
+    }
     if (e.key === 'Escape' && GT.sidebar.selecting) { e.preventDefault(); GT.sidebar.exitSelect(); return; }
     if (e.key === 'Escape' && GT.sidebar.isOpen() && !GT.palette.isOpen()) {
       e.preventDefault(); GT.sidebar.dismiss(); return;

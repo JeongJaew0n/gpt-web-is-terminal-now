@@ -149,6 +149,30 @@ GT.commands = (function () {
     info(`사이드바 ${next ? '켬' : '끔'}`);
   });
 
+  // 글씨 크기. 브라우저 확대(⌘ +/-)는 페이지 전체를 키우고, 이건 터미널만 키운다.
+  def(':font', '글씨 크기 — :font <10-24 | + | - | reset>', async (args) => {
+    const MIN = 10, MAX = 24;
+    const cur = Number(GT.config.get('font.size')) || 13;
+    const a = String(args[0] || '').toLowerCase();
+    let next;
+    if (!a) {
+      info(`글씨 크기 ${cur}px (${MIN}–${MAX})`);
+      return info(':font +  ·  :font -  ·  :font 15  ·  :font reset   (⌥= / ⌥- / ⌥0)');
+    }
+    if (a === '+') next = cur + 1;
+    else if (a === '-') next = cur - 1;
+    else if (a === 'reset') next = GT.config.DEFAULTS['font.size'];
+    else if (/^\d+$/.test(a)) next = Number(a);
+    else return err(':font <10-24 | + | - | reset>');
+
+    next = Math.max(MIN, Math.min(MAX, next));
+    if (next === cur) return info(`이미 ${cur}px`);
+    await GT.config.set('font.size', next);
+    GT.tty.applyConfig(GT.config.all);
+    GT.tty.render();
+    info(`글씨 크기 ${cur} → ${next}px`);
+  });
+
   def(':theme', `테마 — ${GT.theme.names().join(' · ')}`, async (args) => {
     const name = args[0];
     if (!name) return info(`현재 ${GT.config.get('theme')} · 가능: ${GT.theme.names().join(', ')}`);

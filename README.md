@@ -54,9 +54,10 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | 본문 아무 데나 클릭 · `Esc` | 목록이 비켜난다 (오버레이 바깥 클릭) |
 | 목록에서 대화 선택 | 목록이 비켜난다 (설정으로 끌 수 있음) |
 | `Ctrl` + `B` | 같은 토글 |
+| `⌥` + `=` / `-` / `0` | 글씨 크게 / 작게 / 기본값 |
 | `/` (입력창이 빈 상태) | 사이드바 검색 |
 
-명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:select` `clear` `:q` `:reload`
+명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:select` `clear` `:q` `:reload`
 
 ## 배지
 
@@ -169,6 +170,7 @@ node test/picker.test.mjs      # 모델·추론 수준 선택 (원본 메뉴 조
 node test/focus.test.mjs       # 클릭·타이핑이 입력창으로 가는가
 node test/convops.test.mjs     # 대화 조작 — 되돌릴 수 없는 것은 확인 후에만
 node test/renderplan.test.mjs  # 스크롤백 재구성 서명·재사용
+node test/font.test.mjs        # 글씨 크기 — 물리 키로 받는가
 ```
 
 ## 검증 상태
