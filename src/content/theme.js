@@ -231,6 +231,13 @@ GT.theme = (function () {
 .gt-placeholder { border: 1px dashed var(--gt-border); padding: 9px 12px; display: flex;
   align-items: center; gap: 12px; color: var(--gt-fg-dim); }
 
+.gt-suggest { display: flex; align-items: center; gap: 12px; padding: 0 0 6px;
+  font-size: 11.5px; color: var(--gt-fg-faint); flex-wrap: wrap; }
+.gt-suggest[hidden] { display: none; }
+.gt-suggest-item { color: var(--gt-fg-dim); }
+.gt-suggest-item[data-first="1"] { color: var(--gt-cyan); }
+.gt-suggest-more, .gt-suggest-hint { color: var(--gt-fg-faint); }
+
 /* ---- composer ---- */
 .gt-composer { border-top: 1px solid var(--gt-bg-3); padding: 10px 28px 12px; flex: 0 0 auto; }
 .gt-composer-meta { display: flex; gap: 12px; font-size: 11.5px; }

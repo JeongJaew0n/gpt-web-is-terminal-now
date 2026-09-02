@@ -27,7 +27,8 @@ GT.commands = (function () {
   };
 
   const REG = [];
-  const def = (name, desc, run, hint) => { REG.push({ name, desc, run, hint }); };
+  // args: 인자 후보를 돌려주는 함수(선택). 이미 입력된 앞 인자들을 받는다.
+  const def = (name, desc, run, hint, args) => { REG.push({ name, desc, run, hint, args }); };
 
   def(':help', '명령 목록', () => {
     GT.tty.system('info', null, table(REG.map((c) => [c.name, c.desc])));
@@ -156,7 +157,9 @@ GT.commands = (function () {
     const name = gid ? (projects.find((x) => x.id === gid) || {}).name : null;
     info(name ? `${c.title} → ${name}` : `${c.title} → 프로젝트에서 뺐다`);
     if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
-  });
+  }, null, (prev) => (prev.length === 1
+    ? (GT.chats.projects ? GT.chats.projects().map((p) => p.name).concat('none') : ['none'])
+    : []));
 
   // 공유는 공개 링크를 만든다. API 로 곧장 만들지 않고 원본 대화상자를 띄운다 —
   // 무엇이 공개되는지 ChatGPT 자신의 확인 절차를 거치게 한다.
@@ -199,7 +202,7 @@ GT.commands = (function () {
     }
     const next = await GT.sidebar.toggle(a === 'on' ? true : a === 'off' ? false : undefined);
     info(`사이드바 ${next ? '켬' : '끔'}`);
-  });
+  }, null, (prev) => (prev.length ? [] : ['on', 'off', 'toggle', 'more', 'width', 'clear-cache']));
 
   // 글씨 크기. 브라우저 확대(⌘ +/-)는 페이지 전체를 키우고, 이건 터미널만 키운다.
   def(':font', '글씨 크기 — :font <10-24 | + | - | reset>', async (args) => {
@@ -223,7 +226,7 @@ GT.commands = (function () {
     GT.tty.applyConfig(GT.config.all);
     GT.tty.render();
     info(`글씨 크기 ${cur} → ${next}px`);
-  });
+  }, null, () => ['+', '-', 'reset', '12', '13', '15', '17']);
 
   def(':theme', `테마 — ${GT.theme.names().join(' · ')}`, async (args) => {
     const name = args[0];
@@ -232,7 +235,7 @@ GT.commands = (function () {
     await GT.config.set('theme', name);
     GT.tty.applyConfig(GT.config.all);
     info(`theme = ${name}`);
-  }, 'modern-dark');
+  }, 'modern-dark', () => GT.theme.names());
 
   def(':config', '설정 전체 보기', () => {
     const cfg = GT.config.all;
@@ -250,7 +253,7 @@ GT.commands = (function () {
       GT.tty.render();
       info(`${k} = ${v}`);
     } catch (e) { err(String(e.message || e)); }
-  });
+  }, null, (prev) => (prev.length ? [] : GT.config.keys()));
 
   def(':model', '모델 — 인자 없으면 목록, :model <n|이름> 으로 전환', async (args) => {
     const last = [...GT.store.state.messages].reverse().find((m) => m.model);
@@ -299,7 +302,7 @@ GT.commands = (function () {
     }
     if (r.reason === 'no-move') return err(`움직이지 않았다 (${r.from} → ${r.to}). 원본이 바뀌었을 수 있다`);
     err(`전환 실패 (${r.reason})`);
-  });
+  }, null, () => ['0', '1', '2', '낮음', '중간', '높음', '+', '-']);
 
   def(':version', '지금 실행 중인 코드의 빌드 시각', () => {
     info(`gpt-term 0.1.0 · build ${GT_BUILD}`);
@@ -349,10 +352,66 @@ GT.commands = (function () {
     return true;
   }
 
+  // ---------------------------------------------------------------- 자동완성
+  //
+  // 순수 함수로 둔다. DOM 없이 검사할 수 있어야 규칙이 흔들리지 않는다.
+  const lower = (x) => String(x).toLowerCase();
+
+  function commonPrefix(list) {
+    if (!list.length) return '';
+    let p = String(list[0]);
+    list.forEach((v) => {
+      const s2 = String(v);
+      let i = 0;
+      while (i < p.length && i < s2.length && p[i].toLowerCase() === s2[i].toLowerCase()) i += 1;
+      p = p.slice(0, i);
+    });
+    return p;
+  }
+
+  // line 의 마지막 토큰을 무엇으로 채울 수 있는지 계산한다.
+  function complete(line) {
+    const raw = String(line == null ? '' : line);
+    const endsWithSpace = /\s$/.test(raw);
+    const parts = raw.trim() === '' ? [] : raw.trim().split(/\s+/);
+
+    // 아직 명령 이름을 치는 중
+    if (parts.length === 0 || (parts.length === 1 && !endsWithSpace)) {
+      const token = parts[0] || '';
+      const candidates = REG.map((c) => c.name).filter((n) => lower(n).startsWith(lower(token)));
+      return { kind: 'command', token, candidates };
+    }
+
+    const cmd = REG.find((c) => c.name === parts[0]);
+    if (!cmd || typeof cmd.args !== 'function') return { kind: 'none', token: '', candidates: [] };
+
+    const token = endsWithSpace ? '' : parts[parts.length - 1];
+    const before = parts.slice(1, endsWithSpace ? parts.length : parts.length - 1);
+    let list = [];
+    try { list = cmd.args(before) || []; } catch (_) { list = []; }
+    const candidates = list.map(String).filter((v) => lower(v).startsWith(lower(token)));
+    return { kind: 'argument', token, candidates };
+  }
+
+  // Tab 을 눌렀을 때 줄이 어떻게 바뀌는지. 바뀌지 않으면 null.
+  function applyCompletion(line, res) {
+    const r = res || complete(line);
+    if (!r.candidates.length) return null;
+    const raw = String(line == null ? '' : line);
+    const fill = r.candidates.length === 1 ? r.candidates[0] + ' ' : commonPrefix(r.candidates);
+    if (fill.length <= r.token.length && r.candidates.length > 1) return null;   // 더 채울 게 없다
+    const cut = raw.length - r.token.length;
+    const next = raw.slice(0, cut) + fill;
+    return next === raw ? null : next;
+  }
+
   return {
     registry: REG,
     run,
     parse,
+    complete,
+    applyCompletion,
+    commonPrefix,
     openPalette() {
       GT.palette.open(REG.map((c) => ({ name: c.name, desc: c.desc, hint: c.hint })), (item) => {
         GT.tty.ui.input.value = item.name + ' ';

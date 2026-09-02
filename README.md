@@ -46,6 +46,7 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | 툴바 아이콘 | 같은 토글 |
 | `⌘K` / `Ctrl+K` | 명령 팔레트 |
 | 화면 아무 데나 클릭 · 타이핑 | 입력창으로 들어간다 (직접 클릭할 필요 없음) |
+| `Tab` | 명령·인자 자동완성 |
 | `Enter` | 전송 (`:` 로 시작하면 명령) |
 | `Shift+Enter` | 줄바꿈 |
 | `Ctrl+C` | 생성 중단 |
@@ -60,6 +61,9 @@ Chrome 111 이상이 필요하다 (`world: "MAIN"` 콘텐츠 스크립트).
 | `/` (입력창이 빈 상태) | 사이드바 검색 |
 
 명령: `:help` `ls` `:open <n>` `:new` `:sidebar` `:font` `:theme <name>` `:config` `:set <k> <v>` `:model` `:effort` `:w` `:health` `:options` `:rename` `:pin` `:archive` `:rm` `:mv` `:share` `:select` `clear` `:q` `:reload`
+
+`:` 로 시작하면 입력줄 위에 후보가 뜨고 `Tab` 으로 완성한다. 인자도 완성된다 —
+`:theme ⇥` 는 테마 이름을, `:set ⇥` 은 설정 키를, `:mv 3 ⇥` 는 프로젝트 이름을 준다.
 
 상단바 오른쪽에 모델과 추론 수준이 뜬다. **추론 수준을 누르면 골라서 바꿀 수 있고**, 바꾸는 동안에는 `⠴ 중간 →` 로 표시된다.
 
@@ -188,6 +192,7 @@ node test/focus.test.mjs       # 클릭·타이핑이 입력창으로 가는가
 node test/convops.test.mjs     # 대화 조작 — 되돌릴 수 없는 것은 확인 후에만
 node test/renderplan.test.mjs  # 스크롤백 재구성 서명·재사용
 node test/font.test.mjs        # 글씨 크기 — 물리 키로 받는가
+node test/complete.test.mjs    # 명령·인자 자동완성
 ```
 
 ## 검증 상태

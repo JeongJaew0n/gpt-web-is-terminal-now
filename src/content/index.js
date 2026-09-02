@@ -254,16 +254,43 @@
   const input = GT.tty.ui.input;
 
   const autosize = () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 240) + 'px'; };
-  input.addEventListener('input', autosize);
+
+  // 명령을 치는 동안 후보를 보여준다. 메시지를 칠 때는 방해하지 않는다.
+  function refreshSuggest() {
+    const line = input.value;
+    if (!GT.commands.parse(line) && !/^\s*:/.test(line)) { GT.tty.setSuggest(null); return; }
+    const r = GT.commands.complete(line);
+    if (!r.candidates.length || (r.candidates.length === 1 && r.candidates[0] === r.token)) {
+      GT.tty.setSuggest(null);
+      return;
+    }
+    GT.tty.setSuggest(r.candidates, r.kind === 'argument' ? '⇥ 완성 · 인자' : '⇥ 완성');
+  }
+
+  input.addEventListener('input', () => { autosize(); refreshSuggest(); });
   input.addEventListener('focus', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'INSERT'));
   input.addEventListener('blur', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'NORMAL'));
 
   input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      const next = GT.commands.applyCompletion(input.value);
+      if (next != null) {
+        input.value = next;
+        input.setSelectionRange(next.length, next.length);
+        autosize();
+      }
+      refreshSuggest();
+      return;
+    }
+    if (e.key === 'Escape' && GT.tty.ui.suggest && !GT.tty.ui.suggest.hidden) {
+      e.preventDefault(); GT.tty.setSuggest(null); return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const text = input.value.trim();
       if (!text) return;
-      input.value = ''; autosize();
+      input.value = ''; autosize(); GT.tty.setSuggest(null);
       const handled = await GT.commands.run(text);
       if (handled) return;
       const r = await GT.compose.send(text);

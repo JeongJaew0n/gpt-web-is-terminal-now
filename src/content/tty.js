@@ -107,6 +107,9 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
 
     // composer
     const comp = el('div', 'gt-composer');
+    ui.suggest = el('div', 'gt-suggest');
+    ui.suggest.hidden = true;
+    comp.appendChild(ui.suggest);
     ui.compMeta = el('div', 'gt-composer-meta');
     const row = el('div', 'gt-composer-row');
     ui.mark = el('span', 'gt-prompt-mark', '❯');
@@ -435,6 +438,22 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     }, 0);
   }
 
+  // 입력줄 위 제안 행. 명령을 치는 동안 후보를 보여준다.
+  function setSuggest(list, note) {
+    if (!ui.suggest) return;
+    ui.suggest.textContent = '';
+    if (!list || !list.length) { ui.suggest.hidden = true; return; }
+    list.slice(0, 8).forEach((v, i) => {
+      const it = el('span', 'gt-suggest-item', v);
+      if (i === 0) it.dataset.first = '1';
+      ui.suggest.appendChild(it);
+    });
+    if (list.length > 8) ui.suggest.appendChild(el('span', 'gt-suggest-more', `+${list.length - 8}`));
+    ui.suggest.appendChild(el('span', 'gt-spacer'));
+    ui.suggest.appendChild(el('span', 'gt-suggest-hint', note || '⇥ 완성'));
+    ui.suggest.hidden = false;
+  }
+
   function focusInput() { if (ui.input) ui.input.focus(); }
 
   function setMode(m) {
@@ -453,7 +472,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get ui() { return ui; },
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
-    applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup,
+    applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
     render, setMode, system,
     clearSystem() { systemLog.length = 0; render(); },
     // 확장이 다시 로드되면 이 스크립트는 고아가 된다. 그때 화면에서 완전히 물러난다.
