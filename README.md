@@ -101,7 +101,9 @@
 **인자도 완성된다** — `:theme ⇥` 는 테마 이름을, `:set ⇥` 은 설정 키를, `:mv 3 ⇥` 는 프로젝트 이름을 준다.
 
 <table>
-<tr><th align="left">대화</th><th align="left"></th></tr>
+<tr><th align="left" width="46%">명령</th><th align="left">동작</th></tr>
+
+<tr><td colspan="2"><b>대화</b></td></tr>
 <tr><td><code>ls</code></td><td>대화 목록</td></tr>
 <tr><td><code>:open &lt;n&gt;</code></td><td>대화 열기</td></tr>
 <tr><td><code>:new</code></td><td>새 대화</td></tr>
@@ -113,19 +115,15 @@
 <tr><td><code>:mv &lt;n|id&gt; &lt;프로젝트|none&gt;</code></td><td>프로젝트로 이동 / 빼기</td></tr>
 <tr><td><code>:share &lt;n|id&gt;</code></td><td>원본 공유 대화상자를 연다</td></tr>
 <tr><td><code>:select</code></td><td>다중 선택 모드 <sub>(원본에 없는 기능)</sub></td></tr>
-</table>
 
-<table>
-<tr><th align="left">모델 · 화면</th><th align="left"></th></tr>
+<tr><td colspan="2"><b>모델 · 화면</b></td></tr>
 <tr><td><code>:model [n|이름]</code></td><td>인자 없으면 목록, 주면 전환</td></tr>
 <tr><td><code>:effort &lt;0-2 | 낮음·중간·높음 | +·-&gt;</code></td><td>추론 수준</td></tr>
-<tr><td><code>:sidebar &lt;on|off|toggle|more|width n|clear-cache&gt;</code></td><td>사이드바</td></tr>
+<tr><td><code>:sidebar &lt;on|off|toggle|more|width n&gt;</code></td><td>사이드바 <sub>(<code>clear-cache</code> 도 받는다)</sub></td></tr>
 <tr><td><code>:font &lt;10-24 | + | - | reset&gt;</code></td><td>글씨 크기</td></tr>
 <tr><td><code>:theme &lt;modern-dark|crt-green&gt;</code></td><td>테마</td></tr>
-</table>
 
-<table>
-<tr><th align="left">설정 · 점검</th><th align="left"></th></tr>
+<tr><td colspan="2"><b>설정 · 점검</b></td></tr>
 <tr><td><code>:help</code></td><td>명령 목록</td></tr>
 <tr><td><code>:config</code></td><td>설정 전체 보기</td></tr>
 <tr><td><code>:set &lt;key&gt; &lt;value&gt;</code></td><td>설정 변경</td></tr>
