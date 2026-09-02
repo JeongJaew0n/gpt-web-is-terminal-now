@@ -1,6 +1,6 @@
 # 모델 · 추론 수준 선택
 
-- 상태: **구현됨** (2026-09-01) — 모델 전환 검증 완료, 추론 수준은 부분
+- 상태: **구현 완료** (2026-09-02) — 모델·추론 수준 모두 동작
 - 관련 파일: `src/content/picker.js`, `src/content/commands.js`
 
 ## 제약 — 왜 원본 메뉴를 조작하는가
@@ -50,7 +50,50 @@ button.__composer-pill[aria-haspopup=menu]   라벨 = 현재 추론 수준 ("중
 상단바에 `gpt-5-6-thinking · 중간` 처럼 모델과 추론 수준이 함께 뜬다.
 추론 수준은 우리가 따로 들고 있지 않고 **원본 pill 의 라벨을 그대로 읽는다** — 정본이 하나다.
 
-## 한계 `[미정]`
+## 추론 수준 — 하위 메뉴가 아니라 슬라이더였다 (2026-09-02)
+
+며칠간 "하위 메뉴가 안 열린다"고 붙잡고 있었는데, **애초에 하위 메뉴가 아니었다.**
+
+```html
+[role=menuitem][aria-label="성능"]  aria-keyshortcuts="ArrowLeft ArrowRight"
+  └ [role=slider] aria-valuemin=0 aria-valuemax=2      ← 3단계
+     aria-describedby → "중간, 3개 중 2번째. 왼쪽/오른쪽 화살표 키로 성능을 조정합니다."
+     자손: Track / Range / TickRail / Tick×3 / Thumb
+```
+
+열릴 리가 없었다. 열 것이 없었으니까. 관측한 3단계는 `Instant / 중간 / (상위)` 다.
+
+**화살표 키를 네이티브로 쏘면 움직인다.** React 프롭을 만질 필요가 없어 isolated world 에서 끝난다.
+
+```js
+item.focus();
+item.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, composed: true }));
+```
+
+### 구조로 식별한다
+
+라벨("성능"·"중간")은 로케일을 탄다. 그래서 문자열이 아니라
+**`[role="slider"]` 를 품은 메뉴 항목**으로 찾는다. 현재 위치는 `aria-valuenow`,
+없으면 설명문에서 숫자만 뽑는다(`"3개 중 2번째"` → 2/3). 언어와 무관하다.
+
+### 명령
+
+```
+:effort              현재값 + 안내
+:effort 0 | 1 | 2    위치로
+:effort 낮음|중간|높음  별칭 (실제 이동은 인덱스로 한다)
+:effort + | -        한 칸씩
+```
+
+이동 후 실제 위치를 다시 읽어 확인한다. 안 움직였으면 그대로 보고한다.
+
+### 되짚어볼 교훈
+
+`aria-expanded` 가 있는 다른 항목(`aria-label="모델 선택"`)을 추론 수준 트리거로 **오인**했다.
+텍스트가 "중간"이라 더 헷갈렸다. `aria-label` 을 먼저 봤으면 첫날 끝났을 일이다.
+**보이는 글자가 아니라 접근성 속성이 그 컨트롤의 정체를 말해준다.**
+
+## 옛 한계 기록 (해결됨)
 
 **추론 수준 하위 메뉴가 합성 이벤트로 열리지 않는다.** 세 가지를 시도했다.
 

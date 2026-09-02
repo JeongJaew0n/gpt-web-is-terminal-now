@@ -11,58 +11,76 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').filter((l) => !/^\
 {
   t('Radix 는 pointer 이벤트로 연다', /pointerdown/.test(src) && /pointerup/.test(src));
   t('로케일 라벨을 로직에 쓰지 않는다', !/중간|빠름|높음/.test(code));
-  t('추론 트리거는 역할로 식별한다', /role'\) === 'menuitem' && label\(e\)/.test(src));
+  t('추론 항목은 슬라이더 보유로 식별한다', /querySelector\('\[role="slider"\]'\)/.test(src));
+  t('화살표 키로 조작한다', /ArrowRight/.test(src) && /ArrowLeft/.test(src));
   t('모델은 menuitemradio 로 식별', /menuitemradio/.test(src));
   t('현재값은 aria-checked 로', /aria-checked/.test(src));
   t('메뉴를 반드시 닫는다', (src.match(/await close\(\)/g) || []).length >= 6);
 }
 
 // --- 동작: 가짜 Radix 메뉴로 ---
-function world({ withSubmenu }) {
-  const mk = (role, text, checked) => {
+function world(opt) {
+  const o = opt || {};
+  const mk = (role, text, checked, extra) => {
     const el = {
       role, text, checked, clicks: 0,
-      getAttribute: (k) => (k === 'role' ? role : k === 'aria-checked' ? checked : null),
+      getAttribute: (k) => (k === 'role' ? role : k === 'aria-checked' ? checked
+        : k === 'aria-describedby' ? (extra && extra.describedby) || null : null),
       textContent: text, focus(){}, click(){ el.clicks++; },
-      dispatchEvent(){ return true; }
+      dispatchEvent(e){ if (extra && extra.onKey && e && e.key) extra.onKey(e.key); return true; },
+      querySelector: (sel) => (extra && extra.slider && sel === '[role="slider"]' ? extra.slider : null)
     };
     return el;
   };
+
+  // 3단계 슬라이더. 0=Instant 1=중간 2=Thinking
+  const LABELS = ['Instant', '중간', 'Thinking'];
+  const slider = { pos: 1, keys: [],
+    getAttribute: (k) => (k === 'aria-valuemax' ? '2' : k === 'aria-valuemin' ? '0'
+      : k === 'aria-valuenow' ? String(slider.pos) : null) };
+  const descNode = { textContent: '' };
+  const sync = () => { descNode.textContent = `${LABELS[slider.pos]}, 3개 중 ${slider.pos + 1}번째.`; };
+  sync();
+
+  const perf = mk('menuitem', '', null, {
+    describedby: 'desc1', slider,
+    onKey: (k) => { slider.keys.push(k);
+                    if (k === 'ArrowRight' && slider.pos < 2) slider.pos++;
+                    if (k === 'ArrowLeft' && slider.pos > 0) slider.pos--; sync(); }
+  });
+
   const pillEl = {
     className: '__composer-pill x', textContent: '중간',
     getAttribute: (k) => (k === 'aria-haspopup' ? 'menu' : null),
     click(){ state.open = true; }, dispatchEvent(){ return true; }, focus(){}
   };
-  const base = [mk('menuitem', '중간'), mk('menuitem', ''),
+  const base = [mk('menuitem', '모델 선택'), perf,
                 mk('menuitemradio', 'GPT-5.6 Sol', 'true'), mk('menuitemradio', 'GPT-5.5', 'false')];
-  const sub = [mk('menuitem', '빠름'), mk('menuitem', '높음')];
-  const state = { open: false, subOpen: false };
+  if (o.noSlider) base.splice(1, 1);
+  const state = { open: false };
   const sandbox = {
     console, Object, Array, Set, Map, Number, String, Boolean, JSON, Promise, Error, Date, setTimeout,
     PointerEvent: class { constructor(t){ this.type=t; } },
-    KeyboardEvent: class { constructor(t,o){ this.type=t; Object.assign(this,o); } },
+    KeyboardEvent: class { constructor(t,o2){ this.type=t; Object.assign(this,o2); } },
     MouseEvent: class { constructor(t){ this.type=t; } },
     document: {
       querySelector: () => pillEl,
+      getElementById: (id) => (id === 'desc1' ? descNode : null),
       querySelectorAll: (sel) => {
         if (sel === 'button') return [pillEl];
-        if (!state.open) return [];
-        return state.subOpen && withSubmenu ? base.concat(sub) : base;
+        return state.open ? base : [];
       },
-      dispatchEvent(e){ if (e && e.key === 'Escape') { state.open = false; state.subOpen = false; } return true; }
+      dispatchEvent(e){ if (e && e.key === 'Escape') state.open = false; return true; }
     }
   };
   sandbox.window = sandbox; sandbox.globalThis = sandbox; sandbox.GT = {};
-  // 하위 메뉴는 트리거를 누를 때만 열린다
-  base[0].dispatchEvent = () => { if (state.open) state.subOpen = true; return true; };
-  base[0].click = () => { if (state.open) state.subOpen = true; base[0].clicks++; };
   vm.createContext(sandbox);
   vm.runInContext(src, sandbox, { filename: 'picker.js' });
-  return { P: sandbox.GT.picker, base, sub, state };
+  return { P: sandbox.GT.picker, base, slider, state };
 }
 
 {
-  const { P, base } = world({ withSubmenu: true });
+  const { P, base } = world();
   t('선택기 존재 감지', P.available() === true);
   t('현재 추론 수준을 메뉴 없이 읽는다', P.current().effort === '중간');
 
@@ -79,19 +97,37 @@ function world({ withSubmenu }) {
 
   const r3 = await P.chooseModel('없는모델');
   t('없으면 후보를 알려준다', r3.ok === false && r3.reason === 'no-match' && r3.had.length === 2);
-
-  const eff = await P.efforts();
-  t('하위 메뉴 항목을 읽는다', Array.isArray(eff) && eff.includes('빠름') && eff.includes('높음'));
-  const r4 = await P.chooseEffort('높음');
-  t('추론 수준 전환', r4.ok === true && r4.picked === '높음');
 }
 
-// 하위 메뉴가 안 열리는 환경 — 조용히 실패하면 안 된다
+// --- 추론 수준: 하위 메뉴가 아니라 슬라이더 ---
 {
-  const { P } = world({ withSubmenu: false });
-  t('하위 메뉴 없으면 null', (await P.efforts()) === null);
-  const r = await P.chooseEffort('높음');
-  t('실패 사유를 밝힌다', r.ok === false && r.reason === 'submenu-unavailable');
+  const { P, slider } = world();
+  const st = await P.effort();
+  t('슬라이더에서 현재 위치를 읽는다', st && st.index === 1 && st.steps === 3);
+  t('현재 라벨도 읽는다', st.label === '중간');
+
+  const up = await P.setEffort(2);
+  t('오른쪽으로 한 칸', up.ok === true && up.index === 2);
+  t('ArrowRight 를 쐈다', slider.keys.join(',') === 'ArrowRight');
+
+  slider.keys.length = 0;
+  const down = await P.setEffort(0);
+  t('왼쪽으로 두 칸', down.ok === true && down.index === 0);
+  t('ArrowLeft 두 번', slider.keys.join(',') === 'ArrowLeft,ArrowLeft');
+
+  slider.keys.length = 0;
+  const clamp = await P.setEffort(9);
+  t('범위를 벗어나면 끝으로 고정', clamp.ok === true && clamp.index === 2);
+
+  t('마지막 라벨을 기억한다', typeof P.lastEffort === 'string');
+}
+
+// --- 슬라이더가 없으면 사유를 밝힌다 ---
+{
+  const { P } = world({ noSlider: true });
+  t('슬라이더 없으면 null', (await P.effort()) === null);
+  const r = await P.setEffort(1);
+  t('실패 사유를 밝힌다', r.ok === false && r.reason === 'no-slider');
 }
 
 let bad = 0;

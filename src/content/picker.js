@@ -79,54 +79,88 @@ GT.picker = (function () {
     return { ok: true, picked };
   }
 
-  // 추론 수준 트리거 = 라디오가 아니면서 글자가 있는 항목.
-  // 라벨이 곧 현재값이다.
+  // ------------------------------------------------------------- 추론 수준
+  //
+  // 하위 메뉴가 아니라 **슬라이더**다. 그래서 아무리 열려고 해도 안 열렸다(2026-09-01 실측).
+  //
+  //   [role=menuitem][aria-label="성능"]
+  //     └ [role=slider] aria-valuemin=0 aria-valuemax=2      ← 3단계
+  //        aria-keyshortcuts="ArrowLeft ArrowRight"
+  //        aria-describedby → "중간, 3개 중 2번째."
+  //
+  // 화살표 키를 네이티브로 쏘면 움직인다 — React 프롭을 만질 필요가 없다.
+  // 라벨("성능"·"중간")은 로케일을 타므로 **슬라이더를 품은 항목**으로 구조 식별한다.
+
+  function effortItem() {
+    return items().find((e) => e.querySelector && e.querySelector('[role="slider"]'));
+  }
+
+  function readEffort(item) {
+    if (!item) return null;
+    const slider = item.querySelector('[role="slider"]');
+    const max = Number(slider && slider.getAttribute('aria-valuemax'));
+    const nowAttr = slider && slider.getAttribute('aria-valuenow');
+    // 설명문에서 현재 라벨과 위치를 읽는다. 숫자만 뽑으므로 언어와 무관하다.
+    const ids = String(item.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+    const desc = ids.map((id) => {
+      const n = document.getElementById(id);
+      return n ? (n.textContent || '').trim() : '';
+    }).join(' ');
+    const nums = desc.match(/(\d+)\D+(\d+)/);       // "3개 중 2번째" / "2 of 3"
+    const steps = Number.isFinite(max) && max >= 0 ? max + 1 : (nums ? Number(nums[1]) : null);
+    let index = nowAttr != null && nowAttr !== '' ? Number(nowAttr) : null;
+    if (index == null && nums) index = Number(nums[2]) - 1;
+    const label = (desc.split(',')[0] || '').trim();
+    return { index, steps, label, desc };
+  }
+
+  async function effort() {
+    if (!(await open())) return null;
+    const state = readEffort(effortItem());
+    await close();
+    return state;
+  }
+
+  async function setEffort(target) {
+    if (!(await open())) return { ok: false, reason: 'menu-not-found' };
+    const item = effortItem();
+    if (!item) { await close(); return { ok: false, reason: 'no-slider' }; }
+    const cur = readEffort(item);
+    if (!cur || cur.index == null || !cur.steps) { await close(); return { ok: false, reason: 'unreadable' }; }
+
+    const want = Math.max(0, Math.min(cur.steps - 1, Number(target)));
+    if (!Number.isFinite(want)) { await close(); return { ok: false, reason: 'bad-target' }; }
+
+    const key = want > cur.index ? 'ArrowRight' : 'ArrowLeft';
+    const n = Math.abs(want - cur.index);
+    item.focus();
+    for (let i = 0; i < n; i += 1) {
+      item.dispatchEvent(new KeyboardEvent('keydown', {
+        key, bubbles: true, cancelable: true, composed: true
+      }));
+      await wait(250);
+    }
+    const after = readEffort(item);
+    await close();
+    if (!after || after.index !== want) {
+      return { ok: false, reason: 'no-move', from: cur.index, to: after ? after.index : null };
+    }
+    return { ok: true, index: after.index, label: after.label, steps: after.steps };
+  }
+
+  // 옛 이름 — 하위 메뉴 모델이었던 시절의 잔재. 라벨이 곧 현재값이다.
   function effortTrigger() {
     return items().find((e) => e.getAttribute('role') === 'menuitem' && label(e));
   }
 
-  async function efforts() {
-    if (!(await open())) return null;
-    const trig = effortTrigger();
-    if (!trig) { await close(); return null; }
-    const before = new Set(items().map(label));
+  // 상단바가 매 렌더마다 메뉴를 열 수는 없다. 마지막으로 확인한 라벨만 들고 있는다.
+  let lastEffort = null;
+  const remember = (st) => { if (st && st.label) lastEffort = st.label; return st; };
 
-    // Radix 하위 메뉴 열기. 합성 이벤트로는 안 열리는 경우가 있어 여러 방법을 시도한다.
-    trig.focus();
-    ['pointerover', 'pointermove', 'pointerenter'].forEach((t) => pointer(trig, t));
-    trig.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
-    pointer(trig, 'pointerdown'); pointer(trig, 'pointerup'); trig.click();
-    await wait(700);
-
-    const fresh = items().map(label).filter((t) => t && !before.has(t));
-    await close();
-    return fresh.length ? fresh : null;
-  }
-
-  async function chooseEffort(want) {
-    if (!(await open())) return { ok: false, reason: 'menu-not-found' };
-    const trig = effortTrigger();
-    if (!trig) { await close(); return { ok: false, reason: 'no-trigger' }; }
-    const before = new Set(items());
-    trig.focus();
-    ['pointerover', 'pointermove', 'pointerenter'].forEach((t) => pointer(trig, t));
-    trig.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
-    pointer(trig, 'pointerdown'); pointer(trig, 'pointerup'); trig.click();
-    await wait(700);
-
-    const fresh = items().filter((e) => !before.has(e));
-    if (!fresh.length) { await close(); return { ok: false, reason: 'submenu-unavailable' }; }
-    const n = Number(want);
-    const el = Number.isInteger(n) && fresh[n]
-      ? fresh[n]
-      : fresh.find((e) => label(e).toLowerCase().includes(String(want).toLowerCase()));
-    if (!el) { const had = fresh.map(label); await close(); return { ok: false, reason: 'no-match', had }; }
-    const picked = label(el);
-    pointer(el, 'pointerdown'); pointer(el, 'pointerup'); el.click();
-    await wait(400);
-    await close();
-    return { ok: true, picked };
-  }
-
-  return { current, models, chooseModel, efforts, chooseEffort, available: () => !!pill() };
+  return {
+    current, models, chooseModel, available: () => !!pill(),
+    effort: async () => remember(await effort()),
+    setEffort: async (t) => { const r = await setEffort(t); if (r && r.ok) lastEffort = r.label; return r; },
+    get lastEffort() { return lastEffort; }
+  };
 })();

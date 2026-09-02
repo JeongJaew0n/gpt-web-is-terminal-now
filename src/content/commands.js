@@ -194,44 +194,35 @@ GT.commands = (function () {
     err(`전환 실패 (${r.reason})`);
   });
 
-  def(':effort', '추론 수준 — 인자 없으면 현재값, :effort <n|이름> 으로 전환', async (args) => {
+  def(':effort', '추론 수준 — :effort <0-2 | 낮음|중간|높음 | + | ->', async (args) => {
     if (!GT.picker.available()) {
       return err('원본의 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
     }
-    const cur = GT.picker.current().effort;
+    const cur = await GT.picker.effort();
+    if (!cur) return err('추론 수준을 읽지 못했다 — :health 확인');
+
     if (!args.length) {
-      info(`현재 추론 수준: ${cur || '알 수 없음'}`);
-      const list = await GT.picker.efforts();
-      if (!list) {
-        return warn('하위 메뉴를 열지 못했다 — 원본이 합성 이벤트로는 안 열어준다. :q 로 원본에서 바꿔라');
-      }
-      GT.tty.system('info', null, table(list.map((t, i) => [String(i), t, t === cur ? '● 현재' : ''])));
-      return info(':effort <번호|이름> 으로 전환한다');
+      info(`추론 수준: ${cur.label} (${cur.index + 1}/${cur.steps})`);
+      return info(':effort 0 · 1 · 2 또는 낮음/중간/높음, +/- 로 한 칸씩');
     }
-    const r = await GT.picker.chooseEffort(args.join(' '));
-    if (r.ok) return info(`추론 수준 → ${r.picked}`);
-    if (r.reason === 'submenu-unavailable') {
-      return warn('하위 메뉴를 열지 못했다 — :q 로 원본 UI 에서 바꿔라');
-    }
-    if (r.reason === 'no-match') return err(`일치 없음. 가능: ${(r.had || []).join(', ')}`);
+
+    // 라벨은 로케일을 타므로 이름은 별칭으로만 받고 실제 이동은 인덱스로 한다.
+    const ALIAS = { '낮음': 0, 'low': 0, 'instant': 0, '중간': 1, 'mid': 1, 'medium': 1,
+                    '높음': 2, 'high': 2, 'thinking': 2 };
+    const a = String(args[0]).toLowerCase();
+    let want;
+    if (a === '+') want = cur.index + 1;
+    else if (a === '-') want = cur.index - 1;
+    else if (Object.prototype.hasOwnProperty.call(ALIAS, a)) want = ALIAS[a];
+    else if (/^\d+$/.test(a)) want = Number(a);
+    else return err(`:effort <0-${cur.steps - 1} | 낮음|중간|높음 | + | ->`);
+
+    if (want === cur.index) return info(`이미 ${cur.label}`);
+    const r = await GT.picker.setEffort(want);
+    if (r.ok) return info(`추론 수준 → ${r.label} (${r.index + 1}/${r.steps})`);
+    if (r.reason === 'no-move') return err(`움직이지 않았다 (${r.from} → ${r.to}). 원본이 바뀌었을 수 있다`);
     err(`전환 실패 (${r.reason})`);
   });
-
-  def(':w', '대화를 마크다운으로 클립보드에 복사', async () => {
-    const md = GT.store.state.messages
-      .map((m) => (m.role === 'user' ? `## user\n\n${m.text}` : `## ${m.model || 'assistant'}\n\n${m.text}`))
-      .join('\n\n');
-    try { await navigator.clipboard.writeText(md); info(`${md.length}자 복사됨`); }
-    catch (e) { err('클립보드 접근 실패 — 페이지에 포커스가 있어야 한다'); }
-  });
-
-  def('clear', '스크롤백의 시스템 출력만 지운다', () => GT.tty.clearSystem());
-
-  def(':q', '원본 UI 로 (토글은 ^` 또는 툴바 아이콘)', () => {
-    GT.tty.hide();
-  });
-
-  def(':reload', '대화를 다시 수확한다', () => { GT.toMain('harvest'); info('원본에서 다시 읽는 중'); });
 
   def(':version', '지금 실행 중인 코드의 빌드 시각', () => {
     info(`gpt-term 0.1.0 · build ${GT_BUILD}`);

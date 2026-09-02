@@ -132,7 +132,7 @@ src/options/options.html     설정 화면
 
 - [좌측 사이드바 (대화 목록 상시 표시)](docs/plan/2026-09-01-sidebar.md) — 동작 확인됨
 - [대화 조작 (이름·고정·보관·삭제)](docs/plan/2026-09-01-conversation-ops.md) — 4/6 + 다중 선택 삭제, 공유·프로젝트 이동은 TODO
-- [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) — 모델 전환 완료, **추론 수준 하위 메뉴는 TODO**
+- [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) — 모델·추론 수준 모두 동작
 
 ## 알려진 이슈
 

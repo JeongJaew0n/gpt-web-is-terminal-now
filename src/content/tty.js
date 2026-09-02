@@ -260,8 +260,9 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     const last = [...s.messages].reverse().find((m) => m.model);
     ui.model.textContent = last ? last.model : '';
     // 추론 수준은 원본 컴포저의 pill 이 정본이다. 우리가 따로 들고 있지 않는다.
-    const eff = GT.picker && GT.picker.available() ? GT.picker.current().effort : null;
-    ui.effort.textContent = eff ? '· ' + eff : '';
+    // 추론 수준은 메뉴를 열어야 정확히 읽힌다. 렌더마다 열 수는 없으니
+    // 마지막으로 확인한 값을 보여주고, :effort 가 갱신한다.
+    ui.effort.textContent = GT.picker && GT.picker.lastEffort ? '· ' + GT.picker.lastEffort : '';
     ui.clock.textContent = new Date().toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
     ui.tabs.textContent = '';
