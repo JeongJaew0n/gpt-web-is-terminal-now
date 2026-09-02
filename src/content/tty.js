@@ -127,7 +127,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.mode = el('span', 'gt-mode', 'NORMAL');
     ui.stat1 = el('span', 'gt-status-seg', '');
     ui.stat2 = el('span', 'gt-status-seg', '');
-    ui.hint = el('span', 'gt-status-hint', '⌘K 팔레트   :help   ^C 중단');
+    ui.hint = el('span', 'gt-status-hint', '⌘K 팔레트   :help   esc·^C 중단');
     st.appendChild(ui.mode); st.appendChild(ui.stat1); st.appendChild(ui.stat2);
     st.appendChild(el('span', 'gt-spacer')); st.appendChild(ui.hint);
     root.appendChild(st);

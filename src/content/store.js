@@ -56,7 +56,9 @@ GT.store = (function () {
       state.orphanDeltas = 0;
       messages.forEach((m) => upsert({ at: null, ...m }));
       if (meta) {
-        if (meta.title) state.conversationTitle = meta.title;
+        // 대화가 통째로 바뀌는 자리다. 제목이 비어 있으면 '모르는 것'이 아니라
+        // '없는 것'으로 본다 — 안 지우면 새 대화 화면에 이전 제목이 남는다.
+        state.conversationTitle = meta.title || '';
         if (meta.path) state.path = meta.path;
       }
       emit('harvest');

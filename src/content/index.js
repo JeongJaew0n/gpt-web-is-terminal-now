@@ -320,9 +320,19 @@
       }[e.code];
       if (zoom) { e.preventDefault(); GT.commands.run(':font ' + zoom); return; }
     }
+    // 입력줄에서 이미 처리한 esc(후보 닫기)를 두 번 쓰지 않는다.
+    if (e.defaultPrevented) return;
     if (e.key === 'Escape' && GT.sidebar.selecting) { e.preventDefault(); GT.sidebar.exitSelect(); return; }
     if (e.key === 'Escape' && GT.sidebar.isOpen() && !GT.palette.isOpen()) {
       e.preventDefault(); GT.sidebar.dismiss(); return;
+    }
+    // 그 다음이 생성 중단. '중단 버튼이 있는가' 가 생성 중인지의 정본이다 —
+    // 우리 쪽이 스트림 시작을 놓쳤더라도 멈출 수 있어야 한다.
+    if (e.key === 'Escape' && GT.compose.stopButton()) {
+      e.preventDefault();
+      GT.compose.stop();
+      GT.tty.system('info', '중단 요청 (esc)');
+      return;
     }
     // 입력창이 비어 있을 때만 '/' 를 사이드바 검색으로 가로챈다.
     if (e.key === '/' && !e.metaKey && !e.ctrlKey && !GT.sidebar.filtering
@@ -384,7 +394,13 @@
   every(600, () => {
     if (location.pathname !== lastPath) {
       lastPath = location.pathname;
-      pull('route').then((ok) => { if (!ok) GT.toMain('harvest'); });
+      if (GT.conversation.idFromPath()) {
+        pull('route').then((ok) => { if (!ok) GT.toMain('harvest'); });
+      } else {
+        // 새 대화 화면(/). 수확할 대화가 없다 — 수확을 기다리지 말고 바로 비운다.
+        // 안 비우면 본문만 사라지고 상단바·탭에 이전 대화 제목이 남는다.
+        GT.store.replaceAll([], { path: location.pathname, title: '' });
+      }
       GT.sidebar.draw();                 // 현재 대화 강조를 옮긴다
     }
   });
