@@ -220,6 +220,27 @@ GT.theme = (function () {
 .gt-key { color: var(--gt-fg-dim); }
 .gt-key-hint { color: var(--gt-fg-faint); }
 
+/* ---- 복사 버튼 ---- */
+.gt-copy {
+  font: inherit; font-size: 11px; line-height: 1;
+  color: var(--gt-fg-faint); background: transparent;
+  border: 1px solid var(--gt-border); border-radius: 3px;
+  padding: 3px 8px; cursor: pointer; flex: 0 0 auto;
+  opacity: 0.55; transition: opacity 90ms linear, color 90ms linear, border-color 90ms linear;
+}
+.gt-copy:hover { opacity: 1; color: var(--gt-fg); border-color: var(--gt-fg-faint); }
+.gt-copy:focus-visible { opacity: 1; outline: 1px solid var(--gt-cyan); outline-offset: 1px; }
+.gt-copy[data-state="ok"] { opacity: 1; color: var(--gt-green); border-color: var(--gt-green); }
+.gt-copy[data-state="fail"] { opacity: 1; color: var(--gt-red); border-color: var(--gt-red); }
+/* 메타줄의 버튼은 마우스를 올렸을 때만 눈에 띈다. 스크롤백이 시끄러워지면 안 된다.
+   안 보일 때는 pointer-events 도 끊는다 — 투명한 채로 클릭을 먹으면 안 된다. */
+.gt-meta .gt-copy { opacity: 0; pointer-events: none; }
+.gt-turn:hover .gt-meta .gt-copy,
+.gt-meta .gt-copy:focus-visible,
+.gt-meta .gt-copy[data-state] { opacity: 0.55; pointer-events: auto; }
+.gt-turn:hover .gt-meta .gt-copy:hover,
+.gt-meta .gt-copy[data-state] { opacity: 1; }
+
 /* ---- 시스템 출력 ---- */
 .gt-sys { display: flex; gap: 12px; font-size: 0.96em; }
 .gt-sys-tag { width: 62px; flex: 0 0 auto; }

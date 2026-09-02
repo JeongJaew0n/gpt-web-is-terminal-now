@@ -59,12 +59,39 @@ GT.markdown = (function () {
 
   // ------------------------------------------------------------------- block
 
+  // 복사 버튼. 누른 순간의 원문을 가져오도록 함수를 받는다 —
+  // 스트리밍 중 노드를 재사용해도 옛 본문을 붙여넣지 않는다.
+  function copyBtn(getText, label) {
+    const text = label || '복사';
+    const b = el('button', 'gt-copy', text);
+    b.type = 'button';
+    b.title = '클립보드로 복사';
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const done = (ok) => {
+        b.textContent = ok ? '복사됨' : '복사 실패';
+        b.dataset.state = ok ? 'ok' : 'fail';
+        setTimeout(() => {
+          if (!b.isConnected) return;
+          b.textContent = text;
+          delete b.dataset.state;
+        }, 1200);
+      };
+      let p;
+      try { p = GT.tty && GT.tty.copy ? GT.tty.copy(getText()) : false; } catch (_) { p = false; }
+      Promise.resolve(p).then(done, () => done(false));
+    });
+    return b;
+  }
+
   function codeBlock(lang, lines) {
     const box = el('div', 'gt-code');
     const head = el('div', 'gt-code-head');
     head.appendChild(el('span', 'gt-code-lang', lang || 'text'));
     head.appendChild(el('span', 'gt-spacer'));
     head.appendChild(el('span', 'gt-dim', `${lines.length} lines`));
+    head.appendChild(copyBtn(() => box.dataset.code));
     box.appendChild(head);
 
     const body = el('div', 'gt-code-body');
@@ -78,15 +105,6 @@ GT.markdown = (function () {
     body.appendChild(code);
     box.appendChild(body);
 
-    const foot = el('div', 'gt-code-foot');
-    foot.appendChild(el('span', 'gt-spacer'));
-    [['y', 'yank'], ['w', 'write'], ['o', 'open']].forEach(([k, label]) => {
-      const s = el('span', 'gt-key-hint');
-      s.appendChild(el('span', 'gt-key', k));
-      s.appendChild(document.createTextNode(' ' + label));
-      foot.appendChild(s);
-    });
-    box.appendChild(foot);
     box.dataset.code = lines.join('\n');
     return box;
   }
@@ -194,5 +212,5 @@ GT.markdown = (function () {
     return out;
   }
 
-  return { render, inline };
+  return { render, inline, copyBtn };
 })();

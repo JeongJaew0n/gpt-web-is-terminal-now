@@ -217,6 +217,10 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       meta.appendChild(el('span', 'gt-faint gt-elapsed', `${GT.store.elapsed().toFixed(1)}s`));
     }
     meta.appendChild(el('span', 'gt-spacer'));
+    // 스트리밍 중에는 붙이지 않는다. 아직 안 끝난 본문을 복사하게 된다.
+    if (!m.streaming && (m.text || '').trim()) {
+      meta.appendChild(GT.markdown.copyBtn(() => m.text || '', '복사'));
+    }
     meta.appendChild(el('span', 'gt-faint gt-stamp', stamp(m.at)));
 
     const shell = el('div', 'gt-assistant');
@@ -456,6 +460,32 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
 
   function focusInput() { if (ui.input) ui.input.focus(); }
 
+  // 클립보드. 비동기 API 를 먼저 쓰고, 막히면 execCommand 로 내려간다.
+  // 실패를 삼키지 않고 false 를 돌려준다 — 버튼이 '복사 실패' 를 보여줘야 한다.
+  async function copy(text) {
+    const s = String(text == null ? '' : text);
+    if (!s) return false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(s);
+        return true;
+      }
+    } catch (_) { /* 권한·포커스 문제. 아래 폴백으로 간다 */ }
+    try {
+      // execCommand 는 문서에 붙은 노드에서만 동작한다. shadow root 안에서는 안 잡힌다.
+      const ta = document.createElement('textarea');
+      ta.value = s;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      focusInput();                      // 포커스를 원래 자리로 돌려놓는다
+      return !!ok;
+    } catch (_) { return false; }
+  }
+
   function setMode(m) {
     mode = m;
     if (ui.mode) { ui.mode.textContent = m; ui.mode.dataset.mode = m; }
@@ -473,7 +503,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
     applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
-    render, setMode, system,
+    render, setMode, system, copy,
     clearSystem() { systemLog.length = 0; render(); },
     // 확장이 다시 로드되면 이 스크립트는 고아가 된다. 그때 화면에서 완전히 물러난다.
     destroy() {
