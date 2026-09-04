@@ -154,6 +154,40 @@ const CHAT = { id: 7, url: 'https://chatgpt.com/c/abc' };
   t('기본으로 터미널로 시작하지 않는다', /key: 'enabled'[\s\S]{0,120}def: false/.test(defaults));
 }
 
+// --- 가독성: 작은 글씨가 대부분이라 대비를 지킨다 ---
+{
+  // 터미널 팔레트를 그대로 쓰다가 도움말이 2.3:1 까지 떨어져 안 읽혔다.
+  // 다시 어두워지지 않게 값 자체를 검사한다.
+  const css = fs.readFileSync('src/popup/popup.css', 'utf8');
+  const token = (name) => (new RegExp('--' + name + ': (#[0-9a-f]{6})').exec(css) || [])[1];
+
+  const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const lum = (h) => {
+    const n = parseInt(h.slice(1), 16);
+    return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  };
+  const ratio = (a, b) => {
+    const x = lum(a), y = lum(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  };
+
+  const bg1 = token('bg-1'), bg2 = token('bg-2'), bg0 = token('bg-0');
+  const fg = token('fg'), dim = token('fg-dim'), faint = token('fg-faint');
+  t('팔레트를 다 읽었다', [bg0, bg1, bg2, fg, dim, faint].every(Boolean));
+
+  const FLOOR = 4.5;   // WCAG 본문 기준
+  t(`라벨이 본문 배경에서 ${FLOOR}:1 이상`, ratio(fg, bg1) >= FLOOR);
+  t(`도움말이 본문 배경에서 ${FLOOR}:1 이상`, ratio(dim, bg1) >= FLOOR);
+  t(`흐린 글자도 상단바에서 ${FLOOR}:1 이상`, ratio(faint, bg2) >= FLOOR);
+  t(`흐린 글자도 푸터에서 ${FLOOR}:1 이상`, ratio(faint, bg0) >= FLOOR);
+  t('라벨이 도움말보다 밝다', lum(fg) > lum(dim));
+  t('도움말이 흐린 글자보다 밝다', lum(dim) > lum(faint));
+
+  t('도움말을 가장 흐린 색으로 두지 않는다', /\.help \{ color: var\(--fg-dim\)/.test(css));
+  t('잠긴 줄도 읽히게 둔다', /\.row:disabled \.label \{ color: var\(--fg-dim\)/.test(css));
+  t('왜 팔레트를 바꿨는지 적어뒀다', /2\.3:1 까지 떨어져/.test(css));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

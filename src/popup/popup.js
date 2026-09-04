@@ -58,14 +58,14 @@
     const state = await ask({ kind: 'state' });
     if (!state) {
       termUsable = false; termOn = false;
-      ui.helpTerm.textContent = '이 탭에 아직 안 붙었다 — 새로고침이 필요하다.';
+      ui.helpTerm.textContent = '아직 이 탭에 안 붙었다. 새로고침 필요.';
       paintTerminal();
       return;
     }
     if (state.degraded) {
       termUsable = false; termOn = false;
       ui.dot.dataset.broken = '1';
-      ui.helpTerm.textContent = '전제가 깨져 원본 UI 로 복귀했다. :health 로 사유 확인.';
+      ui.helpTerm.textContent = '전제가 깨져 복귀했다. :health 로 사유 확인.';
       paintTerminal();
       return;
     }
@@ -79,7 +79,7 @@
   ui.rowTerm.addEventListener('click', async () => {
     if (!termUsable) return;
     const res = await ask({ kind: 'toggle' });
-    if (!res) { termUsable = false; ui.helpTerm.textContent = '응답이 없다 — 새로고침이 필요하다.'; }
+    if (!res) { termUsable = false; ui.helpTerm.textContent = '응답이 없다. 새로고침 필요.'; }
     else termOn = !!res.visible;
     paintTerminal();
   });
