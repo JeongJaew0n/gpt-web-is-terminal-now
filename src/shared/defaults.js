@@ -1,15 +1,16 @@
 // gpt-term 빌드 스탬프.
 // 크롬은 언팩 확장 파일을 캐시한다. "고쳤는데 왜 그대로지?" 를 추측으로 풀지 않으려고 둔다.
 // 터미널 부팅 줄과 :version 에 찍힌다. 이 값이 안 바뀌면 확장이 다시 로드되지 않은 것이다.
-var GT_BUILD = '2026-09-02 22:10';
+var GT_BUILD = '2026-09-04 10:20';
 
 // gpt-term — 설정 스키마. 콘텐츠 스크립트와 옵션 화면이 같은 정의를 쓴다.
 // 여기가 유일한 출처다. 옵션 화면에 항목을 늘리려면 이 배열만 고치면 된다.
 var GT_SCHEMA = [
   {
     section: '동작',
-    key: 'enabled', label: '페이지를 열면 터미널로 시작', type: 'bool',
-    def: true, help: '끄면 원본 UI 로 시작한다. Ctrl+` 로 언제든 전환.'
+    key: 'enabled', label: 'ChatGPT 를 열면 바로 터미널로', type: 'bool',
+    def: false,
+    help: '기본은 꺼짐 — 원본 UI 로 시작한다. 툴바 아이콘이나 Ctrl+` 로 그때그때 켠다.'
   },
   {
     section: '동작',

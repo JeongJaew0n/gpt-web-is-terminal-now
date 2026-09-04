@@ -14,7 +14,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 475](https://img.shields.io/badge/테스트-475_케이스-22C55E)
+![테스트 506](https://img.shields.io/badge/테스트-506_케이스-22C55E)
 
 </div>
 
@@ -72,7 +72,8 @@
 
 | 키 | 동작 |
 |---|---|
-| <kbd>Ctrl</kbd> + <kbd>&#96;</kbd> · 툴바 아이콘 | 터미널 ↔ 원본 UI 토글 |
+| <kbd>Ctrl</kbd> + <kbd>&#96;</kbd> | 터미널 ↔ 원본 UI 토글 |
+| 툴바 아이콘 | 패널을 연다 — 이 탭 토글 · 기본 동작 토글 |
 | <kbd>⌘K</kbd> / <kbd>Ctrl</kbd>+<kbd>K</kbd> | 명령 팔레트 |
 | **화면 아무 데나 클릭 · 타이핑** | 입력창으로 들어간다 (입력창을 직접 클릭할 필요 없음) |
 | <kbd>Tab</kbd> | 명령·인자 자동완성 |
@@ -151,7 +152,26 @@
 
 ## 설정
 
-툴바 아이콘 우클릭 → **옵션**, 또는 터미널에서 `:options`.
+### 툴바 패널
+
+아이콘을 누르면 작은 패널이 열린다. 토글이 둘이고 **서로 다른 것**이다.
+
+| 토글 | 무엇을 |
+|---|---|
+| **이 탭을 터미널로** | 지금 보고 있는 탭에만. 저장하지 않는다 |
+| **ChatGPT 를 열면 바로 터미널로** | 기본 동작. `enabled` 로 저장된다 |
+
+기본 동작은 **꺼짐**이다. ChatGPT 를 열면 원본 UI 로 시작하고, 아이콘이나
+<kbd>Ctrl</kbd>+<kbd>&#96;</kbd> 로 그때그때 터미널로 넘어간다.
+항상 터미널로 시작하고 싶으면 두 번째 토글을 켠다.
+
+콘텐츠 스크립트는 기본 동작과 무관하게 항상 붙는다 — 안 그러면 토글이 즉시 먹지 않는다.
+붙을 수 없는 상태(ChatGPT 가 아닌 탭, 확장을 다시 로드한 뒤 새로고침 안 한 탭,
+전제가 깨져 복귀한 탭)에서는 첫 토글이 잠기고 이유를 적는다.
+
+### 설정 전체
+
+패널의 **설정 전체**, 툴바 아이콘 우클릭 → **옵션**, 또는 터미널에서 `:options`.
 
 핵심은 **전제가 깨졌을 때**(`onBreak`) 항목이다.
 
@@ -195,8 +215,9 @@ src/content/                          ← 매니페스트 주입 순서
   health.js                           깨짐 감지 · 정책 적용
   index.js                            부팅과 배선
 
-src/background/service-worker.js      배지와 토글
+src/background/service-worker.js      배지
 src/shared/defaults.js                설정 스키마 (콘텐츠 · 옵션 공용)
+src/popup/                            툴바 패널 (토글 둘)
 src/options/                          설정 화면 (스키마에서 생성)
 
 icons/  tools/make-icons.py           아이콘
@@ -278,7 +299,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>22개 파일 · 475 케이스</b></summary>
+<summary><b>23개 파일 · 506 케이스</b></summary>
 
 <br>
 
@@ -304,6 +325,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `complete` | 28 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
 | `copy` | 29 | 복사 버튼 — 누른 순간의 원문을 집는가, 실패를 삼키지 않는가 |
+| `popup` | 31 | 툴바 패널 — 토글 둘이 서로 독립인가, 못 쓰는 탭을 잠그는가 |
 | `route` | 29 | 대화를 옮기면 이전 제목·본문이 남지 않는가 · 수확이 제목을 덮지 않는가 · esc 우선순위 |
 | `ime` | 15 | 한글 조합 중 Enter 를 전송으로 받지 않는가 |
 
@@ -341,7 +363,8 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 |---|---|
 | 문법 검사 | 전체 파일 `node --check` 통과 |
 | 로드 시점 예외 | 없음 (`test/load.test.mjs` — 20개 모듈) |
-| 순수 로직 | 475 케이스 통과 (위 표) |
+| 툴바 패널의 다섯 상태 | 실제 `popup.html`/`popup.css` 로 렌더해 눈으로 확인 |
+| 순수 로직 | 506 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

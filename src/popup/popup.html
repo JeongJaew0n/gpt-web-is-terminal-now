@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>gpt-term</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="top">
+    <span class="dot" id="dot"></span>
+    <span class="brand">gpt-term</span>
+    <span class="spacer"></span>
+    <span class="build" id="build"></span>
+  </header>
+
+  <main class="rows">
+    <button class="row" id="row-terminal" type="button" disabled>
+      <span class="labels">
+        <span class="label">이 탭을 터미널로</span>
+        <span class="help" id="terminal-help">확인 중…</span>
+      </span>
+      <span class="sw" id="sw-terminal" data-on="0"><span class="knob"></span></span>
+    </button>
+
+    <button class="row" id="row-default" type="button">
+      <span class="labels">
+        <span class="label">ChatGPT 를 열면 바로 터미널로</span>
+        <span class="help">기본 동작. 꺼두면 원본 UI 로 시작한다.</span>
+      </span>
+      <span class="sw" id="sw-default" data-on="0"><span class="knob"></span></span>
+    </button>
+  </main>
+
+  <footer class="foot">
+    <span class="hint">Ctrl+`</span>
+    <span class="spacer"></span>
+    <button class="link" id="options" type="button">설정 전체</button>
+  </footer>
+
+  <script src="../shared/defaults.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

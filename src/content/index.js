@@ -465,6 +465,9 @@
   })();
 
   if (cfg.enabled) GT.tty.show();
+  // 배지·팝업이 실제 상태를 알아야 한다. 이걸 안 보내면 서비스 워커가
+  // '점검이 멀쩡하니 켜져 있겠지' 로 추측한다 — 기본이 꺼짐이 되면서 그 추측이 틀리게 됐다.
+  GT.sendToSW({ kind: 'visible', visible: GT.tty.visible() });
   GT.health.report();
   GT.tty.system('info', `gpt-term 0.1.0 · build ${GT_BUILD} — :help 로 명령, ^\` 로 원본 토글`);
 })();

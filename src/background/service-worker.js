@@ -13,12 +13,12 @@ function badgeFor(s) {
   }
   if (s.warned) {
     return { text: '⚠', color: '#d29922',
-      title: 'gpt-term 켜짐 — 경고 있음\n' + (s.reasons || []).join('\n') + '\n\n클릭하면 원본 UI' };
+      title: 'gpt-term 켜짐 — 경고 있음\n' + (s.reasons || []).join('\n') };
   }
   if (s.visible) {
-    return { text: '▮', color: '#3fb950', title: 'gpt-term 켜짐 — 클릭하면 원본 UI' };
+    return { text: '▮', color: '#3fb950', title: 'gpt-term 켜짐' };
   }
-  return { text: '', color: '#30363d', title: 'gpt-term 꺼짐 — 클릭하면 터미널' };
+  return { text: '', color: '#30363d', title: 'gpt-term 꺼짐' };
 }
 
 function paint(tabId) {
@@ -46,16 +46,9 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   paint(tabId);
 });
 
-chrome.action.onClicked.addListener((tab) => {
-  if (!tab.id) return;
-  chrome.tabs.sendMessage(tab.id, { kind: 'toggle' }, (res) => {
-    if (chrome.runtime.lastError) return;
-    const s = STATE.get(tab.id) || {};
-    s.visible = res && res.visible;
-    STATE.set(tab.id, s);
-    paint(tab.id);
-  });
-});
+// 툴바 아이콘을 누르면 팝업(src/popup)이 뜬다. default_popup 이 걸리면
+// chrome.action.onClicked 는 아예 발생하지 않으므로 여기서 토글을 다루지 않는다.
+// 팝업이 콘텐츠 스크립트에 직접 토글을 쏘고, 콘텐츠 스크립트가 'visible' 로 알려준다.
 
 chrome.tabs.onRemoved.addListener((tabId) => STATE.delete(tabId));
 chrome.tabs.onUpdated.addListener((tabId, info) => {
