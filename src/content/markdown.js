@@ -13,7 +13,54 @@ GT.markdown = (function () {
 
   // ------------------------------------------------------------------ inline
 
+  // ------------------------------------------------------------- 인용 마커
+  //
+  // 같은 인용이 경로마다 다른 표기로 온다. 실측 결과(2026-09-04):
+  //   백엔드 API·SSE : \uE200cite\uE202turn937490search17\uE201   (PUA 로 감싼 봉투)
+  //   React fiber    : :contentReference[oaicite:0]{index=0}
+  // 원본은 react-markdown 에 넘기기 전에 앞의 것을 뒤의 것으로 치환하고,
+  // 렌더 플러그인이 그걸 먹어 칩을 그린다. 우리는 둘 다 받으므로 둘 다 처리한다.
+  // docs/issue/2026-09-04-citation-markers-shown-raw.md
+  //
+  // 봉투는 범용이다 — \uE200<종류>\uE202<내용>\uE201. cite 말고 genui 도 관측됐다.
+  // 인용이 아닌 종류는 각주를 매기지 않고 지운다. 본문에 보일 것이 아니다.
+  const PUA_MARK = /\uE200([a-z_]+)(?:\uE202([\s\S]*?))?\uE201/;
+  const OAI_MARK = /:contentReference\[oaicite:(\d+)\]\{index=(\d+)\}/;
+
+  // 인용으로 볼 ref 타입. 모르는 타입은 각주를 매기지 않고 지운다 —
+  // 무엇인지 모르는 것을 출처인 양 번호 매기면 안 된다.
+  const CITE_TYPES = /^(grouped_webpages|webpage|webpage_extended|sources_footnote)$/;
+
+  const newCtx = (opts) => ({
+    refs: (opts && opts.refs) || [],
+    seen: 0,        // 마커를 몇 개 지났나 (content_references 의 인덱스와 같다)
+    n: 0,           // 각주 번호
+    used: []        // 각주로 쓴 출처
+  });
+
+  // 마커 하나를 각주로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
+  function mark(ctx, idx, kind) {
+    const ref = ctx.refs[idx] || null;
+    const isCite = ref ? CITE_TYPES.test(ref.type) : kind === 'cite';
+    if (!isCite) return document.createDocumentFragment();
+
+    ctx.n += 1;
+    const n = ctx.n;
+    const label = el('sup', 'gt-cite', `[${n}]`);
+    // 출처를 모르면 번호만 남긴다. 목록에 '(출처 미상)' 을 채우지 않는다 —
+    // 스트리밍 중에는 늘 모르는 상태라 매번 빈 줄이 붙는다.
+    if (ref) {
+      const name = ref.attribution || ref.title || '';
+      if (name) label.title = ref.url ? `${name} — ${ref.url}` : name;
+      if (name || ref.url) ctx.used.push({ n, title: ref.title, url: ref.url, attribution: ref.attribution });
+    }
+    return label;
+  }
+
   const INLINE = [
+    // 마커를 먼저 잡는다. 뒤의 규칙이 봉투 안의 JSON 을 물어뜯으면 안 된다.
+    { re: PUA_MARK, make: (m, ctx) => mark(ctx, ctx.seen++, m[1]) },
+    { re: OAI_MARK, make: (m, ctx) => { ctx.seen = Math.max(ctx.seen, +m[2] + 1); return mark(ctx, +m[2], 'cite'); } },
     { re: /`([^`\n]+)`/, make: (m) => el('span', 'gt-code-inline', m[1]) },
     { re: /\*\*([^*\n]+)\*\*/, make: (m) => el('strong', 'gt-strong', m[1]) },
     { re: /(?<![*\w])\*([^*\n]+)\*(?!\w)/, make: (m) => el('em', 'gt-em', m[1]) },
@@ -39,8 +86,9 @@ GT.markdown = (function () {
     }
   ];
 
-  function inline(text, frag) {
+  function inline(text, frag, ctx) {
     frag = frag || document.createDocumentFragment();
+    ctx = ctx || newCtx(null);
     let rest = String(text);
     for (;;) {
       let best = null;
@@ -50,7 +98,7 @@ GT.markdown = (function () {
       }
       if (!best) break;
       if (best.m.index > 0) frag.appendChild(document.createTextNode(rest.slice(0, best.m.index)));
-      frag.appendChild(best.rule.make(best.m));
+      frag.appendChild(best.rule.make(best.m, ctx));
       rest = rest.slice(best.m.index + best.m[0].length);
     }
     if (rest) frag.appendChild(document.createTextNode(rest));
@@ -151,13 +199,13 @@ GT.markdown = (function () {
     return box;
   }
 
-  function table(rows) {
+  function table(rows, ctx) {
     const t = el('table', 'gt-table');
     rows.forEach((cells, i) => {
       const tr = el('tr');
       cells.forEach((c) => {
         const td = el(i === 0 ? 'th' : 'td');
-        td.appendChild(inline(c.trim()));
+        td.appendChild(inline(c.trim(), null, ctx));
         tr.appendChild(td);
       });
       t.appendChild(tr);
@@ -165,7 +213,7 @@ GT.markdown = (function () {
     return t;
   }
 
-  function render(src) {
+  function renderInto(src, ctx) {
     const out = document.createDocumentFragment();
     const lines = String(src == null ? '' : src).split('\n');
     let i = 0;
@@ -174,7 +222,7 @@ GT.markdown = (function () {
     const flushPara = () => {
       if (!para.length) return;
       const p = el('div', 'gt-p');
-      p.appendChild(inline(para.join(' ')));
+      p.appendChild(inline(para.join(' '), null, ctx));
       out.appendChild(p);
       para = [];
     };
@@ -204,7 +252,7 @@ GT.markdown = (function () {
       if (h) {
         flushPara();
         const n = el('div', `gt-h gt-h${h[1].length}`);
-        n.appendChild(inline(h[2]));
+        n.appendChild(inline(h[2], null, ctx));
         out.appendChild(n);
         i += 1; continue;
       }
@@ -216,7 +264,7 @@ GT.markdown = (function () {
         const q = el('div', 'gt-quote');
         q.appendChild(el('span', 'gt-quote-bar'));
         const inner = el('div', 'gt-quote-body');
-        inner.appendChild(render(buf.join('\n')));
+        inner.appendChild(renderInto(buf.join('\n'), ctx));
         q.appendChild(inner);
         out.appendChild(q);
         continue;
@@ -230,7 +278,7 @@ GT.markdown = (function () {
           if (!/^[\s:|-]+$/.test(lines[i])) rows.push(cells);
           i += 1;
         }
-        if (rows.length) out.appendChild(table(rows));
+        if (rows.length) out.appendChild(table(rows, ctx));
         continue;
       }
 
@@ -241,7 +289,7 @@ GT.markdown = (function () {
         const row = el('div', `gt-li gt-li-d${Math.min(depth, 3)}`);
         row.appendChild(el('span', 'gt-bullet', depth === 0 ? '·' : '▸'));
         const body = el('span', 'gt-li-body');
-        body.appendChild(inline(li[3]));
+        body.appendChild(inline(li[3], null, ctx));
         row.appendChild(body);
         out.appendChild(row);
         i += 1; continue;
@@ -254,5 +302,37 @@ GT.markdown = (function () {
     return out;
   }
 
-  return { render, inline, copyBtn };
+  // 각주로 쓴 출처를 응답 끝에 모아 적는다.
+  // 원본은 favicon 이 붙은 칩을 그리지만 여기서는 목록이 맞다 — 터미널이다.
+  function sourceList(ctx) {
+    if (!ctx.used.length) return null;
+    const box = el('div', 'gt-sources');
+    ctx.used.forEach((u) => {
+      const row = el('div', 'gt-source');
+      row.appendChild(el('span', 'gt-source-n', `[${u.n}]`));
+      const name = u.attribution || u.title || u.url;
+      if (u.url && /^https?:\/\//i.test(u.url)) {
+        const a = el('a', 'gt-link', name);
+        a.href = u.url; a.target = '_blank'; a.rel = 'noreferrer noopener';
+        a.title = u.title && u.title !== name ? u.title : u.url;
+        row.appendChild(a);
+      } else {
+        row.appendChild(el('span', null, name));
+      }
+      box.appendChild(row);
+    });
+    return box;
+  }
+
+  // opts.refs — conversation.js 가 실어준 content_references.
+  // 없으면 마커는 각주 번호만 남고 출처 목록은 붙지 않는다(스트리밍 중이 그렇다).
+  function render(src, opts) {
+    const ctx = newCtx(opts);
+    const frag = renderInto(src, ctx);
+    const list = sourceList(ctx);
+    if (list) frag.appendChild(list);
+    return frag;
+  }
+
+  return { render, renderInto, inline, copyBtn, newCtx };
 })();

@@ -43,6 +43,23 @@ GT.conversation = (function () {
     return line.reverse();
   }
 
+  // 인용 마커가 무엇을 가리키는지는 메시지 메타데이터가 알려준다.
+  // 본문에는 마커만 있고(원본은 그 자리에 칩을 그린다) 제목·주소는 여기에만 있다.
+  // docs/issue/2026-09-04-citation-markers-shown-raw.md
+  function toRefs(meta) {
+    const list = (meta && meta.content_references) || [];
+    return list.map((r) => {
+      const it = (r.items && r.items[0]) || null;
+      return {
+        type: String((r && r.type) || ''),
+        matched: String((r && r.matched_text) || ''),
+        title: String((it && it.title) || ''),
+        url: String((it && it.url) || ''),
+        attribution: String((it && it.attribution) || '')
+      };
+    });
+  }
+
   function toRecords(conv) {
     const branch = activeBranch(conv);
     const out = [];
@@ -58,7 +75,8 @@ GT.conversation = (function () {
         model: (m.metadata && m.metadata.model_slug) || null,
         text: parts.filter((p) => typeof p === 'string').join('\n'),
         at: m.create_time ? Math.round(m.create_time * 1000) : null,
-        thinking: m.author.role === 'assistant' && pendingThinking ? pendingThinking : 0
+        thinking: m.author.role === 'assistant' && pendingThinking ? pendingThinking : 0,
+        refs: toRefs(m.metadata)
       });
       if (m.author.role === 'assistant') pendingThinking = 0;
     });
@@ -78,5 +96,5 @@ GT.conversation = (function () {
     };
   }
 
-  return { load, toRecords, activeBranch, isVisible, isReasoning, idFromPath };
+  return { load, toRecords, toRefs, activeBranch, isVisible, isReasoning, idFromPath };
 })();

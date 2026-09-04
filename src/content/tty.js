@@ -237,7 +237,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       shell.appendChild(g);
     }
     const body = el('div', 'gt-body');
-    body.appendChild(GT.markdown.render(m.text || ''));
+    body.appendChild(GT.markdown.render(m.text || '', { refs: m.refs }));
     if (m.streaming) body.appendChild(el('span', 'gt-cursor'));
 
     // tty 로 그릴 수 없는 파트는 자리표시자로 남긴다

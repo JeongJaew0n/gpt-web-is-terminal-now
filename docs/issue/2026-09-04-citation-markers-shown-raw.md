@@ -96,14 +96,63 @@ fiber 로 본문이 교정돼도 그 메타는 유지해야 한다.
 원본처럼 favicon + 제목 pill 을 그리는 것. 이미지를 끌어와야 하고
 터미널 화면에서 겉돈다. `:q` 로 원본에서 보면 된다.
 
-## 확인해야 할 것
+## 2차 실측 (2026-09-04) — 남았던 세 가지
 
-- **[가정]** fiber 표기의 `oaicite:N` / `index=N` 이 `content_references` 배열의
-  N 번째와 대응한다. 이 응답에는 참조가 하나뿐이라 확증하지 못했다.
-  → 참조가 2개 이상인 응답을 하나 만들어 인덱스와 순서를 대조한다.
-- **[미정]** 스트리밍 중 SSE 델타는 어느 표기로 오는가.
-  → 검색이 붙는 질문을 한 번 보내 `test/fixtures` 에 녹화하고 확인한다.
-  스트리밍 경로도 같은 치환을 타야 한다.
-- **[미정]** `grouped_webpages` `sources_footnote` 말고 어떤 `type` 이 더 있는가.
-  → 이미지·상품·영상이 붙은 응답을 모아 `type` 을 수집한다.
-  모르는 type 은 **마커만 지우고 넘어가는** 기본 경로로 떨어뜨린다.
+검색이 붙는 질문을 하나 보내고 SSE 를 통째로 녹화해(545KB) 확인했다.
+
+**[확정] 스트리밍 SSE 도 PUA 표기다.** 본문 델타에 마커가 그대로 들어온다.
+
+```
+{"p":"/message/content/parts/0","o":"append","v":" … 전망입니다. \uE200cite\uE202turn937490search17\uE201\n"}
+```
+
+**[확정] 출처 메타도 같은 스트림으로 온다.** 본문 델타 바로 뒤에 붙는다.
+
+```
+{"p":"/message/metadata/content_references","o":"append",
+ "v":[{"matched_text":"\uE200cite\uE202turn937490search17\uE201",
+       "start_idx":171,"end_idx":196, …}]}
+```
+
+**[확정] 봉투는 범용이다.** `\uE200<종류>\uE202<내용>\uE201` 이고,
+`cite` 말고 `genui` 도 왔다 — 인용이 아니라 자동화 제안 UI 다.
+
+```
+\uE200genui\uE202{"suggest_automation":{"label":"매일 국내 IT 뉴스 3줄로 요약받기"}}\uE201
+```
+
+**[확정] `oaicite:N` = `index=N` = `content_references[N]`.**
+마커 5개가 0..4 로 순서대로 대응했다. 인덱스는 **인용만이 아니라 모든 마커**를 센다 —
+5번째 마커인 `genui` 가 `content_references[4]`(`type: "dil"`)였다.
+
+관측된 `type`: `grouped_webpages` · `sources_footnote` · `dil`
+cite 토큰 종류: `search` · `view` · `news`
+
+한 가지 더 봤다 — **스트리밍이 끝난 직후 fiber 원문이 잠깐 조각으로 보인다**
+(본문 641자인데 fiber 는 196자, 마커만 뭉쳐 있었다). 새로고침하면 674자로 정상이다.
+수확이 그 순간을 물면 본문이 뭉텅 잘린다. 별건이라 여기서는 기록만 한다.
+
+## 고친 방법 (2026-09-04)
+
+방안 1단계를 그대로 넣었다.
+
+- `conversation.js` — `content_references` 를 `refs` 로 정규화해 레코드에 싣는다
+- `markdown.js` — 두 표기를 모두 인식한다. 인용이면 `[n]` 각주, 아니면 지운다.
+  응답 끝에 출처 목록을 붙인다
+- `store.js` — 수확(DOM·fiber)에는 refs 가 없다. **가진 것을 지키고 넘어간다** —
+  안 지키면 fiber 교정이 도는 순간 각주가 번호만 남는다
+- `renderplan.js` — 서명에 `refs.length` 를 넣는다. 출처는 본문보다 늦게 붙으므로
+  빠뜨리면 각주가 살아나지 않는다
+
+모르는 `type` 은 **각주를 매기지 않고 지운다.** 무엇인지 모르는 것을
+출처인 양 번호 매기지 않는다.
+
+`test/citation.test.mjs` 34건.
+
+## 아직 안 한 것
+
+- **스트리밍 중에는 출처 목록이 안 붙는다.** 마커는 각주 번호로 바뀌지만
+  `refs` 가 store 에 없다 — SSE 의 `content_references` 델타를 tap 이 아직 안 모은다.
+  스트림이 끝나고 API·fiber 로 교정될 때 붙는다.
+  → `DeltaDecoder` 가 `/message/metadata/content_references` 를 누적하게 하면 된다.
+- 이미지·상품·영상 인용의 `type` 은 아직 못 봤다. 기본 경로(지우기)로 떨어진다.

@@ -220,6 +220,18 @@ GT.theme = (function () {
 .gt-key { color: var(--gt-fg-dim); }
 .gt-key-hint { color: var(--gt-fg-faint); }
 
+/* ---- 인용 각주와 출처 ---- */
+.gt-cite {
+  color: var(--gt-cyan); font-size: 0.78em; vertical-align: super; line-height: 0;
+  padding: 0 1px; user-select: none;
+}
+.gt-sources {
+  margin-top: 10px; padding-top: 7px; border-top: 1px solid var(--gt-bg-3);
+  font-size: 0.9em; color: var(--gt-fg-dim);
+}
+.gt-source { display: flex; gap: 8px; }
+.gt-source-n { color: var(--gt-cyan); flex: 0 0 auto; }
+
 /* ---- 복사 버튼 ---- */
 .gt-copy {
   display: inline-flex; align-items: center; justify-content: center;

@@ -28,6 +28,7 @@ GT.renderplan = (function () {
       m.model || '',
       m.thinking || 0,
       m.parts ? m.parts.length : -1,
+      m.refs ? m.refs.length : -1,   // 인용 출처는 본문보다 늦게 붙는다. 빠뜨리면 각주가 안 살아난다
       c.epoch || 0,          // 설정 변경. 개별 추적 대신 하나로 묶는다
       c.path || ''           // 메타 줄에 경로가 찍힌다
     ]);

@@ -101,7 +101,10 @@ GT.store = (function () {
         state.byId.clear();
         messages.forEach((m) => {
           const old = m.id && prev.get(m.id);
-          upsert({ at: old ? old.at : null, ...m });
+          // 수확(DOM·fiber)에는 인용 출처가 없다. API 로 받아둔 것을 지키고 넘어간다 —
+          // 안 지키면 fiber 교정이 도는 순간 각주가 번호만 남는다.
+          const keep = old && old.refs && !m.refs ? { refs: old.refs } : null;
+          upsert({ at: old ? old.at : null, ...m, ...keep });
         });
         emit('harvest');
         return { mode: 'adopt', kept: 0, gained };
@@ -115,6 +118,7 @@ GT.store = (function () {
           if (typeof m.text === 'string' && m.text) rec.text = m.text;
           if (m.model) rec.model = m.model;
           if (m.parts) rec.parts = m.parts;
+          if (m.refs) rec.refs = m.refs;
         } else {
           upsert({ at: null, ...m });
           gained += 1;
