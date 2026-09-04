@@ -36,10 +36,10 @@ GT.commands = (function () {
 
   def(':new', '새 대화', () => { GT.navigate.newChat(); });
 
-  // ls 와 사이드바는 같은 제공자를 쓴다. 출처가 갈리면 둘이 다른 걸 보여준다.
+  // :ls 와 사이드바는 같은 제공자를 쓴다. 출처가 갈리면 둘이 다른 걸 보여준다.
   let lastList = [];
 
-  def('ls', '대화 목록', async () => {
+  def(':ls', '대화 목록', async () => {
     const g = await GT.chats.load();
     // flatten 은 한 번만 부른다. 두 번 부르면 객체가 달라져 indexOf 가 -1 을 낸다.
     const flat = GT.chats.flatten(g);
@@ -58,14 +58,14 @@ GT.commands = (function () {
 
   def(':open', '대화 열기 — :open <n>', (args) => {
     const n = Number(args[0]);
-    if (!lastList.length) return err('먼저 ls 로 목록을 불러와라');
+    if (!lastList.length) return err('먼저 :ls 로 목록을 불러와라');
     if (!Number.isInteger(n) || !lastList[n]) return err(`:open <0-${lastList.length - 1}>`);
     if (GT.config.get('sidebar.closeOnOpen')) GT.sidebar.dismiss();
     GT.navigate.to(lastList[n].href);
   });
 
   // 대화 조작 — 원본 "..." 메뉴에 해당한다.
-  // 대상은 ls 번호 또는 대화 id 앞자리로 지정한다.
+  // 대상은 :ls 번호 또는 대화 id 앞자리로 지정한다.
   function findChat(raw) {
     // '@3' · '@6a97' 처럼 앞에 @ 를 붙여도 된다.
     // 이름과 섞일 수 있는 명령(:rename)에서 대상임을 분명히 하려고 쓴다.
@@ -81,7 +81,7 @@ GT.commands = (function () {
 
   const needTarget = (key) => {
     const c = findChat(key);
-    if (!c) err(`대상을 못 찾았다: ${key} — ls 번호나 id 앞자리로 지정해라`);
+    if (!c) err(`대상을 못 찾았다: ${key} — :ls 번호나 id 앞자리로 지정해라`);
     return c;
   };
 
@@ -160,7 +160,7 @@ GT.commands = (function () {
     const want = args.slice(1).join(' ').trim();
 
     if (!want) {
-      if (!projects.length) return err('프로젝트 목록이 비었다 — ls 로 목록을 먼저 불러와라');
+      if (!projects.length) return err('프로젝트 목록이 비었다 — :ls 로 목록을 먼저 불러와라');
       GT.tty.system('info', null, table(projects.map((p, i) => [String(i), p.name, ''])));
       return info(`:mv ${args[0]} <번호|이름>  ·  빼려면 :mv ${args[0]} none`);
     }
@@ -361,14 +361,17 @@ GT.commands = (function () {
   function parse(line) {
     const t = line.trim();
     if (!t) return null;
-    // ':' 없이 명령으로 받는 건 여기 목록뿐이다. 레지스트리에 없는 이름을 넣으면
-    // 평범한 대화가 '알 수 없는 명령' 으로 막힌다 — clear 가 그랬다.
-    const isCmd = t.startsWith(':') || /^(ls|help)\b/.test(t);
-    if (!isCmd) return null;
+    // ':' 없이 명령으로 받는 건 여기 목록뿐이고, '그 낱말 하나' 일 때만이다.
+    //
+    // 전에는 /^(ls|help)\b/ 로 앞머리만 봤다. 그래서
+    // 'ls 명령어가 뭔지 설명해줘' · 'help me write a function' 같은 평범한 질문이
+    // 명령으로 잡혀 GPT 로 가지 못했다. clear 를 뺄 때 같은 문제를 고쳤는데
+    // 이 둘이 남아 있었다. 레지스트리에 없는 이름을 넣어도 같은 일이 벌어진다.
+    const ALIAS = { ls: ':ls', help: ':help' };
+    if (Object.prototype.hasOwnProperty.call(ALIAS, t)) return { name: ALIAS[t], args: [] };
+    if (!t.startsWith(':')) return null;
     const parts = t.split(/\s+/);
-    let name = parts[0];
-    if (name === 'help') name = ':help';
-    return { name, args: parts.slice(1) };
+    return { name: parts[0], args: parts.slice(1) };
   }
 
   async function run(line) {

@@ -14,7 +14,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 550](https://img.shields.io/badge/테스트-550_케이스-22C55E)
+![테스트 559](https://img.shields.io/badge/테스트-559_케이스-22C55E)
 
 </div>
 
@@ -107,7 +107,7 @@
 <tr><th align="left" width="46%">명령</th><th align="left">동작</th></tr>
 
 <tr><td colspan="2"><b>대화</b></td></tr>
-<tr><td><code>ls</code></td><td>대화 목록</td></tr>
+<tr><td><code>:ls</code></td><td>대화 목록 <sub>(<code>ls</code> 한 낱말만 쳐도 된다)</sub></td></tr>
 <tr><td><code>:open &lt;n&gt;</code></td><td>대화 열기</td></tr>
 <tr><td><code>:new</code></td><td>새 대화</td></tr>
 <tr><td><code>:rename &lt;새 이름&gt;</code></td><td><b>지금 대화</b>의 이름을 바꾼다</td></tr>
@@ -299,7 +299,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>24개 파일 · 550 케이스</b></summary>
+<summary><b>24개 파일 · 559 케이스</b></summary>
 
 <br>
 
@@ -322,7 +322,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
-| `complete` | 28 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
+| `complete` | 37 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
 | `copy` | 29 | 복사 버튼 — 누른 순간의 원문을 집는가, 실패를 삼키지 않는가 |
 | `citation` | 34 | 인용 마커 — 두 표기를 각주로, 인용 아닌 봉투는 지우는가 |
@@ -367,7 +367,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 툴바 패널의 다섯 상태 | 실제 `popup.html`/`popup.css` 로 렌더해 눈으로 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 550 케이스 통과 (위 표) |
+| 순수 로직 | 559 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

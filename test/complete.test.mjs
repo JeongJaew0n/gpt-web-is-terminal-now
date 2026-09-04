@@ -24,15 +24,27 @@ const C = load();
 const results = []; const t = (n, ok) => results.push([n, ok]);
 const names = C.registry.map((c) => c.name);
 
-// --- parse: ':' 없이 받는 이름은 전부 레지스트리에 있어야 한다 ---
+// --- parse: ':' 없이 받는 이름은 별칭 하나뿐이고, 레지스트리에 있어야 한다 ---
 {
   // 없는 이름을 명령으로 인식하면 그 낱말로 시작하는 대화가 통째로 막힌다.
-  const bare = ['ls', 'help'];
-  bare.forEach((w) => {
+  const bare = { ls: ':ls', help: ':help' };
+  Object.entries(bare).forEach(([w, full]) => {
     const p = C.parse(w);
     t(`'${w}' 는 명령으로 인식된다`, !!p);
-    t(`'${w}' 는 레지스트리에 있다`, !!p && names.includes(p.name));
+    t(`'${w}' 는 ${full} 로 간다`, !!p && p.name === full);
+    t(`${full} 이 레지스트리에 있다`, names.includes(full));
   });
+
+  t('등록된 이름은 전부 : 로 시작한다', names.every((n) => n.startsWith(':')));
+
+  // 별칭은 '그 낱말 하나' 일 때만이다. 앞머리만 보면 평범한 질문이 막힌다.
+  t("'ls 명령어 설명해줘' 는 대화로 간다", C.parse('ls 명령어가 뭔지 설명해줘') === null);
+  t("'ls -la 는 무슨 뜻이야' 도 대화로", C.parse('ls -la 는 무슨 뜻이야') === null);
+  t("'help me write a function' 도 대화로", C.parse('help me write a function') === null);
+  t("'lstm 이 뭐야' 는 원래 안 걸렸다", C.parse('lstm 이 뭐야') === null);
+  t('앞뒤 공백은 무시한다', (C.parse('  ls  ') || {}).name === ':ls');
+  t('대문자는 별칭이 아니다', C.parse('LS') === null);
+
   t("'clear' 는 더 이상 명령이 아니다", C.parse('clear') === null);
   t("'clear' 로 시작하는 문장은 대화로 간다", C.parse('clear 를 영어로 뭐라고 해?') === null);
   t('평범한 문장은 명령이 아니다', C.parse('오늘 날씨 어때') === null);
