@@ -220,6 +220,10 @@ GT.theme = (function () {
 .gt-key { color: var(--gt-fg-dim); }
 .gt-key-hint { color: var(--gt-fg-faint); }
 
+/* ---- 화면에만 있는 블록 (:messup) ---- */
+.gt-turn-local { opacity: 0.92; }
+.gt-turn-local .gt-assistant { border-left: 1px dashed var(--gt-yellow); padding-left: 10px; }
+
 /* ---- 인용 각주와 출처 ---- */
 .gt-cite {
   color: var(--gt-cyan); font-size: 0.78em; vertical-align: super; line-height: 0;

@@ -16,6 +16,8 @@ GT.tty = (function () {
   const pool = new Map();
   let epoch = 0;
   const systemLog = [];
+  const localLog = [];        // 우리가 화면에만 끼워 넣은 블록 (:messup). 서버로 가지 않는다
+  let localSeq = 0;
   let sysSeq = 0;
 
   // 원본 UI 를 덮는 스타일은 page document 에 있어야 한다(shadow root 밖).
@@ -255,6 +257,27 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     return wrap;
   }
 
+  // 화면에만 있는 블록. 대화 기록이 아니라는 걸 메타줄에서 분명히 한다 —
+  // 나중에 스크롤백을 되돌아볼 때 진짜 응답과 헷갈리면 안 된다.
+  function turnLocal(rec) {
+    const wrap = el('div', 'gt-turn gt-turn-local');
+    const meta = el('div', 'gt-meta');
+    const head = el('span', null, '⏺ local');
+    head.style.color = 'var(--gt-yellow)';
+    meta.appendChild(head);
+    meta.appendChild(el('span', 'gt-faint', '·'));
+    meta.appendChild(el('span', 'gt-faint', ':messup — 화면에만 있는 출력'));
+    meta.appendChild(el('span', 'gt-spacer'));
+    meta.appendChild(el('span', 'gt-faint gt-stamp', stamp(rec.at)));
+
+    const shell = el('div', 'gt-assistant');
+    const body = el('div', 'gt-body');
+    body.appendChild(GT.markdown.render(rec.text || ''));
+    shell.appendChild(body);
+    wrap.appendChild(meta); wrap.appendChild(shell);
+    return wrap;
+  }
+
   function systemRow(rec) {
     const row = el('div', 'gt-sys');
     row.dataset.level = rec.level;
@@ -274,12 +297,27 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     const ctx = { epoch, path: s.path };
 
     const next = [];
-    s.messages.forEach((m, i) => {
-      // id 가 없다고 건너뛰면 그 메시지가 화면에서 조용히 사라진다.
-      // 위치 기반 키로라도 반드시 그린다.
+
+    // id 가 없다고 건너뛰면 그 메시지가 화면에서 조용히 사라진다.
+    // 위치 기반 키로라도 반드시 그린다.
+    const byKey = new Map();
+    const keys = s.messages.map((m, i) => {
       const key = m.id ? 'm:' + m.id : 'i:' + i;
-      next.push({ key, sig: GT.renderplan.signature(m, ctx), m });
+      byKey.set(key, m);
+      return key;
     });
+
+    // :messup 블록을 제자리에 끼운다. 순서 규칙은 renderplan 이 갖는다.
+    GT.renderplan.interleave(keys, localLog).forEach((slot) => {
+      if (slot.local) {
+        const r = slot.local;
+        next.push({ key: 'l:' + r.id, sig: JSON.stringify(['local', r.id, epoch]), local: r });
+        return;
+      }
+      const m = byKey.get(slot.key);
+      next.push({ key: slot.key, sig: GT.renderplan.signature(m, ctx), m });
+    });
+
     systemLog.forEach((rec) => {
       next.push({ key: 's:' + rec.id, sig: JSON.stringify(['sys', rec.id, epoch]), rec });
     });
@@ -299,7 +337,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       if (!rec || rec.sig !== n.sig) {
         const node = n.m
           ? (n.m.role === 'user' ? turnUser(n.m) : turnAssistant(n.m))
-          : systemRow(n.rec);
+          : (n.local ? turnLocal(n.local) : systemRow(n.rec));
         if (rec && rec.el.parentElement) rec.el.remove();
         rec = { el: node, sig: n.sig, at: n.m ? n.m.at : null };
         pool.set(n.key, rec);
@@ -505,6 +543,19 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
     render, setMode, system, copy,
     clearSystem() { systemLog.length = 0; render(); },
+
+    // 화면에만 끼워 넣는 블록. 지금 마지막 메시지를 앵커로 잡는다.
+    local(text) {
+      const s = GT.store.state;
+      const last = s.messages.length - 1;
+      const m = last >= 0 ? s.messages[last] : null;
+      const anchorKey = m ? (m.id ? 'm:' + m.id : 'i:' + last) : '';
+      localLog.push({ id: ++localSeq, anchorKey, at: Date.now(), text: String(text == null ? '' : text) });
+      render();
+      return localLog.length;
+    },
+    localCount() { return localLog.length; },
+    clearLocal() { const n = localLog.length; localLog.length = 0; render(); return n; },
     // 확장이 다시 로드되면 이 스크립트는 고아가 된다. 그때 화면에서 완전히 물러난다.
     destroy() {
       document.documentElement.classList.remove(HIDE_CLASS);

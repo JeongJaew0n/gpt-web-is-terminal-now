@@ -14,7 +14,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 559](https://img.shields.io/badge/테스트-559_케이스-22C55E)
+![테스트 587](https://img.shields.io/badge/테스트-587_케이스-22C55E)
 
 </div>
 
@@ -133,6 +133,7 @@
 <tr><td><code>:options</code></td><td>확장 설정 화면 열기</td></tr>
 <tr><td><code>:health</code></td><td>점검 상태와 경고 목록</td></tr>
 <tr><td><code>:version</code></td><td>지금 실행 중인 코드의 빌드 시각</td></tr>
+<tr><td><code>:messup [횟수|clear]</code></td><td>화면에만 가짜 출력을 끼워 넣는다 <sub>(서버로 안 간다)</sub></td></tr>
 </table>
 
 > 상단바 오른쪽에 모델과 추론 수준이 뜬다. **추론 수준을 누르면 골라서 바꿀 수 있고**, 바뀌는 동안에는 `⠴ 중간 →` 로 표시된다.
@@ -299,7 +300,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>24개 파일 · 559 케이스</b></summary>
+<summary><b>25개 파일 · 587 케이스</b></summary>
 
 <br>
 
@@ -321,6 +322,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `focus` | 17 | 클릭·타이핑이 입력창으로 가는가 |
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
+| `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
 | `complete` | 37 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
@@ -367,7 +369,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 툴바 패널의 다섯 상태 | 실제 `popup.html`/`popup.css` 로 렌더해 눈으로 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 559 케이스 통과 (위 표) |
+| 순수 로직 | 587 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

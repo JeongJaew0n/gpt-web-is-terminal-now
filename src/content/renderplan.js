@@ -34,6 +34,31 @@ GT.renderplan = (function () {
     ]);
   }
 
+  // ':messup' 처럼 화면에만 있는 블록을 스크롤백의 제자리에 끼운다.
+  //
+  // 시스템 줄처럼 맨 아래에 두면 새 대화가 올 때마다 그 아래로 밀려나
+  // 순서가 뒤집힌다. 만들 때의 '마지막 메시지' 를 앵커로 잡아 그 뒤에 둔다.
+  // 앵커가 사라졌으면(대화를 갈아엎었다) 끝에 붙인다 — 조용히 지우지 않는다.
+  //
+  // keys   : 메시지 키 (그리는 순서대로)
+  // locals : [{id, anchorKey}]  anchorKey 가 비면 '메시지보다 앞'
+  function interleave(keys, locals) {
+    const out = [];
+    const byAnchor = new Map();
+    (locals || []).forEach((r) => {
+      const k = r.anchorKey || '';
+      if (!byAnchor.has(k)) byAnchor.set(k, []);
+      byAnchor.get(k).push(r);
+    });
+    const placed = new Set();
+    const drain = (k) => (byAnchor.get(k) || []).forEach((r) => { placed.add(r.id); out.push({ local: r }); });
+
+    drain('');
+    (keys || []).forEach((k) => { out.push({ key: k }); drain(k); });
+    (locals || []).forEach((r) => { if (!placed.has(r.id)) out.push({ local: r }); });
+    return out;
+  }
+
   // prev: [{key, sig}]  지금 붙어 있는 것
   // next: [{key, sig}]  붙어 있어야 하는 것 (순서 포함)
   //
@@ -61,5 +86,5 @@ GT.renderplan = (function () {
     return plan.ops.every((o, i) => prevKeys[i] === o.key);
   }
 
-  return { signature, reconcile, unchanged };
+  return { signature, interleave, reconcile, unchanged };
 })();
