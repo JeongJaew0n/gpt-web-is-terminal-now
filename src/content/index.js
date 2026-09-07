@@ -421,6 +421,8 @@
   });
   // 이 틱의 목적은 시계와 경과시간이다. 본문을 갈아엎을 이유가 없다.
   every(1000, () => { if (GT.tty.visible()) GT.tty.renderChrome(); });
+  // 회전자는 더 자주 돈다. 렌더가 아니라 해당 노드의 글자만 바꾸므로 싸다.
+  every(90, () => { if (GT.tty.visible()) GT.tty.tickSpin(); });
 
   // 확장이 다시 로드됐는지 지켜본다. 감지되면 조용히 물러난다.
   every(4000, () => { if (!contextAlive()) shutdown('확장이 다시 로드됨'); });

@@ -54,6 +54,7 @@ Ctrl+` 한 번이면 언제든 원본으로 돌아갑니다.
 · Tab 자동완성 — 명령도, 인자도 완성됩니다 (:theme ⇥ 는 테마 이름을, :mv 3 ⇥ 는 프로젝트를)
 · 대화 목록 오버레이 — Ctrl+B. 폭을 드래그로 조절하고, 프로젝트는 펼칠 때 읽어옵니다
 · 모델과 추론 수준을 상단바에서 바로 바꿉니다
+· 모델이 생각하는 동안 "생각 중" 표시와 경과 시간
 · 코드블록과 응답 전체를 복사하는 버튼
 · 검색 인용을 각주로 정리해 보여줍니다
 · 테마 · 글자 크기 · 줄 간격 · 본문 폭을 설정에서 바꿉니다
@@ -97,6 +98,7 @@ from the extension's own state. Ctrl+` switches back at any time.
 · Tab completion for commands and their arguments
 · Overlay chat list (Ctrl+B) with drag-to-resize and lazy-loaded projects
 · Switch model and reasoning effort from the top bar
+· A "thinking" indicator with elapsed time while the model reasons
 · Copy buttons for code blocks and for whole replies
 · Search citations rendered as footnotes with sources
 · Theme, font size, line height and wrap width in settings

@@ -9,6 +9,7 @@ GT.store = (function () {
     slotId: null,           // 현재 턴이 차지한 assistant 레코드 (아래 설명)
     superseded: 0,          // 대체해서 버린 중간 메시지 수 (진단용)
     pendingThinking: 0,     // 다음 응답 앞에 쌓인 추론 조각 수
+    thinkingSince: 0,       // 지금 추론이 진행 중이면 그 시작 시각 (0 이면 진행 중 아님)
     orphanDeltas: 0,        // add 없이 도착한 본문 델타 (스트림 해석이 어긋났다는 신호)
     startedAt: 0,
     conversationTitle: '',
@@ -54,6 +55,7 @@ GT.store = (function () {
       state.streamingId = null;
       state.superseded = 0;
       state.orphanDeltas = 0;
+      state.thinkingSince = 0;
       messages.forEach((m) => upsert({ at: null, ...m }));
       if (meta) {
         // 대화가 통째로 바뀌는 자리다. 제목이 비어 있으면 '모르는 것'이 아니라
@@ -137,15 +139,33 @@ GT.store = (function () {
     userSent(text, id) {
       state.slotId = null;        // 새 턴이 열린다
       state.pendingThinking = 0;
+      state.thinkingSince = 0;
       upsert({ id: id || `local-${Date.now()}`, role: 'user', text, model: null });
       emit('user');
     },
 
-    // 추론 조각이 흘러왔다. 본문은 아니지만 "생각 중이었다"는 사실은 남긴다.
+    // 추론 조각이 흘러왔다.
+    //
+    // pendingThinking 은 '몇 조각 지났나'(응답에 사후로 붙는 기록)이고,
+    // thinkingSince 는 '지금 생각하고 있나'(화면에 띄우는 상태)다. 둘은 다른 것이다.
+    // 원본은 이 구간에 "생각 중…" 을 보여주는데 우리는 아무것도 안 보여줬다.
     thinking() {
       state.pendingThinking += 1;
+      if (!state.thinkingSince) state.thinkingSince = Date.now();
       emit('thinking');
     },
+
+    // 추론 표시를 끈다. 본문이 시작되거나 턴이 끝나면 더 보여줄 이유가 없다.
+    thinkingDone() {
+      if (!state.thinkingSince) return false;
+      state.thinkingSince = 0;
+      return true;
+    },
+
+    // 화면에 '생각 중' 줄을 띄울 조건.
+    // 본문이 이미 흐르고 있으면 그 블록의 회전자가 같은 일을 한다 — 둘 다 띄우지 않는다.
+    isThinking() { return !!state.thinkingSince && !state.streamingId; },
+    thinkingElapsed() { return state.thinkingSince ? (Date.now() - state.thinkingSince) / 1000 : 0; },
 
     begin(m) {
       if (state.slotId && state.slotId !== m.id && state.byId.has(state.slotId)) {
@@ -161,6 +181,7 @@ GT.store = (function () {
         if (rec) rec.thinking = state.pendingThinking;
         state.pendingThinking = 0;
       }
+      state.thinkingSince = 0;      // 본문이 시작됐다. '생각 중' 은 끝났다
       emit('begin');
     },
 
@@ -193,6 +214,7 @@ GT.store = (function () {
       const rec = (id && state.byId.get(id)) || state.messages[state.messages.length - 1];
       if (rec) { if (typeof text === 'string' && text) rec.text = text; rec.streaming = false; }
       state.streamingId = null;
+      state.thinkingSince = 0;
       // slotId 는 그대로 둔다. 같은 턴에서 또 begin 이 오면 이 자리를 대체해야 한다.
       emit('end');
     },

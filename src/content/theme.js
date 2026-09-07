@@ -220,6 +220,23 @@ GT.theme = (function () {
 .gt-key { color: var(--gt-fg-dim); }
 .gt-key-hint { color: var(--gt-fg-faint); }
 
+/* ---- 생각 중 ---- */
+.gt-turn-thinking { padding: 2px 0; }
+.gt-thinking-live {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--gt-cyan); font-size: 0.96em;
+}
+.gt-thinking-label { color: var(--gt-fg-dim); }
+.gt-thinking-dots {
+  color: var(--gt-fg-faint);
+  animation: gt-dots 1.4s steps(4, end) infinite;
+  width: 1.6ch; overflow: hidden; white-space: nowrap;
+}
+@keyframes gt-dots { from { width: 0; } to { width: 1.6ch; } }
+@media (prefers-reduced-motion: reduce) {
+  .gt-thinking-dots { animation: none; width: auto; }
+}
+
 /* ---- 화면에만 있는 블록 (:messup) ---- */
 .gt-turn-local { opacity: 0.92; }
 .gt-turn-local .gt-assistant { border-left: 1px dashed var(--gt-yellow); padding-left: 10px; }

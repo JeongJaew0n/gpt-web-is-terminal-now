@@ -15,6 +15,11 @@ GT.tty = (function () {
   // 손대지 않은 블록에 걸린 선택이 살아남는 지점이다.
   const pool = new Map();
   let epoch = 0;
+  // 회전자. 프레임을 한 곳에서 돌리고, 화면의 .gt-spin 노드를 제자리에서 갈아준다.
+  // 스크롤백을 다시 그리면 선택이 깨지므로(2026-09-02 이슈) 렌더를 돌리지 않는다.
+  const SPIN = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  let spinAt = 0;
+
   const systemLog = [];
   const localLog = [];        // 우리가 화면에만 끼워 넣은 블록 (:messup). 서버로 가지 않는다
   let localSeq = 0;
@@ -211,8 +216,11 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
   function turnAssistant(m) {
     const wrap = el('div', 'gt-turn');
     const meta = el('div', 'gt-meta');
-    const head = el('span', null, `${m.streaming ? '⠴' : '⏺'} ${m.model || 'assistant'}`);
+    const head = el('span');
     head.style.color = m.streaming ? 'var(--gt-cyan)' : 'var(--gt-magenta)';
+    if (m.streaming) head.appendChild(el('span', 'gt-spin', SPIN[spinAt]));
+    else head.appendChild(el('span', null, '⏺'));
+    head.appendChild(document.createTextNode(` ${m.model || 'assistant'}`));
     meta.appendChild(head);
     if (m.streaming) {
       meta.appendChild(el('span', 'gt-faint', '·'));
@@ -278,6 +286,20 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     return wrap;
   }
 
+  // 본문이 오기 전, 추론이 도는 구간을 보여준다. 원본이 "생각 중…" 을 띄우는 자리다.
+  // 서명에 경과 시각을 넣지 않는다 — 넣으면 매 틱 노드가 새로 만들어진다.
+  function thinkingRow() {
+    const wrap = el('div', 'gt-turn gt-turn-thinking');
+    const row = el('div', 'gt-thinking-live');
+    row.appendChild(el('span', 'gt-spin', SPIN[spinAt]));
+    row.appendChild(el('span', 'gt-thinking-label', '생각 중'));
+    row.appendChild(el('span', 'gt-thinking-dots', '…'));
+    row.appendChild(el('span', 'gt-spacer'));
+    row.appendChild(el('span', 'gt-faint gt-think-elapsed', `${GT.store.thinkingElapsed().toFixed(1)}s`));
+    wrap.appendChild(row);
+    return wrap;
+  }
+
   function systemRow(rec) {
     const row = el('div', 'gt-sys');
     row.dataset.level = rec.level;
@@ -322,6 +344,11 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       next.push({ key: 's:' + rec.id, sig: JSON.stringify(['sys', rec.id, epoch]), rec });
     });
 
+    // '생각 중' 은 항상 맨 아래다. 답이 나올 자리이기 때문이다.
+    if (GT.store.isThinking()) {
+      next.push({ key: 'thinking', sig: JSON.stringify(['thinking', epoch]), thinking: true });
+    }
+
     const prev = [...pool.entries()].map(([key, v]) => ({ key, sig: v.sig }));
     const plan = GT.renderplan.reconcile(prev, next);
     if (GT.renderplan.unchanged(plan, prev)) return false;
@@ -337,7 +364,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       if (!rec || rec.sig !== n.sig) {
         const node = n.m
           ? (n.m.role === 'user' ? turnUser(n.m) : turnAssistant(n.m))
-          : (n.local ? turnLocal(n.local) : systemRow(n.rec));
+          : (n.thinking ? thinkingRow() : (n.local ? turnLocal(n.local) : systemRow(n.rec)));
         if (rec && rec.el.parentElement) rec.el.remove();
         rec = { el: node, sig: n.sig, at: n.m ? n.m.at : null };
         pool.set(n.key, rec);
@@ -363,6 +390,19 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       const e = rec && rec.el.querySelector('.gt-elapsed');
       if (e) e.textContent = `${GT.store.elapsed().toFixed(1)}s`;
     }
+  }
+
+  // 회전자만 돌린다. 렌더를 돌리지 않으므로 선택도, 스크롤도 건드리지 않는다.
+  // 돌 게 없으면 DOM 을 훑지도 않는다 — 이 틱은 초당 열한 번 돈다.
+  function tickSpin() {
+    if (!root || !shadow) return;
+    const s = GT.store.state;
+    if (!s.streamingId && !GT.store.isThinking()) return;
+    spinAt = (spinAt + 1) % SPIN.length;
+    const f = SPIN[spinAt];
+    shadow.querySelectorAll('.gt-spin').forEach((n) => { n.textContent = f; });
+    const t = shadow.querySelector('.gt-think-elapsed');
+    if (t) t.textContent = `${GT.store.thinkingElapsed().toFixed(1)}s`;
   }
 
   // 상단바·탭·입력줄 메타·상태줄. 싸므로 매 틱 돌아도 된다.
@@ -541,7 +581,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
     applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
-    render, setMode, system, copy,
+    render, setMode, system, copy, tickSpin,
     clearSystem() { systemLog.length = 0; render(); },
 
     // 화면에만 끼워 넣는 블록. 지금 마지막 메시지를 앵커로 잡는다.
