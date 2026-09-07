@@ -41,10 +41,10 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 {
   const r = run(STALE);
   const msg = r.errors.join('\n');
-  t('빠진 모듈을 콘솔에 알린다', /모듈이 로드되지 않았다/.test(msg));
+  t('빠진 모듈을 콘솔에 알린다', /모듈이 로드되지 않았습니다/.test(msg));
   t('GT_DEFAULTS 를 지목한다', /GT_DEFAULTS/.test(msg));
   t('해결 방법을 알려준다', /chrome:\/\/extensions/.test(msg) && /↻/.test(msg));
-  t('제거 재설치가 불필요함을 명시', /재설치할 필요 없다/.test(msg));
+  t('제거 재설치가 불필요함을 명시', /재설치할 필요는 없습니다/.test(msg));
   t('화면에도 배너를 띄운다', r.appended.some(n => n.id === 'gpt-term-preflight'));
 }
 

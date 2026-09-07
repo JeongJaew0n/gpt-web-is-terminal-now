@@ -94,7 +94,10 @@ const ALL = SRC.map(src).join('\n');
     'src/popup/popup.js', 'src/popup/popup.html', 'src/options/options.js', 'src/options/options.html'];
 
   // 반말 종결. 주석 줄은 빼고 문자열·태그 안쪽만 본다.
-  const RUDE = /(했다|한다|없다|있다|된다|간다|온다|린다|본다|아니다|해라|봐라|와라|바꿔라|어라)(?=['"\u0060<]|\s*$)/;
+  //
+  // 종결 뒤에 마침표·물음표나 공백이 올 수 있다. 전에는 따옴표가 바로 오는 경우만
+  // 봐서 '…새로고침해라.' 를 놓쳤다 — 실제로 그 문구가 화면에 그대로 나갔다.
+  const RUDE = /(했다|한다|없다|있다|된다|간다|온다|린다|본다|아니다|해라|봐라|와라|바꿔라|어라)[.!?…)\s]*(?=['"\u0060<]|$)/;
   const bad = [];
   files.forEach((f) => {
     src(f).split('\n').forEach((line, i) => {

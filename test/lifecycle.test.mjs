@@ -51,8 +51,8 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 // 6. 물러날 때 조용히 사라지지 않는다
 {
   t('물러남을 알린다', /notifyGone/.test(src));
-  t('원본 UI 라는 걸 명시', /지금 보이는 건 원본 UI/.test(src));
-  t('새로고침하라고 안내', /새로고침해라/.test(src));
+  t('원본 UI 라는 걸 명시', /지금 보이는 것은 원본 UI/.test(src));
+  t('새로고침하라고 안내', /새로고침하세요/.test(src));
   t('알림은 한 번만', /getElementById\('gpt-term-gone'\)\) return/.test(src));
 }
 

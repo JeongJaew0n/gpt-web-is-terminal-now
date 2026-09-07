@@ -16,9 +16,9 @@
   if (!missing.length) return;
 
   console.error(
-    '[gpt-term] 모듈이 로드되지 않았다: ' + missing.join(', ') +
-    '\nchrome://extensions 에서 gpt-term 카드의 ↻ 를 눌러 확장을 다시 로드한 뒤 이 페이지를 새로고침해라. ' +
-    '(제거 후 재설치할 필요 없다)'
+    '[gpt-term] 모듈이 로드되지 않았습니다: ' + missing.join(', ') +
+    '\nchrome://extensions 에서 gpt-term 카드의 ↻ 를 눌러 확장을 다시 로드한 뒤 이 페이지를 새로고침하세요. ' +
+    '(제거 후 재설치할 필요는 없습니다)'
   );
 
   const show = () => {
@@ -37,10 +37,10 @@
     const body = document.createElement('div');
     body.style.flex = '1';
     const l1 = document.createElement('div');
-    l1.textContent = 'gpt-term 이 로드되지 않았다 — ' + missing.join(', ');
+    l1.textContent = 'gpt-term 이 로드되지 않았습니다 — ' + missing.join(', ');
     const l2 = document.createElement('div');
     l2.setAttribute('style', 'color:#8b949e;margin-top:4px');
-    l2.textContent = 'chrome://extensions 에서 gpt-term 의 ↻ 를 누르고 이 페이지를 새로고침해라. 제거 후 재설치할 필요 없다.';
+    l2.textContent = 'chrome://extensions 에서 gpt-term 의 ↻ 를 누르고 이 페이지를 새로고침하세요. 제거 후 재설치할 필요는 없습니다.';
     body.appendChild(l1); body.appendChild(l2);
     const close = document.createElement('button');
     close.textContent = '닫기';
@@ -101,7 +101,7 @@
       'display:flex', 'gap:12px', 'align-items:center', 'max-width:420px'
     ].join(';'));
     const txt = document.createElement('div');
-    txt.textContent = `gpt-term 이 물러났다 (${why}). 지금 보이는 건 원본 UI 다 — 페이지를 새로고침해라.`;
+    txt.textContent = `gpt-term 이 물러났습니다 (${why}). 지금 보이는 것은 원본 UI 입니다 — 페이지를 새로고침하세요.`;
     const close = document.createElement('button');
     close.textContent = '닫기';
     close.setAttribute('style', 'background:none;border:1px solid #30363d;color:#8b949e;font:inherit;padding:2px 8px;cursor:pointer;flex:0 0 auto');
