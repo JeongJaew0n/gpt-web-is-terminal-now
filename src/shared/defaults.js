@@ -1,7 +1,7 @@
 // gpt-term 빌드 스탬프.
 // 크롬은 언팩 확장 파일을 캐시한다. "고쳤는데 왜 그대로지?" 를 추측으로 풀지 않으려고 둔다.
 // 터미널 부팅 줄과 :version 에 찍힌다. 이 값이 안 바뀌면 확장이 다시 로드되지 않은 것이다.
-var GT_BUILD = '2026-09-07 20:35';
+var GT_BUILD = '2026-09-07 21:15';
 
 // gpt-term — 설정 스키마. 콘텐츠 스크립트와 옵션 화면이 같은 정의를 쓴다.
 // 여기가 유일한 출처다. 옵션 화면에 항목을 늘리려면 이 배열만 고치면 된다.
@@ -10,7 +10,7 @@ var GT_SCHEMA = [
     section: '동작',
     key: 'enabled', label: 'ChatGPT 를 열면 바로 터미널로', type: 'bool',
     def: false,
-    help: '기본은 꺼짐 — 원본 UI 로 시작한다. 툴바 아이콘이나 Ctrl+` 로 그때그때 켠다.'
+    help: '기본은 꺼짐 — 원본 UI 로 시작합니다. 툴바 아이콘이나 Ctrl+` 로 그때그때 켭니다.'
   },
   {
     section: '동작',
@@ -27,24 +27,24 @@ var GT_SCHEMA = [
     section: '동작',
     key: 'drift.threshold', label: '본문 대조 경고 임계값 (%)', type: 'int',
     def: 8, min: 1, max: 100,
-    help: '스트림으로 받은 본문과 원본이 이만큼 넘게 어긋나면 경고한다. 화면은 항상 원본 쪽으로 교정되므로 경고일 뿐이다.'
+    help: '스트림으로 받은 본문과 원본이 이만큼 넘게 어긋나면 경고합니다. 화면은 항상 원본 쪽으로 교정되므로 경고일 뿐입니다.'
   },
 
   { section: '사이드바', key: 'sidebar.visible', label: '대화 목록 표시', type: 'bool', def: true,
-    help: 'Ctrl+B 로도 토글한다.' },
+    help: 'Ctrl+B 로도 토글합니다.' },
   { section: '사이드바', key: 'sidebar.width', label: '폭 (ch)', type: 'int', def: 30, min: 16, max: 80 },
   { section: '사이드바', key: 'sidebar.closeOnOpen', label: '대화를 열면 목록 닫기', type: 'bool', def: true,
-    help: '원본과 같은 동작. 목록이 본문 위에 떠 있으므로 고르고 나면 비켜준다. ≡ 로 다시 연다.' },
+    help: '원본과 같은 동작입니다. 목록이 본문 위에 떠 있으므로 고르고 나면 비켜 줍니다. ≡ 로 다시 엽니다.' },
   { section: '사이드바', key: 'sidebar.groups', label: '고정·프로젝트 그룹 표시', type: 'bool', def: true },
   { section: '사이드바', key: 'sidebar.minColumns', label: '이보다 좁으면 처음에 접어둠 (칸)', type: 'int',
     def: 100, min: 0, max: 400,
-    help: '0 이면 항상 표시. 목록은 본문 위에 덮이므로 좁은 창에서는 기본값을 접어둔다. 손잡이로 열면 폭과 무관하게 열린다.' },
+    help: '0 이면 항상 표시합니다. 목록은 본문 위에 덮이므로 좁은 창에서는 기본값을 접어 둡니다. 손잡이로 열면 폭과 무관하게 열립니다.' },
 
   { section: '표시', key: 'theme', label: '테마', type: 'enum', def: 'modern-dark',
     choices: [['modern-dark', 'modern-dark'], ['crt-green', 'crt-green'], ['amber', 'amber']] },
   { section: '표시', key: 'font.family', label: '폰트', type: 'text',
     def: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
-    help: '설치돼 있지 않으면 뒤쪽 스택으로 폴백한다.' },
+    help: '설치돼 있지 않으면 뒤쪽 스택으로 폴백합니다.' },
   { section: '표시', key: 'font.size', label: '글자 크기 (px)', type: 'int', def: 13, min: 10, max: 24 },
   { section: '표시', key: 'line.height', label: '줄 간격', type: 'float', def: 1.62, min: 1, max: 3, step: 0.01 },
   { section: '표시', key: 'wrap.columns', label: '본문 최대 너비 (ch)', type: 'int', def: 96, min: 0, max: 400,

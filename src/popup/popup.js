@@ -50,7 +50,7 @@
 
     if (!tab || !CHATGPT.test(tab.url || '')) {
       termUsable = false; termOn = false;
-      ui.helpTerm.textContent = 'ChatGPT 탭에서만 쓸 수 있다.';
+      ui.helpTerm.textContent = 'ChatGPT 탭에서만 쓸 수 있습니다.';
       paintTerminal();
       return;
     }
@@ -58,28 +58,28 @@
     const state = await ask({ kind: 'state' });
     if (!state) {
       termUsable = false; termOn = false;
-      ui.helpTerm.textContent = '아직 이 탭에 안 붙었다. 새로고침 필요.';
+      ui.helpTerm.textContent = '아직 이 탭에 붙지 않았습니다. 새로고침이 필요합니다.';
       paintTerminal();
       return;
     }
     if (state.degraded) {
       termUsable = false; termOn = false;
       ui.dot.dataset.broken = '1';
-      ui.helpTerm.textContent = '전제가 깨져 복귀했다. :health 로 사유 확인.';
+      ui.helpTerm.textContent = '전제가 깨져 복귀했습니다. :health 로 사유를 확인하세요.';
       paintTerminal();
       return;
     }
 
     termUsable = true;
     termOn = !!state.visible;
-    ui.helpTerm.textContent = '이 탭에만 적용된다.';
+    ui.helpTerm.textContent = '이 탭에만 적용됩니다.';
     paintTerminal();
   }
 
   ui.rowTerm.addEventListener('click', async () => {
     if (!termUsable) return;
     const res = await ask({ kind: 'toggle' });
-    if (!res) { termUsable = false; ui.helpTerm.textContent = '응답이 없다. 새로고침 필요.'; }
+    if (!res) { termUsable = false; ui.helpTerm.textContent = '응답이 없습니다. 새로고침이 필요합니다.'; }
     else termOn = !!res.visible;
     paintTerminal();
   });

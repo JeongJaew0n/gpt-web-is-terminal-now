@@ -148,7 +148,7 @@
     GT.store.end(p.id, p.text);
     // 응답이 끝났는데 본문을 한 번도 못 잡았다 = 판별자가 낡았다.
     if (p.began === false && (p.skipped || []).length) {
-      GT.health.soft(`최종 응답을 찾지 못했다 — 건너뛴 종류: ${p.skipped.join(', ')}. 판별자가 낡았을 수 있다`);
+      GT.health.soft(`최종 응답을 찾지 못했습니다 — 건너뛴 종류: ${p.skipped.join(', ')}. 판별자가 낡았을 수 있습니다`);
     }
     // add 를 못 보고 본문부터 받은 스트림. 화면은 정상이지만 해석이 어긋났다는 신호다.
     if (p.orphan) {
@@ -160,7 +160,7 @@
       setTimeout(() => pull('stream-empty'), 600);
     }
     if (p.totalOps && p.unknownOps / p.totalOps > 0.2) {
-      GT.health.soft(`알 수 없는 델타 op ${p.unknownOps}/${p.totalOps} — 스키마가 바뀌었을 수 있다`);
+      GT.health.soft(`알 수 없는 델타 op ${p.unknownOps}/${p.totalOps} — 스키마가 바뀌었을 수 있습니다`);
     }
     // 스트림 결과를 fiber 원문과 대조한다
     setTimeout(() => GT.toMain('verify', { id: p.id }), 400);
@@ -244,7 +244,7 @@
              : GT.health.fail('composer', '15초 안에 나타나지 않았다');
 
   const okThread = await waitFor('#thread, main', 15000);
-  okThread ? GT.health.pass('thread') : GT.health.fail('thread', '찾지 못했다');
+  okThread ? GT.health.pass('thread') : GT.health.fail('thread', '찾지 못했습니다');
 
   // 실제로 원본 UI 로 돌아간 경우에만 멈춘다.
   // onBreak 가 warn/ignore 면 문제를 안고서도 계속 간다 — 사용자가 그렇게 고른 것이다.
@@ -305,10 +305,10 @@
       const handled = await GT.commands.run(text);
       if (handled) return;
       const r = await GT.compose.send(text);
-      if (!r.ok) GT.health.soft(`전송 실패(${r.reason}) — 원본 컴포저를 찾지 못했다`);
+      if (!r.ok) GT.health.soft(`전송 실패(${r.reason}) — 원본 컴포저를 찾지 못했습니다`);
     } else if (e.key === 'c' && e.ctrlKey) {
       e.preventDefault();
-      GT.compose.stop() ? GT.tty.system('info', '중단 요청') : GT.tty.system('warn', '중단 버튼을 찾지 못했다');
+      GT.compose.stop() ? GT.tty.system('info', '중단 요청') : GT.tty.system('warn', '중단 버튼을 찾지 못했습니다');
     }
   });
 

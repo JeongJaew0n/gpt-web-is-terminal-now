@@ -86,6 +86,29 @@ const ALL = SRC.map(src).join('\n');
   t('방침에 OpenAI 무관 고지가 있다', /not affiliated/i.test(policy) && /상표/.test(policy));
 }
 
+// --- 화면에 보이는 글은 존댓말이다 ---
+{
+  // 코드 주석은 반말로 쓴다(개발자용). 사용자에게 보이는 글만 검사한다.
+  const files = ['src/content/commands.js', 'src/content/sidebar.js', 'src/content/index.js',
+    'src/content/health.js', 'src/content/tty.js', 'src/shared/defaults.js',
+    'src/popup/popup.js', 'src/popup/popup.html', 'src/options/options.js', 'src/options/options.html'];
+
+  // 반말 종결. 주석 줄은 빼고 문자열·태그 안쪽만 본다.
+  const RUDE = /(했다|한다|없다|있다|된다|간다|온다|린다|본다|아니다|해라|봐라|와라|바꿔라|어라)(?=['"\u0060<]|\s*$)/;
+  const bad = [];
+  files.forEach((f) => {
+    src(f).split('\n').forEach((line, i) => {
+      const code = line.replace(/^\s*(\/\/|\*|\/\*).*$/, '');   // 주석 줄 제거
+      if (!code) return;
+      if (/GT\.log\(/.test(code)) return;                        // 콘솔 진단은 개발자용이다
+      const strings = code.match(/'[^']*'|"[^"]*"|\u0060[^\u0060]*\u0060|>[^<>]+</g) || [];
+      strings.forEach((v) => { if (RUDE.test(v)) bad.push(`${f}:${i + 1} ${v.slice(0, 46)}`); });
+    });
+  });
+  t('사용자에게 보이는 글에 반말이 없다', bad.length === 0);
+  if (bad.length) bad.slice(0, 8).forEach((b) => console.log('        ' + b));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

@@ -102,7 +102,7 @@ GT.health = (function () {
       CHECKS.schema.ok = false;
       GT.health.soft(
         `스트림 본문이 원본과 ${pct}% 어긋난다 (스트림 ${a.length}자 / 원본 ${b.length}자). ` +
-        '화면은 원본 기준으로 교정했다. 델타 파서가 일부 op 를 놓치고 있다는 뜻이다.'
+        '화면은 원본 기준으로 교정했습니다. 델타 파서가 일부 op 를 놓치고 있다는 뜻입니다.'
       );
     }
   };

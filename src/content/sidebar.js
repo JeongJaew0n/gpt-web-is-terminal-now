@@ -49,7 +49,7 @@ GT.sidebar = (function () {
     if (!opening || !gid || GT.chats.isProjectLoaded(gid)) return;
     busy = '프로젝트 읽는 중…'; draw();
     try { absorb(await GT.chats.loadProject(gid)); }
-    catch (e) { GT.tty.system('warn', `프로젝트를 읽지 못했다: ${e.message}`); }
+    catch (e) { GT.tty.system('warn', `프로젝트를 읽지 못했습니다: ${e.message}`); }
     busy = ''; draw();
   }
 
@@ -122,7 +122,7 @@ GT.sidebar = (function () {
 
     if (!visibleRows.length) {
       const why = loading ? '읽는 중…'
-        : source === 'none' ? '목록을 얻지 못했다 — :health'
+        : source === 'none' ? '목록을 가져오지 못했습니다 — :health'
         : query ? '일치 없음'
         : '대화 없음';
       listEl.appendChild(el('div', 'gt-sb-empty', why));
@@ -191,18 +191,18 @@ GT.sidebar = (function () {
       inp.dispatchEvent(new Event('input', { bubbles: true }));
       GT.tty.focus();
       inp.setSelectionRange(inp.value.length, inp.value.length);
-      GT.tty.system('info', '이름을 고치고 Enter');
+      GT.tty.system('info', '이름을 고치고 Enter 를 누르세요');
     });
 
     act(rec.pinned ? '고정 해제' : '채팅 고정', async () => {
       await GT.convops.pin(rec.id, !rec.pinned);
-      GT.tty.system('info', rec.pinned ? '고정 해제됨' : '고정됨');
+      GT.tty.system('info', rec.pinned ? '고정을 해제했습니다' : '고정했습니다');
       await refresh();
     });
 
     act('아카이브에 보관', async () => {
       await GT.convops.archive(rec.id, true);
-      GT.tty.system('info', `보관됨 — :archive ${rec.id.slice(0, 8)} off 로 되돌린다`);
+      GT.tty.system('info', `보관했습니다 — :archive ${rec.id.slice(0, 8)} off 로 되돌립니다`);
       if (currentId() === rec.id) GT.navigate.newChat();
       await refresh();
     });
@@ -235,7 +235,7 @@ GT.sidebar = (function () {
       inp.dispatchEvent(new Event('input', { bubbles: true }));
       GT.tty.focus();
       inp.setSelectionRange(inp.value.length, inp.value.length);
-      GT.tty.system('info', '프로젝트 이름을 이어 쓰고 Enter (빼려면 none) — :mv 만 쳐도 목록이 나온다');
+      GT.tty.system('info', '프로젝트 이름을 이어 쓰고 Enter 를 누르세요 (빼려면 none) — :mv 만 쳐도 목록이 나옵니다');
     });
 
     // 공유는 공개 링크를 만드는 동작이다. 우리 UI 에서 한 번 클릭으로 공개되면 안 된다.
@@ -287,7 +287,7 @@ GT.sidebar = (function () {
     };
 
     if (armed) {
-      footEl.appendChild(el('span', 'gt-sb-warn', `${n}개 · 되돌릴 수 없다`));
+      footEl.appendChild(el('span', 'gt-sb-warn', `${n}개 · 되돌릴 수 없습니다`));
       footEl.appendChild(el('span', 'gt-spacer'));
       act('정말 삭제', 'danger', doRemove);
       act('취소', '', () => { armed = false; draw(); });
@@ -324,7 +324,7 @@ GT.sidebar = (function () {
 
     // 무엇을 지웠는지 스크롤백에 남긴다. 되돌릴 수 없으니 기록이라도 있어야 한다.
     const listing = document.createDocumentFragment();
-    listing.appendChild(el('div', null, `${recs.length}개를 삭제한다 — 되돌릴 수 없다`));
+    listing.appendChild(el('div', null, `${recs.length}개를 삭제합니다 — 되돌릴 수 없습니다`));
     recs.forEach((r) => listing.appendChild(el('div', 'gt-dim', `  ${r.id.slice(0, 8)}  ${r.title}`)));
     GT.tty.system('warn', null, listing);
 

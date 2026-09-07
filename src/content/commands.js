@@ -45,7 +45,7 @@ GT.commands = (function () {
     const flat = GT.chats.flatten(g);
     lastList = flat.filter((r) => r.kind === 'chat');
     if (!lastList.length) {
-      return err('목록을 얻지 못했다 — :health 로 출처를 확인해라');
+      return err('목록을 가져오지 못했습니다 — :health 로 출처를 확인하세요');
     }
     let i = -1;
     const rows = flat.map((r) => r.kind === 'header'
@@ -58,7 +58,7 @@ GT.commands = (function () {
 
   def(':open', '대화 열기 — :open <n>', (args) => {
     const n = Number(args[0]);
-    if (!lastList.length) return err('먼저 :ls 로 목록을 불러와라');
+    if (!lastList.length) return err('먼저 :ls 로 목록을 불러오세요');
     if (!Number.isInteger(n) || !lastList[n]) return err(`:open <0-${lastList.length - 1}>`);
     if (GT.config.get('sidebar.closeOnOpen')) GT.sidebar.dismiss();
     GT.navigate.to(lastList[n].href);
@@ -81,7 +81,7 @@ GT.commands = (function () {
 
   const needTarget = (key) => {
     const c = findChat(key);
-    if (!c) err(`대상을 못 찾았다: ${key} — :ls 번호나 id 앞자리로 지정해라`);
+    if (!c) err(`대상을 찾지 못했습니다: ${key} — :ls 번호나 id 앞자리로 지정하세요`);
     return c;
   };
 
@@ -100,10 +100,10 @@ GT.commands = (function () {
     }
 
     const name = words.join(' ').trim();
-    if (!name) return err('새 이름이 필요하다');
+    if (!name) return err('새 이름이 필요합니다');
 
     const id = target ? target.id : GT.conversation.idFromPath();
-    if (!id) return err('대화를 연 다음에 쓰거나, :rename @<n|id> <새 이름> 으로 지정해라');
+    if (!id) return err('대화를 연 다음에 쓰시거나, :rename @<n|id> <새 이름> 으로 지정하세요');
 
     await GT.convops.rename(id, name);
     info(`이름 변경: ${name}`);
@@ -138,7 +138,7 @@ GT.commands = (function () {
   def(':rm', '삭제 — :rm <n|id> yes', async (args) => {
     const c = needTarget(args[0]); if (!c) return;
     if (String(args[1] || '').toLowerCase() !== 'yes') {
-      warn(`되돌릴 수 없다. 지우려면: :rm ${c.id.slice(0, 8)} yes`);
+      warn(`되돌릴 수 없습니다. 지우려면: :rm ${c.id.slice(0, 8)} yes`);
       return info(`대상: ${c.title}`);
     }
     await GT.convops.remove(c.id);
@@ -148,10 +148,10 @@ GT.commands = (function () {
   });
 
   def(':select', '대화 다중 선택 모드 (원본에 없는 기능)', () => {
-    if (!GT.sidebar.isOpen()) return err('사이드바를 먼저 열어라 (^B)');
+    if (!GT.sidebar.isOpen()) return err('사이드바를 먼저 여세요 (^B)');
     if (GT.sidebar.selecting) { GT.sidebar.exitSelect(); return info('선택 모드 종료'); }
     GT.sidebar.enterSelect();
-    info('행을 클릭해 고르고, 아래 버튼으로 삭제·보관한다. esc 로 나간다');
+    info('행을 클릭해 고르고, 아래 버튼으로 삭제·보관합니다. esc 로 나갑니다');
   });
 
   def(':mv', '프로젝트로 이동 — :mv <n|id> <프로젝트|none>', async (args) => {
@@ -160,7 +160,7 @@ GT.commands = (function () {
     const want = args.slice(1).join(' ').trim();
 
     if (!want) {
-      if (!projects.length) return err('프로젝트 목록이 비었다 — :ls 로 목록을 먼저 불러와라');
+      if (!projects.length) return err('프로젝트 목록이 비어 있습니다 — :ls 로 목록을 먼저 불러오세요');
       GT.tty.system('info', null, table(projects.map((p, i) => [String(i), p.name, ''])));
       return info(`:mv ${args[0]} <번호|이름>  ·  빼려면 :mv ${args[0]} none`);
     }
@@ -177,11 +177,11 @@ GT.commands = (function () {
     const r = await GT.convops.moveToProject(c.id, gid);
     if (!r.ok) {
       return err(r.reason === 'not-applied'
-        ? '요청은 받아들여졌는데 실제로 안 바뀌었다 — 원본이 바뀌었을 수 있다'
+        ? '요청은 받아들여졌는데 실제로 바뀌지 않았습니다 — 원본이 바뀌었을 수 있습니다'
         : `이동 실패 (${r.reason})`);
     }
     const name = gid ? (projects.find((x) => x.id === gid) || {}).name : null;
-    info(name ? `${c.title} → ${name}` : `${c.title} → 프로젝트에서 뺐다`);
+    info(name ? `${c.title} → ${name}` : `${c.title} → 프로젝트에서 뺐습니다`);
     if (GT.sidebar.isOpen()) await GT.sidebar.refresh();
   }, null, (prev) => (prev.length === 1
     ? (GT.chats.projects ? GT.chats.projects().map((p) => p.name).concat('none') : ['none'])
@@ -189,29 +189,29 @@ GT.commands = (function () {
 
   // 공유는 공개 링크를 만든다. API 로 곧장 만들지 않고 원본 대화상자를 띄운다 —
   // 무엇이 공개되는지 ChatGPT 자신의 확인 절차를 거치게 한다.
-  def(':share', '공유 — 원본 공유 대화상자를 연다', async (args) => {
+  def(':share', '공유 — 원본 공유 대화상자를 엽니다', async (args) => {
     const c = args.length ? needTarget(args[0]) : null;
     if (args.length && !c) return;
     const id = c ? c.id : GT.conversation.idFromPath();
-    if (!id) return err('공유할 대화를 특정하지 못했다 — :share <n|id>');
+    if (!id) return err('공유할 대화를 찾지 못했습니다 — :share <n|id>');
 
     if (location.pathname !== '/c/' + id) {
       GT.navigate.to('/c/' + id);
       await new Promise((r) => setTimeout(r, 1200));
     }
     const btn = document.querySelector(GT.convops.SHARE_BUTTON);
-    if (!btn) return err('원본의 공유 버튼을 찾지 못했다 — 창이 좁으면 숨겨진다');
+    if (!btn) return err('원본의 공유 버튼을 찾지 못했습니다 — 창이 좁으면 숨겨집니다');
 
     // 대화상자는 원본 UI 위에 뜬다. 터미널을 덮어둔 채로는 보이지 않는다.
     GT.tty.hide();
     btn.click();
-    warn('원본 공유 대화상자를 열었다 — 링크를 만들면 대화가 공개된다. 끝나면 ^` 로 돌아온다');
+    warn('원본 공유 대화상자를 열었습니다 — 링크를 만들면 대화가 공개됩니다. 끝나면 ^` 로 돌아오세요');
   });
 
   def(':sidebar', '사이드바 — on | off | toggle | more | width <n> | clear-cache', async (args) => {
     const a = (args[0] || 'toggle').toLowerCase();
     if (a === 'more') {
-      if (!GT.sidebar.hasMore) return info('더 읽을 대화가 없다');
+      if (!GT.sidebar.hasMore) return info('더 읽을 대화가 없습니다');
       const g = await GT.sidebar.loadMore();
       return info(`${g.loaded} / ${g.total}개 읽음`);
     }
@@ -224,7 +224,7 @@ GT.commands = (function () {
     }
     if (a === 'clear-cache') {
       const ok = await GT.chats.clearCache();
-      return ok ? info('목록 캐시를 지웠다') : err('캐시를 지우지 못했다');
+      return ok ? info('목록 캐시를 지웠다') : err('캐시를 지우지 못했습니다');
     }
     const next = await GT.sidebar.toggle(a === 'on' ? true : a === 'off' ? false : undefined);
     info(`사이드바 ${next ? '켬' : '끔'}`);
@@ -266,7 +266,7 @@ GT.commands = (function () {
   def(':config', '설정 전체 보기', () => {
     const cfg = GT.config.all;
     GT.tty.system('info', null, table(GT.config.keys().map((k) => [k, cfg[k], k === 'enabled' ? '' : ''])));
-    info(':set <key> <value> 로 바꾼다');
+    info(':set <key> <value> 로 바꿉니다');
   });
 
   def(':set', '설정 변경 — :set <key> <value>', async (args) => {
@@ -281,17 +281,17 @@ GT.commands = (function () {
     } catch (e) { err(String(e.message || e)); }
   }, null, (prev) => (prev.length ? [] : GT.config.keys()));
 
-  def(':model', '모델 — 인자 없으면 목록, :model <n|이름> 으로 전환', async (args) => {
+  def(':model', '모델 — 인자 없으면 목록, :model <n|이름> 으로 전환합니다', async (args) => {
     const last = [...GT.store.state.messages].reverse().find((m) => m.model);
     if (!GT.picker.available()) {
-      return err('원본의 모델 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
+      return err('원본의 모델 선택기를 찾지 못했습니다. 창이 좁으면 숨겨집니다 — 창을 넓히거나 :q 로 원본에서 바꾸세요');
     }
     if (!args.length) {
       const list = await GT.picker.models();
-      if (!list || !list.length) return err('모델 목록을 읽지 못했다');
+      if (!list || !list.length) return err('모델 목록을 읽지 못했습니다');
       GT.tty.system('info', null, table(list.map((m) => [String(m.index), m.label, m.current ? '● 현재' : ''])));
       if (last) info(`직전 응답 모델 슬러그: ${last.model}`);
-      return info(':model <번호|이름> 으로 전환한다');
+      return info(':model <번호|이름> 으로 전환합니다');
     }
     const r = await GT.picker.chooseModel(args.join(' '));
     if (r.ok) return info(`모델 → ${r.picked}`);
@@ -301,12 +301,12 @@ GT.commands = (function () {
 
   def(':effort', '추론 수준 — :effort <0-2 | 낮음|중간|높음 | + | ->', async (args) => {
     if (!GT.picker.available()) {
-      return err('원본의 선택기를 찾지 못했다. 창이 좁으면 숨겨진다 — 넓히거나 :q 로 원본에서 바꿔라');
+      return err('원본의 선택기를 찾지 못했습니다. 창이 좁으면 숨겨집니다 — 창을 넓히거나 :q 로 원본에서 바꾸세요');
     }
 
     if (!args.length) {
       const cur = await GT.picker.effort();
-      if (!cur) return err('추론 수준을 읽지 못했다 — :health 확인');
+      if (!cur) return err('추론 수준을 읽지 못했습니다 — :health 로 확인하세요');
       info(`추론 수준: ${cur.label} (${cur.index + 1}/${cur.steps})`);
       return info(':effort 0 · 1 · 2 또는 낮음/중간/높음, +/- 로 한 칸씩');
     }
@@ -326,18 +326,18 @@ GT.commands = (function () {
     if (r.ok) {
       return info(r.noop ? `이미 ${r.label}` : `추론 수준 → ${r.label} (${r.index + 1}/${r.steps})`);
     }
-    if (r.reason === 'no-move') return err(`움직이지 않았다 (${r.from} → ${r.to}). 원본이 바뀌었을 수 있다`);
+    if (r.reason === 'no-move') return err(`움직이지 않았습니다 (${r.from} → ${r.to}). 원본이 바뀌었을 수 있습니다`);
     err(`전환 실패 (${r.reason})`);
   }, null, () => ['0', '1', '2', '낮음', '중간', '높음', '+', '-']);
 
   def(':version', '지금 실행 중인 코드의 빌드 시각', () => {
     info(`gpt-term 0.1.0 · build ${GT_BUILD}`);
-    info('이 값이 소스를 고친 뒤에도 그대로면 확장이 다시 로드되지 않은 것이다 (chrome://extensions 의 ↻)');
+    info('이 값이 소스를 고친 뒤에도 그대로면 확장이 다시 로드되지 않은 것입니다 (chrome://extensions 의 ↻)');
   });
 
   def(':options', '확장 설정 화면 열기', () => {
     GT.sendToSW({ kind: 'openOptions' });
-    info('설정 탭을 연다');
+    info('설정 탭을 엽니다');
   });
 
   def(':health', '점검 상태와 경고 목록', () => {
@@ -355,7 +355,7 @@ GT.commands = (function () {
     info(`onBreak = ${GT.config.get('onBreak')} · 드리프트 임계 ${GT.config.get('drift.threshold')}%`);
     const orph = GT.store.state.orphanDeltas;
     if (orph) info(`add 없이 도착한 본문 델타 ${orph}건`);
-    info(`턴 안에서 대체한 중간 메시지 ${sup}개` + (sup ? ' — 추론 조각으로 보인다' : ''));
+    info(`턴 안에서 대체한 중간 메시지 ${sup}개` + (sup ? ' — 추론 조각으로 보입니다' : ''));
   });
 
   // ------------------------------------------------------------------ messup
@@ -419,18 +419,18 @@ export async function ${pick(VERBS).replace(/ing$/, '')}${n[0].toUpperCase() + n
     return blocks.join('\n\n');
   }
 
-  def(':messup', '화면에만 가짜 출력을 끼워 넣는다 — :messup [횟수|clear]', (args) => {
+  def(':messup', '화면에만 가짜 출력을 끼워 넣습니다 — :messup [횟수|clear]', (args) => {
     const a = (args[0] || '').toLowerCase();
     if (a === 'clear' || a === 'off') {
       const n = GT.tty.clearLocal();
-      info(n ? `끼워 넣은 블록 ${n}개를 걷어냈다` : '걷어낼 게 없다');
+      info(n ? `끼워 넣은 블록 ${n}개를 걷어냈습니다` : '걷어낼 것이 없습니다');
       return;
     }
     let n = parseInt(a, 10);
     if (!Number.isFinite(n) || n < 1) n = 1;
     n = Math.min(n, 10);
     for (let i = 0; i < n; i += 1) GT.tty.local(messup());
-    info(`${n}개 끼워 넣었다 — 서버로 가지 않는다. :messup clear 로 걷어낸다`);
+    info(`${n}개 끼워 넣었습니다 — 서버로 가지 않습니다. :messup clear 로 걷어냅니다`);
   }, null, (prev) => (prev.length ? [] : ['clear']));
 
   function parse(line) {
@@ -453,7 +453,7 @@ export async function ${pick(VERBS).replace(/ing$/, '')}${n[0].toUpperCase() + n
     const p = parse(line);
     if (!p) return false;
     const cmd = REG.find((c) => c.name === p.name);
-    if (!cmd) { err(`알 수 없는 명령: ${p.name} — :help`); return true; }
+    if (!cmd) { err(`알 수 없는 명령입니다: ${p.name} — :help`); return true; }
     try { await cmd.run(p.args); } catch (e) { err(String((e && e.message) || e)); }
     return true;
   }

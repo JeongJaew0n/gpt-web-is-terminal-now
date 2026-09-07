@@ -62,7 +62,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('로그 블록', /```log/.test(local[0]));
   t('코드 블록', /```ts/.test(local[0]));
   t('제목 줄이 있다', /^### /m.test(local[0]));
-  t('서버로 가지 않는다고 알려준다', said.some((x) => /서버로 가지 않는다/.test(x)));
+  t('서버로 가지 않는다고 알려준다', said.some((x) => /서버로 가지 않습니다/.test(x)));
 
   await C.run(':messup 3');
   t('횟수를 받는다', local.length === 4);
@@ -76,7 +76,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   await C.run(':messup clear');
   t('clear 로 걷어낸다', local.length === 0);
   await C.run(':messup off');
-  t('off 도 같은 뜻', said.some((x) => /걷어낼 게 없다/.test(x)));
+  t('off 도 같은 뜻', said.some((x) => /걷어낼 것이 없습니다/.test(x)));
 
   t('자동완성이 clear 를 준다',
     C.complete(':messup ').candidates.includes('clear'));
