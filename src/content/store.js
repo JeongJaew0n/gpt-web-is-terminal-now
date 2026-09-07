@@ -155,6 +155,13 @@ GT.store = (function () {
       emit('thinking');
     },
 
+    // 화면 표시만 켜고 끈다. pendingThinking(조각 수)은 건드리지 않는다 —
+    // 수확은 같은 상태를 반복해서 알려주므로 여기서 세면 숫자가 부풀어 오른다.
+    setThinking(on) {
+      if (on) { if (!state.thinkingSince) state.thinkingSince = Date.now(); return; }
+      state.thinkingSince = 0;
+    },
+
     // 추론 표시를 끈다. 본문이 시작되거나 턴이 끝나면 더 보여줄 이유가 없다.
     thinkingDone() {
       if (!state.thinkingSince) return false;

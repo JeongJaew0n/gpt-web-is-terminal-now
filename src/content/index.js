@@ -124,7 +124,14 @@
   GT.on('broken', (p) => GT.health.fail('schema', `${p.reason} ${p.detail}`));
 
   GT.on('harvest', (p) => {
-    const r = GT.store.applyHarvest(p.messages || [], { title: cleanTitle(p.title), path: p.path });
+    const all = p.messages || [];
+    // 아직 본문이 없는 assistant 노드는 메시지가 아니다. 원본이 그 자리에 그리는
+    // 자리표시자를 응답으로 삼으면 "생각 중..." 이 스크롤백에 눌러앉는다.
+    // 대신 그게 '지금 생각하고 있다' 는 신호다 — 우리 표시를 켠다.
+    const pending = all.filter((m) => m && m.pending);
+    const messages = all.filter((m) => !(m && m.pending));
+    GT.store.setThinking(pending.length > 0);
+    const r = GT.store.applyHarvest(messages, { title: cleanTitle(p.title), path: p.path });
     if (r.mode === 'merge' && r.kept) {
       // 원본이 앞쪽 턴을 안 그린 상태다. 우리가 이미 가진 것을 지켜서 넘어간다.
       GT.log(`수확이 ${r.kept}건 적게 봤다 — 기존 레코드를 유지한다`);
@@ -421,6 +428,18 @@
   });
   // 이 틱의 목적은 시계와 경과시간이다. 본문을 갈아엎을 이유가 없다.
   every(1000, () => { if (GT.tty.visible()) GT.tty.renderChrome(); });
+
+  // '생각 중' 이 눌러앉지 않게 한다.
+  //
+  // 표시를 끄는 건 SSE 의 begin/end 다. 그 경로가 통째로 실패하면(수확 폴백)
+  // 끄는 신호가 오지 않아 표시가 영원히 남는다.
+  // 생성 중인지의 정본은 원본의 중단 버튼이다 — 그게 없으면 끝난 것이다.
+  every(1000, () => {
+    if (!GT.store.isThinking()) return;
+    if (GT.compose.stopButton()) return;
+    GT.store.setThinking(false);
+    GT.tty.render();
+  });
   // 회전자는 더 자주 돈다. 렌더가 아니라 해당 노드의 글자만 바꾸므로 싸다.
   every(90, () => { if (GT.tty.visible()) GT.tty.tickSpin(); });
 

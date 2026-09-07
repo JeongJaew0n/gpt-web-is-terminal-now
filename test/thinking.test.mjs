@@ -122,6 +122,50 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
     /prefers-reduced-motion[\s\S]{0,120}\.gt-cursor\[data-blink="1"\] \{ animation: none/.test(css));
 }
 
+// --- 원본의 "생각 중..." 자리표시자를 본문으로 삼지 않는다 ---
+{
+  // 실제로 이렇게 보였다: '● assistant / │ 생각 중...'
+  // 추론 중인 노드는 .markdown 이 없어서 innerText 폴백이 자리표시자를 퍼왔다.
+  const tap = fs.readFileSync('src/main/tap.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+
+  t('본문 없는 assistant 노드를 pending 으로 표시한다',
+    /const pending = role === 'assistant' && !md;/.test(tap));
+  t('pending 이면 본문을 비운다', /text: pending \? '' :/.test(tap));
+  t('pending 을 수확 결과에 실어 보낸다', /\n\s*pending\n?\s*\}\);/.test(tap) || /pending\s*\}\);/.test(tap));
+
+  t('메시지 목록에서 걸러낸다', /const messages = all\.filter\(\(m\) => !\(m && m\.pending\)\);/.test(idx));
+  t('대신 생각 중 표시를 켠다', /GT\.store\.setThinking\(pending\.length > 0\);/.test(idx));
+  t('왜 거르는지 적어뒀다', /자리표시자를 응답으로 삼으면/.test(idx));
+
+  t('끄는 신호가 안 와도 눌러앉지 않는다',
+    /if \(GT\.compose\.stopButton\(\)\) return;\s*\n\s*GT\.store\.setThinking\(false\);/.test(idx));
+}
+
+// --- setThinking 은 조각 수를 부풀리지 않는다 ---
+{
+  const S = loadStore();
+  S.setThinking(true); S.setThinking(true); S.setThinking(true);
+  t('수확이 반복돼도 표시는 한 번만 켜진다', S.isThinking() === true);
+  t('조각 수를 세지 않는다', S.state.pendingThinking === 0);
+
+  const first = S.state.thinkingSince;
+  S.setThinking(true);
+  t('시계를 되돌리지 않는다', S.state.thinkingSince === first);
+
+  S.setThinking(false);
+  t('끌 수 있다', S.isThinking() === false && S.state.thinkingSince === 0);
+}
+
+// --- 자리표시자가 사라지면 표시도 꺼진다 ---
+{
+  const S = loadStore();
+  S.setThinking(true);
+  S.begin({ id: 'a', role: 'assistant', text: '' });
+  t('본문이 시작되면 꺼진다', S.isThinking() === false);
+  t('조각 수가 0 이라 thinking 꼬리표가 안 붙는다', !S.state.byId.get('a').thinking);
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

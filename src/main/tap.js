@@ -350,13 +350,19 @@
       const fromFiber = md ? sourceOf(md) : null;
       if (md) fiberEligible += 1;
       if (fromFiber !== null) fiberHits += 1;
+      // assistant 인데 .markdown 이 없으면 아직 답이 없는 것이다.
+      // 그 자리에 원본은 "생각 중..." 같은 자리표시자를 그리는데, innerText 로 퍼오면
+      // 그게 응답 본문이 되어 스크롤백에 남는다. 실제로 그렇게 보였다.
+      // .markdown 이 assistant 본문의 안정 앵커라는 전제를 여기서도 지킨다.
+      const pending = role === 'assistant' && !md;
       out.push({
         id: el.getAttribute('data-message-id'),
         role,
         model: el.getAttribute('data-message-model-slug') || null,
-        text: fromFiber !== null ? fromFiber : ((md || el).innerText || ''),
+        text: pending ? '' : (fromFiber !== null ? fromFiber : ((md || el).innerText || '')),
         parts: partsOf(el) || null,
-        fromFiber: fromFiber !== null
+        fromFiber: fromFiber !== null,
+        pending
       });
     });
     post('harvest', {
