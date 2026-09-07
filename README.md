@@ -2,9 +2,11 @@
 
 <img src="icons/icon128.png" width="104" alt="gpt-term">
 
-# gpt-term
+# Scrollback
 
 **ChatGPT 웹을 터미널 TUI 로 재구성하는 크롬 확장**
+
+<sub><code>gpt-term</code> 에서 이름을 바꿨다 — 웹스토어 제출 준비 과정에서 상표 위험을 피하려고.</sub>
 
 원본 UI 를 지우지 않는다. 덮고, 우리가 자체 상태에서 다시 그린다.
 
@@ -12,9 +14,9 @@
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-4285F4?logo=googlechrome&logoColor=white)
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
-![언팩 배포](https://img.shields.io/badge/배포-개인_언팩-8B5CF6)
+![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 587](https://img.shields.io/badge/테스트-587_케이스-22C55E)
+![테스트 622](https://img.shields.io/badge/테스트-622_케이스-22C55E)
 
 </div>
 
@@ -27,7 +29,7 @@
 | **스코프** | 읽기 + 입력 + 명령 |
 | **원본 UI** | 숨김 토글 — 지우지 않는다 |
 | **깨졌을 때** | 설정 항목(`onBreak`). 기본은 `터미널 유지 + 배지 알림` |
-| **배포** | 개인 언팩 (스토어 미등록) |
+| **배포** | 웹스토어 제출 준비 중 — [`docs/plans/web-store-submission/`](docs/plans/web-store-submission/) |
 
 ---
 
@@ -40,6 +42,16 @@
 ```
 
 > **Chrome 111 이상**이 필요하다. `world: "MAIN"` 콘텐츠 스크립트를 쓴다.
+
+### 배포 패키지 만들기
+
+```bash
+tools/package.sh      # dist/scrollback-<version>.zip
+```
+
+화이트리스트 방식이다 — 담을 것만 적어두고 나머지는 전부 뺀다. 담기 전에
+매니페스트 파싱·참조 파일 존재·`node --check`·동적 코드·외부 주소를 점검하고,
+문서·테스트·목업이 섞이지 않았는지 마지막에 다시 확인한다.
 
 ### 코드를 고친 뒤
 
@@ -223,6 +235,9 @@ src/options/                          설정 화면 (스키마에서 생성)
 
 icons/  tools/make-icons.py           아이콘
 docs/issue/  docs/plan/               조사 기록 · 계획
+docs/store/                           스토어 리스팅 · 개인정보처리방침 · 심사 노트
+docs/plans/                           작업 계획 (재개용)
+tools/package.sh                      배포 zip
 test/                                 Node 테스트 (의존성 없음)
 ```
 
@@ -259,14 +274,16 @@ test/                                 Node 테스트 (의존성 없음)
 <br>
 
 ```
-icons/source.png                마스터 (512px)
-icons/icon{16,32,48,128}.png
+icons/icon{16,32,48,128}.png    확장용
+icons/icon512.png               스토어 리스팅용
 python3 tools/make-icons.py     다시 생성
 ```
 
-48·128 은 원본을 줄이고, **16·32 는 다시 그린다.**
-줄이기만 하면 16px 에서 매듭이 초록 덩어리로 뭉개져 아무것도 안 읽힌다 —
-그 크기에서는 `>_` 만 크게 그리는 게 낫다.
+원본 이미지를 줄이는 방식이 아니라 **크기마다 직접 그린다.**
+줄이기만 하면 16px 에서 획이 뭉개져 아무것도 안 읽힌다 —
+작을수록 획을 두껍게, 여백을 좁게 잡는다(`TUNE` 표).
+
+모티프는 프롬프트 `>_` 하나다. 다른 제품의 마크를 닮은 요소를 쓰지 않는다.
 
 </details>
 
@@ -300,7 +317,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>25개 파일 · 587 케이스</b></summary>
+<summary><b>26개 파일 · 622 케이스</b></summary>
 
 <br>
 
@@ -323,6 +340,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
+| `store.listing` | 35 | 웹스토어 제출 상태 — 권한·외부 주소·토큰 취급·아이콘·문서 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
 | `complete` | 37 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
 | `rename` | 13 | `:rename` 의 기본 대상은 지금 대화 |
@@ -369,7 +387,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 툴바 패널의 다섯 상태 | 실제 `popup.html`/`popup.css` 로 렌더해 눈으로 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 587 케이스 통과 (위 표) |
+| 순수 로직 | 622 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |
@@ -381,5 +399,5 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 
 <div align="center">
 <br>
-<sub>개인용 언팩 확장. 스토어 미등록.</sub>
+<sub>OpenAI 와 무관한 독립 확장. ChatGPT 는 OpenAI 의 상표.</sub>
 </div>

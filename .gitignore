@@ -3,3 +3,4 @@ gpt-term-tui.html
 
 .DS_Store
 node_modules/
+dist/

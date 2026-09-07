@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "gpt-term",
+  "name": "Scrollback — Terminal UI for ChatGPT",
   "version": "0.1.0",
-  "description": "ChatGPT 웹을 터미널 TUI 로 재구성한다. 개인용 언팩 확장.",
+  "description": "ChatGPT 웹을 터미널처럼 씁니다. 키보드로 대화를 넘기고 명령으로 이름·보관·삭제까지. 원본 UI 는 지우지 않고 덮어 그립니다.",
   "minimum_chrome_version": "111",
   "icons": {
     "16": "icons/icon16.png",
@@ -17,7 +17,7 @@
     "https://chatgpt.com/*"
   ],
   "action": {
-    "default_title": "gpt-term",
+    "default_title": "Scrollback",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

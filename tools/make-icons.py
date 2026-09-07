@@ -1,44 +1,57 @@
 #!/usr/bin/env python3
-"""icons/source.png 에서 확장 아이콘을 다시 만든다.
-
-큰 크기(48·128)는 원본을 줄이고, 작은 크기(16·32)는 다시 그린다.
-줄이기만 하면 16px 에서 매듭이 초록 덩어리로 뭉개져 아무것도 못 읽는다 —
-아이콘은 크기별로 다시 그리는 게 정석이다.
+"""확장 아이콘을 그린다.
 
     python3 tools/make-icons.py
+
+원본 이미지를 줄이는 방식이 아니라 **크기마다 직접 그린다.**
+줄이기만 하면 16px 에서 획이 뭉개져 아무것도 안 읽힌다.
+그래서 작은 크기일수록 획을 두껍게, 여백을 좁게 잡는다.
+
+모티프는 프롬프트 `>_` 하나다. 다른 제품의 마크를 닮은 요소를 쓰지 않는다.
 """
 from PIL import Image, ImageDraw
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SRC = ROOT / 'icons' / 'source.png'
 OUT = ROOT / 'icons'
 
-BG = (13, 17, 23, 255)      # --gt-bg-1
-GREEN = (7, 221, 139, 255)  # 원본에서 뽑은 값
+GREEN = (63, 185, 80, 255)    # --gt-green
+INK = (13, 17, 23, 255)       # --gt-bg-1
+SS = 8                        # 8배로 그리고 줄여 계단을 없앤다
+
+# 크기별 비율. 작을수록 획을 두껍고 크게 잡는다.
+#            radius  stroke  chevron(x, ymid, half)      underscore(x0, x1, y)
+TUNE = {
+    16:  (0.20, 0.115, (0.20, 0.44, 0.21), (0.52, 0.82, 0.71)),
+    32:  (0.21, 0.105, (0.21, 0.45, 0.21), (0.53, 0.80, 0.71)),
+    48:  (0.22, 0.100, (0.22, 0.455, 0.205), (0.535, 0.79, 0.705)),
+    128: (0.22, 0.095, (0.24, 0.46, 0.20), (0.54, 0.78, 0.70)),
+}
 
 
-def prompt_icon(size):
-    """작은 크기용 — 매듭 대신 >_ 만 크게."""
-    S = size * 8                     # 8배로 그리고 줄여서 계단을 없앤다
+def draw(size):
+    radius, stroke, (cx, cy, half), (ux0, ux1, uy) = TUNE[size]
+    S = size * SS
     im = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle([0, 0, S - 1, S - 1], radius=int(S * 0.22), fill=BG)
-    w = max(2, int(S * 0.085))
-    x0, ytop, ymid, ybot = int(S * 0.26), int(S * 0.26), int(S * 0.47), int(S * 0.68)
-    d.line([(x0, ytop), (int(S * 0.50), ymid)], fill=GREEN, width=w, joint='curve')
-    d.line([(int(S * 0.50), ymid), (x0, ybot)], fill=GREEN, width=w, joint='curve')
-    d.line([(int(S * 0.56), int(S * 0.70)), (int(S * 0.80), int(S * 0.70))], fill=GREEN, width=w)
+    d.rounded_rectangle([0, 0, S - 1, S - 1], radius=int(S * radius), fill=GREEN)
+
+    w = max(2, int(S * stroke))
+    x, ymid, h = int(S * cx), int(S * cy), int(S * half)
+    d.line([(x, ymid - h), (x + h, ymid)], fill=INK, width=w, joint='curve')
+    d.line([(x + h, ymid), (x, ymid + h)], fill=INK, width=w, joint='curve')
+    d.line([(int(S * ux0), int(S * uy)), (int(S * ux1), int(S * uy))], fill=INK, width=w)
     return im.resize((size, size), Image.LANCZOS)
 
 
 def main():
-    src = Image.open(SRC).convert('RGBA')
-    for n in (48, 128):
-        src.resize((n, n), Image.LANCZOS).save(OUT / f'icon{n}.png')
-    for n in (16, 32):
-        prompt_icon(n).save(OUT / f'icon{n}.png')
-    print('icons/icon{16,32,48,128}.png 갱신')
+    for n in (16, 32, 48, 128):
+        draw(n).save(OUT / f'icon{n}.png')
+        print(f'  icons/icon{n}.png')
+    # 스토어 리스팅용 큰 아이콘 (128 과 같은 비율로 그린다)
+    TUNE[512] = TUNE[128]
+    draw(512).save(OUT / 'icon512.png')
+    print('  icons/icon512.png  (스토어 리스팅용)')
 
 
 if __name__ == '__main__':
