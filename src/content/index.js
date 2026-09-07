@@ -84,13 +84,13 @@
     disposers.length = 0;
     try { GT.tty.destroy(); } catch (_) {}
     console.debug('[gpt-term] 물러남:', why, '— 페이지를 새로고침하면 새 코드로 다시 붙는다');
-    notifyGone(why);
+    notifyGone();
   }
 
   // 조용히 사라지면 원본 UI 가 그대로 보이는데, 그게 터미널인 줄 알고
   // "왜 안 되지?" 를 헤매게 된다. 실제로 그렇게 헷갈린 적이 있다.
   // 작게, 그러나 눈에 보이게 알린다.
-  function notifyGone(why) {
+  function notifyGone() {
     if (document.getElementById('gpt-term-gone')) return;
     const box = document.createElement('div');
     box.id = 'gpt-term-gone';
@@ -101,7 +101,7 @@
       'display:flex', 'gap:12px', 'align-items:center', 'max-width:420px'
     ].join(';'));
     const txt = document.createElement('div');
-    txt.textContent = `gpt-term 이 물러났습니다 (${why}). 지금 보이는 것은 원본 UI 입니다 — 페이지를 새로고침하세요.`;
+    txt.textContent = 'gpt-term 확장이 다시 로드 됐습니다. 기능 사용을 위해서는 페이지를 새로고침해주세요';
     const close = document.createElement('button');
     close.textContent = '닫기';
     close.setAttribute('style', 'background:none;border:1px solid #30363d;color:#8b949e;font:inherit;padding:2px 8px;cursor:pointer;flex:0 0 auto');
