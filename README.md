@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 686](https://img.shields.io/badge/테스트-686_케이스-22C55E)
+![테스트 700](https://img.shields.io/badge/테스트-700_케이스-22C55E)
 
 </div>
 
@@ -317,7 +317,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>27개 파일 · 686 케이스</b></summary>
+<summary><b>27개 파일 · 700 케이스</b></summary>
 
 <br>
 
@@ -326,7 +326,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `load` | 20 모듈 | 콘텐츠 스크립트를 매니페스트 순서대로 평가 — 로드 시점 예외 검출 |
 | `handshake` | 5 | MAIN↔ISOLATED 브리지 버퍼링과 `ready`/`pong` 핸드셰이크 |
 | `policy` | 17 | `onBreak` 정책과 드리프트 분류 |
-| `store` | 20 | 한 턴에 assistant 메시지가 여러 개 와도 한 줄만 남는가 |
+| `store` | 34 | 한 턴에 assistant 메시지가 여러 개 와도 한 줄만 남는가 · 보낸 질문이 두 줄이 되지 않는가 |
 | `harvest` | 12 | 부분 수확이 스크롤백을 갉아먹지 않는가 |
 | `preflight` | 7 | 모듈이 빠졌을 때 조용히 죽지 않는가 |
 | `chats` | 18 | 대화 목록 그룹핑 (고정·프로젝트·일반) |
@@ -364,7 +364,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) | 둘 다 동작 |
 | [스크롤백 렌더 개선](docs/plan/2026-09-02-scrollback-render.md) | 스크롤백 확인 · 스트리밍 중 블록 안의 선택은 미해결 |
 
-조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열한 건 중 여덟이 해결**됐다.
+조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열한 건 중 아홉이 해결**됐다.
 매니페스트 캐시 건은 크롬 동작이라 감지만 하고, 선택 유실 건은 스크롤백 쪽만 고쳐졌다.
 
 ### 아직 안 된 것
@@ -389,7 +389,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 686 케이스 통과 (위 표) |
+| 순수 로직 | 700 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

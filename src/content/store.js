@@ -22,9 +22,29 @@ GT.store = (function () {
   const listeners = [];
   const emit = (why) => listeners.forEach((fn) => fn(state, why));
 
+  // 보낼 때 우리가 먼저 올린 줄의 id. 진짜 id 는 나중에 온다.
+  const isLocalId = (x) => typeof x === 'string' && x.indexOf('local-') === 0;
+
   const upsert = (m) => {
     const existing = m.id && state.byId.get(m.id);
     if (existing) { Object.assign(existing, m); return existing; }
+
+    // 우리가 먼저 올려 둔 사용자 메시지에 진짜 id 를 달아 준다.
+    //
+    // 안 하면 같은 질문이 두 줄이 된다. 진짜 id 는 두 경로로 들어오는데
+    // (SSE 의 input_message, DOM 수확) 둘 다 여기를 지나므로 한 곳에서 막는다.
+    // docs/issue/2026-09-07-user-message-appears-late.md
+    if (m.id && !isLocalId(m.id) && m.role === 'user') {
+      const local = state.messages.find(
+        (x) => x.role === 'user' && isLocalId(x.id) && x.text === m.text);
+      if (local) {
+        state.byId.delete(local.id);
+        Object.assign(local, m);
+        state.byId.set(m.id, local);
+        return local;
+      }
+    }
+
     const rec = { at: Date.now(), streaming: false, parts: null, ...m };
     state.messages.push(rec);
     if (rec.id) state.byId.set(rec.id, rec);
@@ -139,12 +159,15 @@ GT.store = (function () {
       emit('title');
     },
 
+    // 보낼 때(id 없음)와 SSE 가 알려줄 때(진짜 id) 둘 다 이걸 부른다.
+    // 두 번째 호출은 upsert 가 첫 줄에 id 만 달아 주므로 줄이 늘지 않는다.
     userSent(text, id) {
       state.slotId = null;        // 새 턴이 열린다
       state.pendingThinking = 0;
       state.thinkingSince = 0;
-      upsert({ id: id || `local-${Date.now()}`, role: 'user', text, model: null });
+      const rec = upsert({ id: id || `local-${Date.now()}`, role: 'user', text: String(text == null ? '' : text), model: null });
       emit('user');
+      return rec;
     },
 
     // 추론 조각이 흘러왔다.

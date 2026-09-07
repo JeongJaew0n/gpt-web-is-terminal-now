@@ -126,6 +126,64 @@ const shape = (st) => st.state.messages.map((m) => `${m.role}:${m.text}`);
   t('진행 중 레코드에 붙음', s.state.messages.length === 2 && s.state.byId.get('a1').text === '이어붙임');
 }
 
+// --- 보낸 즉시 올리고, 진짜 id 가 오면 그 줄에 달아 준다 ---
+// docs/issue/2026-09-07-user-message-appears-late.md
+{
+  const S = fresh();
+
+  S.userSent('안녕');                              // 보낼 때 — id 가 없다
+  t('보낸 즉시 화면에 올라간다', S.state.messages.length === 1);
+  const rec = S.state.messages[0];
+  const tempId = rec.id;
+  t('사용자 메시지다', rec.role === 'user' && rec.text === '안녕');
+  t('임시 id 를 단다', /^local-/.test(tempId));
+
+  S.userSent('안녕', 'real-1');                    // SSE 가 진짜 id 로 다시 알려준다
+  t('줄이 늘지 않는다', S.state.messages.length === 1);
+  t('같은 레코드다', S.state.messages[0] === rec);
+  t('진짜 id 로 갈아탄다', rec.id === 'real-1');
+  t('byId 로 찾을 수 있다', S.state.byId.get('real-1') === rec);
+  t('임시 id 는 지워진다', S.state.byId.get(tempId) === undefined);
+}
+
+// --- 수확이 진짜 id 로 같은 질문을 물어와도 두 줄이 되지 않는다 ---
+{
+  const S = fresh();
+  S.userSent('질문 하나');
+  S.applyHarvest([{ id: 'srv-9', role: 'user', text: '질문 하나' }], { path: '/c/x' });
+  const users = S.state.messages.filter((m) => m.role === 'user');
+  t('수확 경로에서도 합쳐진다', users.length === 1);
+  t('수확이 준 id 를 쓴다', users[0].id === 'srv-9');
+}
+
+// --- 본문이 다르면 별개의 질문이다 ---
+{
+  const S = fresh();
+  S.userSent('첫 질문');
+  S.userSent('둘째 질문', 'real-2');
+  t('다른 본문은 합치지 않는다', S.state.messages.length === 2);
+}
+
+// --- 같은 질문을 연달아 두 번 보내도 두 줄로 남는다 ---
+{
+  const S = fresh();
+  S.userSent('같은 말');
+  S.userSent('같은 말', 'real-a');
+  S.begin({ id: 'ans', role: 'assistant', text: '답' });
+  S.end('ans', '답');
+  S.userSent('같은 말');
+  t('턴이 다르면 합치지 않는다',
+    S.state.messages.filter((m) => m.role === 'user').length === 2);
+}
+
+// --- 전송이 실패하면 올리지 않는다 (호출 자체를 안 한다) ---
+{
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  t('성공했을 때만 올린다',
+    /if \(!r\.ok\) \{[\s\S]{0,200}?\} else \{[\s\S]{0,400}?GT\.store\.userSent\(text\);/.test(idx));
+  t('왜 올리는지 문서를 가리킨다', /user-message-appears-late\.md/.test(idx));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

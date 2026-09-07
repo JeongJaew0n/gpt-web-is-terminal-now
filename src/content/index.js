@@ -313,7 +313,17 @@
       const handled = await GT.commands.run(text);
       if (handled) return;
       const r = await GT.compose.send(text);
-      if (!r.ok) GT.health.soft(`전송 실패(${r.reason}) — 원본 컴포저를 찾지 못했습니다`);
+      if (!r.ok) {
+        GT.health.soft(`전송 실패(${r.reason}) — 원본 컴포저를 찾지 못했습니다`);
+      } else {
+        // 보낸 즉시 우리도 올린다. 원본이 하는 것과 같은 낙관적 렌더다.
+        //
+        // 이걸 안 하면 사용자 메시지가 SSE 의 input_message 로만 들어오는데,
+        // 실측에서 원본보다 약 1초 늦었다. 그 사이 '생각 중' 이 먼저 떠서
+        // 질문 없이 기다리는 표시만 보인다.
+        // docs/issue/2026-09-07-user-message-appears-late.md
+        GT.store.userSent(text);
+      }
     } else if (e.key === 'c' && e.ctrlKey) {
       e.preventDefault();
       GT.compose.stop() ? GT.tty.system('info', '중단 요청') : GT.tty.system('warn', '중단 버튼을 찾지 못했습니다');
