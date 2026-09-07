@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 673](https://img.shields.io/badge/테스트-673_케이스-22C55E)
+![테스트 686](https://img.shields.io/badge/테스트-686_케이스-22C55E)
 
 </div>
 
@@ -317,7 +317,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>27개 파일 · 673 케이스</b></summary>
+<summary><b>27개 파일 · 686 케이스</b></summary>
 
 <br>
 
@@ -340,7 +340,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
-| `thinking` | 50 | 생각 중 표시 — 켜지는 자리, 끄는 문을 다 막았는가, 커서가 세 곳에서 같은가 |
+| `thinking` | 63 | 생각 중 표시 — 켜지는 자리, 끄는 문을 다 막았는가, 커서가 세 곳에서 같은가 |
 | `store.listing` | 36 | 웹스토어 제출 상태 — 권한·외부 주소·토큰 취급·아이콘·문서·존댓말 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
 | `complete` | 37 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
@@ -389,7 +389,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 673 케이스 통과 (위 표) |
+| 순수 로직 | 686 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

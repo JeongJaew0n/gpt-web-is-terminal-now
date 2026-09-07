@@ -127,10 +127,11 @@
     const all = p.messages || [];
     // 아직 본문이 없는 assistant 노드는 메시지가 아니다. 원본이 그 자리에 그리는
     // 자리표시자를 응답으로 삼으면 "생각 중..." 이 스크롤백에 눌러앉는다.
-    // 대신 그게 '지금 생각하고 있다' 는 신호다 — 우리 표시를 켠다.
-    const pending = all.filter((m) => m && m.pending);
+    //
+    // 다만 이걸 '생각 중' 표시의 근거로 쓰지는 않는다. 원본이 .markdown 을
+    // 붙였다 뗐다 해서 판정이 오르내리고, 그게 깜빡임의 직접 원인이었다.
+    // docs/issue/2026-09-07-thinking-indicator-flicker.md
     const messages = all.filter((m) => !(m && m.pending));
-    GT.store.setThinking(pending.length > 0);
     const r = GT.store.applyHarvest(messages, { title: cleanTitle(p.title), path: p.path });
     if (r.mode === 'merge' && r.kept) {
       // 원본이 앞쪽 턴을 안 그린 상태다. 우리가 이미 가진 것을 지켜서 넘어간다.
@@ -429,16 +430,17 @@
   // 이 틱의 목적은 시계와 경과시간이다. 본문을 갈아엎을 이유가 없다.
   every(1000, () => { if (GT.tty.visible()) GT.tty.renderChrome(); });
 
-  // '생각 중' 이 눌러앉지 않게 한다.
+  // '생각 중' 은 이벤트의 가장자리가 아니라 상태에서 끌어낸다.
   //
-  // 표시를 끄는 건 SSE 의 begin/end 다. 그 경로가 통째로 실패하면(수확 폴백)
-  // 끄는 신호가 오지 않아 표시가 영원히 남는다.
-  // 생성 중인지의 정본은 원본의 중단 버튼이다 — 그게 없으면 끝난 것이다.
-  every(1000, () => {
-    if (!GT.store.isThinking()) return;
-    if (GT.compose.stopButton()) return;
-    GT.store.setThinking(false);
-    GT.tty.render();
+  // 마커(cot_token → user_visible_token)는 118ms 간격으로 붙어 오고, 수확의
+  // pending 은 원본의 렌더 사정에 따라 오르내린다. 둘 다 '지금 모델이 일하고
+  // 있는가' 를 나타내는 신호가 아니라서, 그 가장자리를 쓰면 깜빡인다.
+  // 정본은 원본의 중단 버튼이다 — esc 중단도 같은 것을 본다.
+  // docs/issue/2026-09-07-thinking-indicator-flicker.md
+  every(200, () => {
+    const generating = !!GT.compose.stopButton();
+    const want = generating && !GT.store.state.streamingId;
+    if (GT.store.setThinking(want)) GT.tty.render();
   });
   // 회전자는 더 자주 돈다. 렌더가 아니라 해당 노드의 글자만 바꾸므로 싸다.
   every(90, () => { if (GT.tty.visible()) GT.tty.tickSpin(); });

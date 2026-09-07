@@ -16,6 +16,9 @@ GT.store = (function () {
     path: '/'
   };
 
+  // 한 번 켜지면 이만큼은 유지한다. 그보다 짧게 스치면 깜빡임으로 보인다.
+  const MIN_THINKING_MS = 600;
+
   const listeners = [];
   const emit = (why) => listeners.forEach((fn) => fn(state, why));
 
@@ -156,10 +159,23 @@ GT.store = (function () {
     },
 
     // 화면 표시만 켜고 끈다. pendingThinking(조각 수)은 건드리지 않는다 —
-    // 수확은 같은 상태를 반복해서 알려주므로 여기서 세면 숫자가 부풀어 오른다.
+    // 부르는 쪽이 같은 상태를 반복해서 알려주므로 여기서 세면 숫자가 부풀어 오른다.
+    //
+    // 끌 때는 최소 표시 시간을 지킨다. 조건이 200ms 만에 뒤집혀도 눈에는
+    // 깜빡임으로 보인다 — 실측에서 표시가 235ms 만 살아 있었다.
+    // docs/issue/2026-09-07-thinking-indicator-flicker.md
+    //
+    // 화면이 바뀌어야 하면 true 를 돌려준다. 부르는 쪽이 그때만 다시 그리게 한다.
     setThinking(on) {
-      if (on) { if (!state.thinkingSince) state.thinkingSince = Date.now(); return; }
+      if (on) {
+        if (state.thinkingSince) return false;
+        state.thinkingSince = Date.now();
+        return true;
+      }
+      if (!state.thinkingSince) return false;
+      if (Date.now() - state.thinkingSince < MIN_THINKING_MS) return false;
       state.thinkingSince = 0;
+      return true;
     },
 
     // 추론 표시를 끈다. 본문이 시작되거나 턴이 끝나면 더 보여줄 이유가 없다.

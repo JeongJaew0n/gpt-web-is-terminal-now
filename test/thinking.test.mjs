@@ -1,8 +1,11 @@
 // '생각 중' 표시. 본문이 오기 전 구간에만 떠 있어야 하고, 끄는 걸 빠뜨리면 영원히 남는다.
 import fs from 'node:fs'; import vm from 'node:vm';
 
-function loadStore() {
-  const sb = { console, Object, Array, Set, Map, String, Number, Boolean, JSON, Math, Date, Error };
+function loadStore(clock) {
+  // clock 을 주면 Date.now 만 가짜로 갈아끼운다. 최소 표시 시간을 검사하려면
+  // 시간을 앞으로 밀 수 있어야 한다.
+  const FakeDate = clock ? new Proxy(Date, { get: (t, k) => (k === 'now' ? () => clock.t : t[k]) }) : Date;
+  const sb = { console, Object, Array, Set, Map, String, Number, Boolean, JSON, Math, Date: FakeDate, Error };
   sb.window = sb; sb.globalThis = sb; sb.GT = {};
   vm.createContext(sb);
   vm.runInContext(fs.readFileSync('src/content/store.js', 'utf8'), sb, { filename: 'store.js' });
@@ -135,11 +138,47 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('pending 을 수확 결과에 실어 보낸다', /\n\s*pending\n?\s*\}\);/.test(tap) || /pending\s*\}\);/.test(tap));
 
   t('메시지 목록에서 걸러낸다', /const messages = all\.filter\(\(m\) => !\(m && m\.pending\)\);/.test(idx));
-  t('대신 생각 중 표시를 켠다', /GT\.store\.setThinking\(pending\.length > 0\);/.test(idx));
   t('왜 거르는지 적어뒀다', /자리표시자를 응답으로 삼으면/.test(idx));
 
-  t('끄는 신호가 안 와도 눌러앉지 않는다',
-    /if \(GT\.compose\.stopButton\(\)\) return;\s*\n\s*GT\.store\.setThinking\(false\);/.test(idx));
+  // 깜빡임의 직접 원인이 이것이었다. 수확은 표시를 켜지도 끄지도 않는다.
+  t('수확은 표시를 건드리지 않는다',
+    !/pending[\s\S]{0,80}setThinking/.test(idx));
+
+  // 표시는 상태에서 끌어낸다 — 생성 중이고 아직 보여줄 답이 없으면 켠다
+  t('상태를 주기적으로 평가한다', /every\(200, \(\) => \{/.test(idx));
+  t('생성 중인지는 중단 버튼으로 본다',
+    /const generating = !!GT\.compose\.stopButton\(\);/.test(idx));
+  t('본문이 흐르면 끈다', /const want = generating && !GT\.store\.state\.streamingId;/.test(idx));
+  t('바뀔 때만 다시 그린다', /if \(GT\.store\.setThinking\(want\)\) GT\.tty\.render\(\);/.test(idx));
+  t('왜 이렇게 하는지 문서를 가리킨다', /thinking-indicator-flicker\.md/.test(idx));
+}
+
+// --- 최소 표시 시간: 조건이 순식간에 뒤집혀도 깜빡이지 않는다 ---
+{
+  const clock = { t: 1_000_000 };
+  const S = loadStore(clock);
+
+  t('켜면 true 를 돌려준다 (다시 그려야 한다)', S.setThinking(true) === true);
+  t('이미 켜져 있으면 다시 그릴 것이 없다', S.setThinking(true) === false);
+
+  clock.t += 200;                       // 200ms 만에 조건이 뒤집혔다
+  t('너무 빨리 끄지 않는다', S.setThinking(false) === false);
+  t('화면에는 그대로 떠 있다', S.isThinking() === true);
+
+  clock.t += 500;                       // 누적 700ms
+  t('최소 시간이 지나면 끈다', S.setThinking(false) === true);
+  t('꺼졌다', S.isThinking() === false);
+  t('이미 꺼져 있으면 false', S.setThinking(false) === false);
+}
+
+// --- 켜고 끄는 것이 몇 번 반복돼도 한 번만 다시 그린다 ---
+{
+  const clock = { t: 2_000_000 };
+  const S = loadStore(clock);
+  const changed = [];
+  for (let i = 0; i < 5; i += 1) changed.push(S.setThinking(true));
+  t('반복해서 켜도 최초 한 번만 true', changed.filter(Boolean).length === 1);
+  t('시계를 되돌리지 않는다', S.state.thinkingSince === 2_000_000);
 }
 
 // --- setThinking 은 조각 수를 부풀리지 않는다 ---
@@ -153,8 +192,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   S.setThinking(true);
   t('시계를 되돌리지 않는다', S.state.thinkingSince === first);
 
-  S.setThinking(false);
-  t('끌 수 있다', S.isThinking() === false && S.state.thinkingSince === 0);
+  t('최소 시간 전에는 안 꺼진다', S.setThinking(false) === false && S.isThinking() === true);
 }
 
 // --- 자리표시자가 사라지면 표시도 꺼진다 ---
