@@ -124,7 +124,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.input.rows = 1;
     ui.input.placeholder = '메시지 또는 명령 (:help)';
     ui.input.spellcheck = false;
-    ui.cursor = el('span', 'gt-cursor');
+    ui.cursor = cursorEl();
     row.appendChild(ui.mark); row.appendChild(ui.input); row.appendChild(ui.cursor);
     comp.appendChild(ui.compMeta); comp.appendChild(row);
     root.appendChild(comp);
@@ -178,9 +178,20 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     varStyle.textContent = GT.theme.vars(cfg);
     syncSidebar();
     root.classList.toggle('gt-scanlines', !!cfg.scanlines);
-    ui.cursor.dataset.style = cfg['cursor.style'];
-    ui.cursor.dataset.blink = cfg['cursor.blink'] ? '1' : '0';
+    dressCursor(ui.cursor);
   }
+
+  // 커서는 세 군데에 뜬다 — 입력줄, 스트리밍 본문 끝, '생각 중' 줄.
+  // 셋이 같아야 하는데 본문 쪽에는 속성을 안 붙여서 모양·깜빡임 설정이 먹지 않았다.
+  // 만드는 자리를 하나로 모은다.
+  function dressCursor(n) {
+    if (!n) return n;
+    n.dataset.style = GT.config.get('cursor.style');
+    n.dataset.blink = GT.config.get('cursor.blink') ? '1' : '0';
+    return n;
+  }
+
+  const cursorEl = () => dressCursor(el('span', 'gt-cursor'));
 
   // 수확한 메시지는 at 이 null 이다 — 원본 DOM 이 시각을 노출하지 않는다.
   // 수확 시각을 대신 보여주면 "전부 46초 전"처럼 사실이 아닌 값이 찍힌다. 그럴 바엔 비운다.
@@ -248,7 +259,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     }
     const body = el('div', 'gt-body');
     body.appendChild(GT.markdown.render(m.text || '', { refs: m.refs }));
-    if (m.streaming) body.appendChild(el('span', 'gt-cursor'));
+    if (m.streaming) body.appendChild(cursorEl());
 
     // tty 로 그릴 수 없는 파트는 자리표시자로 남긴다
     const nonText = (m.parts || []).filter((t) => t && t !== 'text');
@@ -293,7 +304,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     const row = el('div', 'gt-thinking-live');
     row.appendChild(el('span', 'gt-spin', SPIN[spinAt]));
     row.appendChild(el('span', 'gt-thinking-label', '생각 중'));
-    row.appendChild(el('span', 'gt-thinking-dots', '…'));
+    row.appendChild(cursorEl());          // 답할 때 본문 끝에 뜨는 그 커서와 같은 것
     row.appendChild(el('span', 'gt-spacer'));
     row.appendChild(el('span', 'gt-faint gt-think-elapsed', `${GT.store.thinkingElapsed().toFixed(1)}s`));
     wrap.appendChild(row);

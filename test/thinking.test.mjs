@@ -106,6 +106,20 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 
   t('스타일이 있다', /\.gt-thinking-live/.test(css));
   t('모션을 줄이는 설정을 존중한다', /prefers-reduced-motion/.test(css));
+
+  // 커서는 세 군데(입력줄·스트리밍 본문·생각 중)에 뜬다. 셋이 같아야 한다.
+  t('커서를 만드는 자리가 하나다', /const cursorEl = \(\) => dressCursor/.test(tty));
+  t('생각 중 줄에 답할 때와 같은 커서가 붙는다',
+    /function thinkingRow\(\)[\s\S]{0,500}?row\.appendChild\(cursorEl\(\)\)/.test(tty));
+  t('스트리밍 본문 끝에도 같은 커서', /if \(m\.streaming\) body\.appendChild\(cursorEl\(\)\)/.test(tty));
+  t('모양·깜빡임 설정을 반영한다',
+    /dressCursor[\s\S]{0,300}?cursor\.style[\s\S]{0,120}?cursor\.blink/.test(tty));
+  // 날것으로 만드는 곳은 생성기 안 한 군데뿐이어야 한다
+  t('커서를 날것으로 만드는 곳이 하나뿐',
+    (tty.match(/el\('span', 'gt-cursor'\)/g) || []).length === 1);
+  t('입력줄 커서도 같은 생성기를 쓴다', /ui\.cursor = cursorEl\(\);/.test(tty));
+  t('커서 깜빡임도 모션 축소를 존중한다',
+    /prefers-reduced-motion[\s\S]{0,120}\.gt-cursor\[data-blink="1"\] \{ animation: none/.test(css));
 }
 
 let bad = 0;

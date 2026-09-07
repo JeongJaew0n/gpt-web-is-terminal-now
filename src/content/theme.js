@@ -227,15 +227,8 @@ GT.theme = (function () {
   color: var(--gt-cyan); font-size: 0.96em;
 }
 .gt-thinking-label { color: var(--gt-fg-dim); }
-.gt-thinking-dots {
-  color: var(--gt-fg-faint);
-  animation: gt-dots 1.4s steps(4, end) infinite;
-  width: 1.6ch; overflow: hidden; white-space: nowrap;
-}
-@keyframes gt-dots { from { width: 0; } to { width: 1.6ch; } }
-@media (prefers-reduced-motion: reduce) {
-  .gt-thinking-dots { animation: none; width: auto; }
-}
+/* 커서는 답할 때 본문 끝에 뜨는 것과 같은 요소다. 여기서는 라벨에 바짝 붙인다. */
+.gt-thinking-live .gt-cursor { margin-left: 0; }
 
 /* ---- 화면에만 있는 블록 (:messup) ---- */
 .gt-turn-local { opacity: 0.92; }
@@ -309,6 +302,9 @@ GT.theme = (function () {
 .gt-cursor[data-style="underline"] { height: 2px; align-self: flex-end; }
 .gt-cursor[data-blink="1"] { animation: gt-blink 1.06s step-end infinite; }
 @keyframes gt-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .gt-cursor[data-blink="1"] { animation: none; }
+}
 
 /* ---- statusline ---- */
 .gt-status { display: flex; align-items: center; height: 26px; font-size: 11.5px; flex: 0 0 auto;
