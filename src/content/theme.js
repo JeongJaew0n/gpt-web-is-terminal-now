@@ -238,17 +238,15 @@ GT.theme = (function () {
 .gt-turn-local { opacity: 0.92; }
 .gt-turn-local .gt-assistant { border-left: 1px dashed var(--gt-yellow); padding-left: 10px; }
 
-/* ---- 인용 각주와 출처 ---- */
+/* ---- 인용 ---- */
+/* 번호 자체가 링크다. 하단 출처 목록은 두지 않는다. */
 .gt-cite {
   color: var(--gt-cyan); font-size: 0.78em; vertical-align: super; line-height: 0;
   padding: 0 1px; user-select: none;
 }
-.gt-sources {
-  margin-top: 10px; padding-top: 7px; border-top: 1px solid var(--gt-bg-3);
-  font-size: 0.9em; color: var(--gt-fg-dim);
-}
-.gt-source { display: flex; gap: 8px; }
-.gt-source-n { color: var(--gt-cyan); flex: 0 0 auto; }
+.gt-cite-link { color: inherit; text-decoration: none; }
+.gt-cite-link:hover { text-decoration: underline; }
+.gt-cite-link:focus-visible { outline: 1px solid var(--gt-cyan); outline-offset: 1px; }
 
 /* ---- 복사 버튼 ---- */
 .gt-copy {

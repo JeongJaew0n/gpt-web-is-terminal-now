@@ -34,8 +34,7 @@ GT.markdown = (function () {
   const newCtx = (opts) => ({
     refs: (opts && opts.refs) || [],
     seen: 0,        // 마커를 몇 개 지났나 (content_references 의 인덱스와 같다)
-    n: 0,           // 각주 번호
-    used: []        // 각주로 쓴 출처
+    n: 0            // 인용 번호
   });
 
   // 마커 하나를 각주로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
@@ -46,13 +45,25 @@ GT.markdown = (function () {
 
     ctx.n += 1;
     const n = ctx.n;
-    const label = el('sup', 'gt-cite', `[${n}]`);
-    // 출처를 모르면 번호만 남긴다. 목록에 '(출처 미상)' 을 채우지 않는다 —
-    // 스트리밍 중에는 늘 모르는 상태라 매번 빈 줄이 붙는다.
-    if (ref) {
-      const name = ref.attribution || ref.title || '';
-      if (name) label.title = ref.url ? `${name} — ${ref.url}` : name;
-      if (name || ref.url) ctx.used.push({ n, title: ref.title, url: ref.url, attribution: ref.attribution });
+    const label = el('sup', 'gt-cite');
+    const name = ref ? (ref.attribution || ref.title || '') : '';
+    const url = ref && /^https?:\/\//i.test(String(ref.url || '')) ? ref.url : '';
+
+    // 번호 자체가 링크다. 아래에 출처 목록을 따로 두지 않는다 —
+    // 논문 각주처럼 두 번 읽게 만들 이유가 없다. 이름은 호버로 보여준다.
+    //
+    // 주소를 모르면 번호만 남긴다. 스트리밍 중에는 refs 가 아직 없어서
+    // 늘 그 상태다 — 스트림이 끝나고 refs 가 붙으면 링크가 된다.
+    if (url) {
+      const a = el('a', 'gt-cite-link', `[${n}]`);
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noreferrer noopener';
+      a.title = name ? `${name} — ${url}` : url;
+      label.appendChild(a);
+    } else {
+      label.textContent = `[${n}]`;
+      if (name) label.title = name;
     }
     return label;
   }
@@ -302,36 +313,11 @@ GT.markdown = (function () {
     return out;
   }
 
-  // 각주로 쓴 출처를 응답 끝에 모아 적는다.
-  // 원본은 favicon 이 붙은 칩을 그리지만 여기서는 목록이 맞다 — 터미널이다.
-  function sourceList(ctx) {
-    if (!ctx.used.length) return null;
-    const box = el('div', 'gt-sources');
-    ctx.used.forEach((u) => {
-      const row = el('div', 'gt-source');
-      row.appendChild(el('span', 'gt-source-n', `[${u.n}]`));
-      const name = u.attribution || u.title || u.url;
-      if (u.url && /^https?:\/\//i.test(u.url)) {
-        const a = el('a', 'gt-link', name);
-        a.href = u.url; a.target = '_blank'; a.rel = 'noreferrer noopener';
-        a.title = u.title && u.title !== name ? u.title : u.url;
-        row.appendChild(a);
-      } else {
-        row.appendChild(el('span', null, name));
-      }
-      box.appendChild(row);
-    });
-    return box;
-  }
-
   // opts.refs — conversation.js 가 실어준 content_references.
-  // 없으면 마커는 각주 번호만 남고 출처 목록은 붙지 않는다(스트리밍 중이 그렇다).
+  // 없으면 마커는 번호만 남는다(스트리밍 중이 그렇다).
   function render(src, opts) {
     const ctx = newCtx(opts);
-    const frag = renderInto(src, ctx);
-    const list = sourceList(ctx);
-    if (list) frag.appendChild(list);
-    return frag;
+    return renderInto(src, ctx);
   }
 
   // 인용 마커를 걷어낸 텍스트. 두 표기를 같은 기준으로 비교할 때 쓴다.

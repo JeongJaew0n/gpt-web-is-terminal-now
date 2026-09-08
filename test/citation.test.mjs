@@ -37,7 +37,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 const cls = (c) => (n) => new RegExp('(^| )' + c + '( |$)').test(n.className || '');
 const text = (frag) => frag.textContent;
 const cites = (frag) => frag.all(cls('gt-cite'));
-const sources = (frag) => frag.all(cls('gt-source'));
+const links = (frag) => frag.all((n) => n.tag === 'a' && /gt-cite-link/.test(n.className || ''));
 
 const REF = (over) => Object.assign({
   type: 'grouped_webpages', matched: '', title: '기사 제목', url: 'https://example.com/a', attribution: 'ZDNet'
@@ -56,31 +56,43 @@ const REF = (over) => Object.assign({
   t('두 표기의 결과가 같다', text(a) === text(b));
 }
 
-// --- 출처 목록 ---
+// --- 번호 자체가 링크다 (하단 목록은 없다) ---
 {
   const frag = M.render('본문 ' + pua('cite', 'turn0search1'), { refs: [REF()] });
-  const s = sources(frag);
-  t('출처를 한 줄 적는다', s.length === 1);
-  t('번호가 각주와 맞는다', s[0].textContent.startsWith('[1]'));
-  t('출처 이름을 쓴다', s[0].textContent.includes('ZDNet'));
-  const link = frag.all((n) => n.tag === 'a')[0];
-  t('주소가 있으면 링크로', !!link && link.href === 'https://example.com/a');
+  const a = links(frag);
+  t('번호가 링크가 된다', a.length === 1);
+  // 없을 때 크래시로 죽으면 이 파일의 나머지 검사가 안 돈다. 빈 객체로 받는다.
+  const one = a[0] || {};
+  t('링크 글자는 번호', one.textContent === '[1]');
+  t('주소가 그 출처를 가리킨다', one.href === 'https://example.com/a');
   // target·rel 은 setAttribute 가 아니라 프로퍼티로 넣는다
   t('새 탭으로 열고 referrer 를 안 준다',
-    link.target === '_blank' && /noreferrer/.test(link.rel || ''));
+    one.target === '_blank' && /noreferrer/.test(one.rel || ''));
+  t('호버하면 출처 이름이 보인다', /ZDNet/.test(one.title || ''));
+
+  t('하단 출처 목록을 만들지 않는다', frag.all(cls('gt-sources')).length === 0);
+  t('본문에 출처 이름이 늘어붙지 않는다', !/ZDNet/.test(text(frag)));
+  t('본문은 번호만', text(frag) === '본문 [1]');
 }
 
-// --- 출처를 모르면 번호만 ---
+// --- 주소를 모르면 번호만 (스트리밍 중이 그렇다) ---
 {
   const frag = M.render('본문 ' + pua('cite', 'turn0search1'));
   t('refs 가 없어도 마커는 지운다', !text(frag).includes(E200));
   t('번호는 남긴다', cites(frag).length === 1);
-  t('빈 출처 줄을 만들지 않는다', sources(frag).length === 0);
+  t('링크로 만들지 않는다', links(frag).length === 0);
+  t('그래도 번호는 보인다', (cites(frag)[0] || {}).textContent === '[1]');
 }
 {
   const frag = M.render('본문 ' + pua('cite', 'x'), { refs: [REF({ title: '', url: '', attribution: '' })] });
-  t('내용 없는 ref 는 목록에 안 넣는다', sources(frag).length === 0);
+  t('내용 없는 ref 는 링크가 아니다', links(frag).length === 0);
   t('그래도 번호는 매긴다', cites(frag).length === 1);
+}
+{
+  // http(s) 가 아닌 주소는 링크로 만들지 않는다
+  const frag = M.render('본문' + pua('cite', 'x'), { refs: [REF({ url: 'javascript:alert(1)' })] });
+  t('http(s) 아닌 주소는 링크로 만들지 않는다', links(frag).length === 0);
+  t('번호는 남는다', cites(frag).length === 1);
 }
 
 // --- 인용이 아닌 봉투는 지운다 ---
@@ -99,22 +111,22 @@ const REF = (over) => Object.assign({
   t('인용 4개만 번호를 받는다', cites(frag).length === 4);
   t('번호가 1..4', cites(frag).map((c) => c.textContent).join('') === '[1][2][3][4]');
   t('genui 는 빠진다', !text(frag).includes('genui'));
-  t('출처도 4줄', sources(frag).length === 4);
+  t('넷 다 링크', links(frag).length === 4);
 }
 
 // --- 마커 순서가 content_references 인덱스다 ---
 {
   const refs = [REF({ attribution: '첫째' }), REF({ attribution: '둘째' })];
   const frag = M.render(pua('cite', 'a') + ' 그리고 ' + pua('cite', 'b'), { refs });
-  const s = sources(frag).map((n) => n.textContent);
-  t('첫 마커가 refs[0]', s[0].includes('첫째'));
-  t('둘째 마커가 refs[1]', s[1].includes('둘째'));
+  const a = links(frag).map((n) => n.title || '');
+  t('첫 마커가 refs[0]', /첫째/.test(a[0] || ''));
+  t('둘째 마커가 refs[1]', /둘째/.test(a[1] || ''));
 }
 {
   // fiber 표기는 index 를 스스로 들고 있다 — 순서가 아니라 그 값을 쓴다
   const refs = [REF({ attribution: '첫째' }), REF({ attribution: '둘째' })];
   const frag = M.render(oai(1), { refs });
-  t('fiber 는 index 로 찾는다', sources(frag)[0].textContent.includes('둘째'));
+  t('fiber 는 index 로 찾는다', /둘째/.test((links(frag)[0] || {}).title || ''));
 }
 
 // --- 모르는 타입은 각주를 매기지 않는다 ---
@@ -129,13 +141,24 @@ const REF = (over) => Object.assign({
   const frag = M.render('- 목록 ' + pua('cite', 'a') + '\n\n> 인용문 ' + pua('cite', 'b'), { refs });
   t('리스트·인용문 안의 마커도 처리한다', cites(frag).length === 2);
   t('번호가 이어진다', cites(frag).map((c) => c.textContent).join('') === '[1][2]');
-  t('출처 목록은 한 번만', frag.all(cls('gt-sources')).length === 1);
+  t('블록 안에서도 링크가 된다', links(frag).length === 2);
 }
 
 // --- 마커가 없으면 아무것도 붙이지 않는다 ---
 {
   const frag = M.render('평범한 문단이다.', { refs: [REF()] });
-  t('마커가 없으면 출처도 없다', sources(frag).length === 0 && cites(frag).length === 0);
+  t('마커가 없으면 아무것도 안 붙는다', links(frag).length === 0 && cites(frag).length === 0);
+}
+
+// --- 하단 목록은 아예 만들지 않는다 (정적) ---
+{
+  const md = fs.readFileSync('src/content/markdown.js', 'utf8');
+  const css = fs.readFileSync('src/content/theme.js', 'utf8');
+  t('출처 목록을 만드는 코드가 없다', !/sourceList|gt-sources/.test(md));
+  t('죽은 CSS 도 없다', !/\.gt-sources|\.gt-source-n/.test(css));
+  t('번호를 링크로 만든다', /el\('a', 'gt-cite-link'/.test(md));
+  t('왜 목록을 안 두는지 적어뒀다', /논문 각주처럼 두 번 읽게 만들 이유가 없다/.test(md));
+  t('링크 스타일이 있다', /\.gt-cite-link/.test(css));
 }
 
 // --- 배선 ---
