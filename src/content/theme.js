@@ -309,6 +309,10 @@ GT.theme = (function () {
 @media (prefers-reduced-motion: reduce) {
   .gt-cursor[data-blink="1"] { animation: none; }
 }
+/* 입력줄 커서는 포커스가 있을 때만 깜빡인다. 없으면 멈추고 흐려진다 —
+   '여기 치면 들어간다' 가 사실이 아닌데 깜빡이면 거짓말이다.
+   data-focus 는 입력줄 커서에만 붙으므로 본문·생각 중 커서는 그대로다. */
+.gt-cursor[data-focus="0"] { animation: none; opacity: 0.35; }
 
 /* ---- statusline ---- */
 .gt-status { display: flex; align-items: center; height: 26px; font-size: 11.5px; flex: 0 0 auto;

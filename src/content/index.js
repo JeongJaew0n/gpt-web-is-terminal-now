@@ -297,6 +297,11 @@
   input.addEventListener('focus', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'INSERT'));
   input.addEventListener('blur', () => GT.tty.setMode(GT.store.isStreaming() ? 'STREAM' : 'NORMAL'));
 
+  // 창이 뒤로 가면 입력줄은 포커스를 유지하지만 타이핑은 이쪽으로 오지 않는다.
+  // 그때도 커서를 멈춘다.
+  listen(window, 'focus', () => GT.tty.syncCursorFocus());
+  listen(window, 'blur', () => GT.tty.syncCursorFocus());
+
   // IME(한글) 조합 중에는 이 핸들러가 아무것도 하지 않는다.
   //
   // 조합 중의 Enter 는 '보내기' 가 아니라 '조합을 확정' 하는 키다.

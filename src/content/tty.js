@@ -126,6 +126,9 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.input.spellcheck = false;
     ui.cursor = cursorEl();
     row.appendChild(ui.mark); row.appendChild(ui.input); row.appendChild(ui.cursor);
+    ui.cursor.dataset.focus = '0';        // 켜자마자 깜빡이지 않는다. 포커스가 오면 켠다
+    ui.input.addEventListener('focus', syncCursorFocus);
+    ui.input.addEventListener('blur', syncCursorFocus);
     comp.appendChild(ui.compMeta); comp.appendChild(row);
     root.appendChild(comp);
 
@@ -182,6 +185,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     syncSidebar();
     root.classList.toggle('gt-scanlines', !!cfg.scanlines);
     dressCursor(ui.cursor);
+    syncCursorFocus();
   }
 
   // 커서는 세 군데에 뜬다 — 입력줄, 스트리밍 본문 끝, '생각 중' 줄.
@@ -195,6 +199,17 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
   }
 
   const cursorEl = () => dressCursor(el('span', 'gt-cursor'));
+
+  // 입력줄 커서는 '지금 여기 치면 들어간다' 는 표시다. 포커스가 없으면
+  // 사실이 아니므로 깜빡이지 않는다. 창이 뒤로 가 있을 때도 마찬가지다 —
+  // 진짜 터미널이 그렇게 동작한다.
+  function syncCursorFocus() {
+    if (!ui.cursor || !ui.input) return;
+    const here = document.activeElement === host
+      && shadow.activeElement === ui.input
+      && document.hasFocus();
+    ui.cursor.dataset.focus = here ? '1' : '0';
+  }
 
   // 수확한 메시지는 at 이 null 이다 — 원본 DOM 이 시각을 노출하지 않는다.
   // 수확 시각을 대신 보여주면 "전부 46초 전"처럼 사실이 아닌 값이 찍힌다. 그럴 바엔 비운다.
@@ -609,7 +624,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     get shadow() { return shadow; },
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
     applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
-    render, setMode, system, copy, tickSpin,
+    render, setMode, system, copy, tickSpin, syncCursorFocus,
     clearSystem() { systemLog.length = 0; render(); },
 
     // 화면에만 끼워 넣는 블록. 지금 마지막 메시지를 앵커로 잡는다.
