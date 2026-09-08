@@ -363,6 +363,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | [대화 조작 (이름·고정·보관·삭제·이동·공유)](docs/plan/2026-09-01-conversation-ops.md) | 다중 선택 삭제 포함 · 보관 목록 보기는 TODO |
 | [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) | 둘 다 동작 |
 | [스크롤백 렌더 개선](docs/plan/2026-09-02-scrollback-render.md) | 스크롤백 확인 · 스트리밍 중 블록 안의 선택은 미해결 |
+| [다국어 도입 검토](docs/plan/2026-09-08-i18n.md) | 검토만 — 문구 295개 실측, 방안 비교, 권하는 순서 |
 
 조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열한 건 중 아홉이 해결**됐다.
 매니페스트 캐시 건은 크롬 동작이라 감지만 하고, 선택 유실 건은 스크롤백 쪽만 고쳐졌다.
