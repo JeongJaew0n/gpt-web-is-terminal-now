@@ -90,14 +90,18 @@ const ALL = SRC.map(src).join('\n');
 {
   // 코드 주석은 반말로 쓴다(개발자용). 사용자에게 보이는 글만 검사한다.
   const files = ['src/content/commands.js', 'src/content/sidebar.js', 'src/content/index.js',
-    'src/content/health.js', 'src/content/tty.js', 'src/shared/defaults.js',
+    'src/content/health.js', 'src/content/tty.js', 'src/content/chats.js',
+    'src/content/palette.js', 'src/content/picker.js', 'src/content/markdown.js',
+    'src/shared/defaults.js', 'src/main/tap.js',
     'src/popup/popup.js', 'src/popup/popup.html', 'src/options/options.js', 'src/options/options.html'];
 
   // 반말 종결. 주석 줄은 빼고 문자열·태그 안쪽만 본다.
   //
-  // 종결 뒤에 마침표·물음표나 공백이 올 수 있다. 전에는 따옴표가 바로 오는 경우만
-  // 봐서 '…새로고침해라.' 를 놓쳤다 — 실제로 그 문구가 화면에 그대로 나갔다.
-  const RUDE = /(했다|한다|없다|있다|된다|간다|온다|린다|본다|아니다|해라|봐라|와라|바꿔라|어라)[.!?…)\s]*(?=['"\u0060<]|$)/;
+  // 두 번 놓쳤다. 처음에는 따옴표가 바로 오는 경우만 봐서 '…새로고침해라.' 를
+  // 놓쳤고, 다음에는 문장 끝만 봐서 '…없다 — :sidebar more' 처럼 중간에 있는 것을
+  // 놓쳤다. 이제 위치를 가리지 않고, 뒤에 다른 한글이 이어지지 않을 때만 잡는다
+  // ('있다면' · '한다면' 같은 연결형은 반말 종결이 아니다).
+  const RUDE = /(했다|한다|없다|있다|된다|간다|온다|린다|본다|아니다|해라|봐라|와라|바꿔라|어라)(?![다가-힣])/;
   const bad = [];
   files.forEach((f) => {
     src(f).split('\n').forEach((line, i) => {

@@ -260,7 +260,7 @@
 
   const nativeFetch = window.fetch;
   if (typeof nativeFetch !== 'function') {
-    fail('no-fetch', 'window.fetch 가 함수가 아니다');
+    fail('no-fetch', 'window.fetch 가 함수가 아닙니다');
     return;
   }
 

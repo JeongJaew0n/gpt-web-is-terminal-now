@@ -53,7 +53,7 @@ GT.commands = (function () {
       : [String(++i), r.title, r.pinned ? '★' : '']);
     GT.tty.system('info', null, table(rows));
     info(`${lastList.length} / ${g.total}개 (출처: ${g.source}) — :open <n>`);
-    if (g.hasMore) info(`${g.total - g.loaded}개가 더 있다 — :sidebar more`);
+    if (g.hasMore) info(`${g.total - g.loaded}개가 더 있습니다 — :sidebar more`);
   });
 
   def(':open', '대화 열기 — :open <n>', (args) => {
@@ -170,7 +170,7 @@ GT.commands = (function () {
       const n = Number(want);
       const p = (Number.isInteger(n) && projects[n])
         || projects.find((x) => x.name.toLowerCase().includes(want.toLowerCase()));
-      if (!p) return err(`일치하는 프로젝트가 없다. 가능: ${projects.map((x) => x.name).join(', ')}`);
+      if (!p) return err(`일치하는 프로젝트가 없습니다. 가능: ${projects.map((x) => x.name).join(', ')}`);
       gid = p.id;
     }
 
@@ -295,7 +295,7 @@ GT.commands = (function () {
     }
     const r = await GT.picker.chooseModel(args.join(' '));
     if (r.ok) return info(`모델 → ${r.picked}`);
-    if (r.reason === 'no-match') return err(`일치하는 모델이 없다. 가능: ${(r.had || []).join(', ')}`);
+    if (r.reason === 'no-match') return err(`일치하는 모델이 없습니다. 가능: ${(r.had || []).join(', ')}`);
     err(`전환 실패 (${r.reason})`);
   });
 

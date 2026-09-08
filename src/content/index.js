@@ -140,7 +140,7 @@
     const verdict = GT.health.fiberVerdict(p.fiberEligible || 0, p.fiberHits || 0);
     if (verdict === 'broken') {
       GT.health.CHECKS.fiber.ok = false;
-      GT.health.soft('fiber 에서 마크다운 원문을 못 읽었다 — 렌더된 텍스트로 대체한다(서식 손실)');
+      GT.health.soft('fiber 에서 마크다운 원문을 읽지 못했습니다 — 렌더된 텍스트로 대체합니다(서식 손실)');
     } else if (verdict === 'partial') {
       GT.health.soft(`마크다운 원문을 ${p.fiberEligible - p.fiberHits}/${p.fiberEligible} 건 못 읽었다`);
     } else if (verdict === 'ok') {
