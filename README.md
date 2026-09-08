@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 828](https://img.shields.io/badge/테스트-828_케이스-22C55E)
+![테스트 840](https://img.shields.io/badge/테스트-840_케이스-22C55E)
 
 </div>
 
@@ -144,7 +144,7 @@ tools/package.sh      # dist/scrollback-<version>.zip
 <tr><td><code>:set &lt;key&gt; &lt;value&gt;</code></td><td>설정 변경</td></tr>
 <tr><td><code>:options</code></td><td>확장 설정 화면 열기</td></tr>
 <tr><td><code>:health</code></td><td>점검 상태와 경고 목록</td></tr>
-<tr><td><code>:log [on|off|toggle]</code></td><td>콘솔 진단 로그 <sub>(인자 없으면 현재 상태 · 상태줄에도 표시)</sub></td></tr>
+<tr><td><code>:log [on|off|toggle]</code></td><td>진단 출력 <sub>(끄면 콘솔과 스크롤백 양쪽이 조용해진다 · 상태줄에 표시)</sub></td></tr>
 <tr><td><code>:log dump [n]</code> · <code>:log clear</code></td><td>쌓인 진단 줄 보기 / 비우기 <sub>(꺼져 있어도 쌓인다)</sub></td></tr>
 <tr><td><code>:version</code></td><td>지금 실행 중인 코드의 빌드 시각</td></tr>
 <tr><td><code>:messup [횟수|clear]</code></td><td>화면에만 가짜 출력을 끼워 넣는다 <sub>(서버로 안 간다)</sub></td></tr>
@@ -326,7 +326,7 @@ tools/test.sh
 그렇게 빠진 적이 있다. 그래서 실패와 '죽음' 을 따로 센다.
 
 <details>
-<summary><b>29개 파일 · 828 케이스</b></summary>
+<summary><b>29개 파일 · 840 케이스</b></summary>
 
 <br>
 
@@ -350,7 +350,7 @@ tools/test.sh
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
 | `thinking` | 63 | 생각 중 표시 — 켜지는 자리, 끄는 문을 다 막았는가, 커서가 세 곳에서 같은가 |
-| `log` | 62 | 콘솔 진단 on/off · 껐을 때도 버퍼에 쌓는가 · 상태줄 표시 |
+| `log` | 74 | 로그 on/off · 껐을 때 화면·콘솔이 조용한가 · 명령 결과는 남는가 · 상태줄 |
 | `i18n` | 40 | 사전 — 로케일 간 키·자리표시자 일치, 스키마 키 존재, 매니페스트 _locales |
 | `store.listing` | 36 | 웹스토어 제출 상태 — 권한·외부 주소·토큰 취급·아이콘·문서·존댓말 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
@@ -401,7 +401,7 @@ tools/test.sh
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 828 케이스 통과 (위 표) |
+| 순수 로직 | 840 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

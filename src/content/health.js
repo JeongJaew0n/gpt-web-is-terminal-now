@@ -58,7 +58,7 @@ GT.health = (function () {
       if (p === 'ignore') { report(); return; }
 
       warned = true;
-      try { GT.tty.system('error', text); } catch (_) {}
+      try { GT.tty.system('error', text, null, { quiet: true }); } catch (_) {}
 
       if (p === 'revert' && !reverted) {
         reverted = true;
@@ -72,7 +72,7 @@ GT.health = (function () {
     soft(reason) {
       if (!note(reason)) return;
       warned = true;
-      try { GT.tty.system('warn', reason); } catch (_) {}
+      try { GT.tty.system('warn', reason, null, { quiet: true }); } catch (_) {}
       report();
     },
 

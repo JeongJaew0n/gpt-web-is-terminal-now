@@ -257,6 +257,41 @@ function loadCommands(initial) {
   t('핸들러 예외도 console.error 로 남는다', /console\.error\('\[gpt-term\]', err\)/.test(proto));
 }
 
+// --- :log off 는 '알아서 남기는 줄' 만 지운다 ---
+//
+// 사용자가 본 것은 콘솔이 아니라 터미널 스크롤백의 [info]/[error] 줄이었다.
+// 명령의 결과까지 지우면 터미널이 고장 난 것처럼 보인다 — 그 경계를 고정한다.
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  const health = fs.readFileSync('src/content/health.js', 'utf8');
+
+  t('system 이 quiet 을 받는다', /function system\(level, text, node, opts\)/.test(tty));
+  t('log 가 꺼져 있을 때만 감춘다', /opts\.quiet && GT\.config\.get\('log'\) === false/.test(tty));
+  t('감춘 줄도 버퍼에는 남긴다', /GT\.log\(`\[\$\{level\}\] \$\{text\}`\)/.test(tty));
+  t('왜 명령 결과는 빼는지 적어뒀다', /명령의 결과.*quiet 이 아니다/s.test(tty));
+
+  // 사용자가 스크린샷으로 지적한 세 줄이 전부 quiet 인가
+  t('부팅 배너가 quiet', /build \$\{GT_BUILD\}[\s\S]{0,120}?quiet: true/.test(idx));
+  t('중단 알림이 quiet', /'중단 요청 \(esc\)', null, \{ quiet: true \}/.test(idx));
+  t('health 경고가 quiet', /system\('warn', reason, null, \{ quiet: true \}\)/.test(health));
+  t('health 오류도 quiet', /system\('error', text, null, \{ quiet: true \}\)/.test(health));
+
+  // 명령 결과는 quiet 이 아니어야 한다
+  const cmds = fs.readFileSync('src/content/commands.js', 'utf8');
+  t('명령 결과에는 quiet 을 안 붙였다', !/quiet: true/.test(cmds));
+}
+
+// --- 중단은 깨짐이 아니다 ---
+{
+  // esc·^C 로 멈추면 리더가 끊기며 던진다. 그걸 깨짐으로 보고하면
+  // 중단할 때마다 [error] 줄이 남는다 — 스크린샷의 그 줄이다.
+  const tap = fs.readFileSync('src/main/tap.js', 'utf8');
+  t('중단을 알아본다', /e\.name === 'AbortError'/.test(tap) && /\/abort\/i\.test\(msg\)/.test(tap));
+  t('중단이면 fail 하지 않는다', /if \(!aborted\) fail\('stream-read', msg\)/.test(tap));
+  t('왜 그런지 적어뒀다', /사용자가 중단하면/.test(tap));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

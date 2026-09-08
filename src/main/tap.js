@@ -303,7 +303,11 @@
           }
           if (buf.trim()) dec.line(buf.trim());
         } catch (e) {
-          fail('stream-read', e && e.message);
+          // 사용자가 중단하면(esc · ^C) 리더가 끊기며 던진다. 그건 정상이다 —
+          // 이걸 깨짐으로 보고하면 중단할 때마다 빨간 줄이 남는다.
+          const msg = String((e && e.message) || e);
+          const aborted = (e && e.name === 'AbortError') || /abort/i.test(msg);
+          if (!aborted) fail('stream-read', msg);
         }
       })();
 

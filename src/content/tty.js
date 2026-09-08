@@ -587,7 +587,17 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     if (ui.mode) { ui.mode.textContent = m; ui.mode.dataset.mode = m; }
   }
 
-  function system(level, text, node) {
+  // opts.quiet — 사용자가 시킨 일의 결과가 아니라 우리가 알아서 남기는 줄.
+  // 부팅 배너, 상태 알림, health 경고가 그렇다. :log off 면 화면에 올리지 않고
+  // 진단 버퍼에만 남긴다(:log dump 로 볼 수 있다).
+  //
+  // 명령의 결과(:ls · :health · '이름 변경: …')는 quiet 이 아니다.
+  // 사용자가 친 것에 답을 안 하면 터미널이 고장 난 것처럼 보인다.
+  function system(level, text, node, opts) {
+    if (opts && opts.quiet && GT.config.get('log') === false) {
+      if (text) GT.log(`[${level}] ${text}`);
+      return;
+    }
     systemLog.push({ id: ++sysSeq, level, text, node });
     if (systemLog.length > 60) systemLog.shift();
     render();
