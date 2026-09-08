@@ -96,11 +96,35 @@ const t = (name, ok) => results.push([name, ok]);
 }
 
 // 10. 렌더 중 fiber 를 정답으로 삼지 않는다 (정적)
+//
+// 전에는 '스트림의 접두사인가' 로 판단했다. 인용 마커의 표기가 두 경로에서 달라
+// 첫 인용부터 갈라지고, 애초에 접두사가 아닌 조각도 온다(실측: 본문 2488자에 312자).
+// 이제 길이 비율로 본다. docs/issue/2026-09-08-drift-warning-false-positive.md
 {
   const idx = fs.readFileSync('src/content/index.js', 'utf8');
-  t('fiber 가 스트림의 접두사면 보류', /streamed\.startsWith\(fiber\)/.test(idx));
-  t('한 번만 다시 본다', /rec\.reverified/.test(idx));
-  t('보류 시 화면을 덮지 않는다', /startsWith\(fiber\)\) \{[\s\S]{0,200}return;/.test(idx));
+  t('접두사 검사에 기대지 않는다', !/streamed\.startsWith\(fiber\)/.test(idx));
+  t('길이 비율로 판단한다', /VERIFY_MIN_RATIO/.test(idx) && /fLen < sLen \* VERIFY_MIN_RATIO/.test(idx));
+  t('비교 전에 인용 마커를 걷어낸다', /stripMarks/.test(idx));
+  t('여러 번 다시 본다', /VERIFY_RETRIES/.test(idx) && /rec\.verifyTries/.test(idx));
+  t('보류하면 화면을 덮지 않는다', /if \(tooShort\) \{[\s\S]{0,400}?return;/.test(idx));
+  t('끝내 짧으면 스트림을 유지한다', /스트림 본문을 유지한다/.test(idx));
+}
+
+// 10-1. 드리프트 경고는 관측만 적는다
+{
+  const h = fs.readFileSync('src/content/health.js', 'utf8');
+  t('원인을 단정하지 않는다', !/델타 파서가 일부 op 를 놓치고 있다/.test(h));
+  t('길이 차이를 보여준다', /스트림 \$\{a\.length\}자 \/ 원본 \$\{b\.length\}자/.test(h));
+  t('비교 전에 마커를 걷어낸다', /stripMarks/.test(h));
+  t('무엇을 보라고 안내한다', /:health/.test(h));
+}
+
+// 10-2. 이어받을 경로는 본문 경로일 때만 갱신한다
+{
+  const tap = fs.readFileSync('src/main/tap.js', 'utf8');
+  t('메타데이터 경로가 lastPath 를 덮지 않는다',
+    /\/\^\\\/message\\\/content\\\//.test(tap) || /message\\\/content\\\//.test(tap));
+  t('왜 그런지 적어뒀다', /본문 델타가 메타데이터 경로를 상속해 버려진다/.test(tap));
 }
 
 let bad = 0;

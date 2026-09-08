@@ -78,7 +78,14 @@
 
       this.totalOps += 1;
       const path = typeof o.p === 'string' && o.p !== '' ? o.p : this.lastPath;
-      if (typeof o.p === 'string' && o.p !== '') this.lastPath = o.p;
+      // 경로를 생략한 델타는 직전 경로를 잇는다. 그런데 본문 사이사이에
+      // /message/metadata/… 델타가 끼어들므로, 그걸 기억해 두면 뒤따르는
+      // 본문 델타가 메타데이터 경로를 상속해 버려진다.
+      // 이어받을 경로는 본문 경로일 때만 갱신한다.
+      // docs/issue/2026-09-08-drift-warning-false-positive.md
+      if (typeof o.p === 'string' && o.p !== '' && /^\/message\/content\//.test(o.p)) {
+        this.lastPath = o.p;
+      }
       const op = o.o || (o.p === undefined ? 'append' : 'add');
 
       if (op === 'patch' && Array.isArray(o.v)) { o.v.forEach((x) => this.op(x)); return; }

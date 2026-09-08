@@ -150,6 +150,28 @@ const REF = (over) => Object.assign({
   t('수확이 refs 를 지운다면 각주가 죽는다 — 지키게 했다', /old\.refs && !m\.refs/.test(store));
 }
 
+// --- 두 표기를 걷어내면 같아진다 (드리프트 대조가 이걸 쓴다) ---
+// docs/issue/2026-09-08-drift-warning-false-positive.md
+{
+  const body = '앞부분 텍스트 ';
+  const tail = ' 뒷부분 텍스트';
+  const streamed = body + pua('cite', 'turn692576search1') + tail;   // SSE·API 표기
+  const fibered = body + oai(0) + tail;                              // fiber 표기
+
+  t('두 표기의 길이가 애초에 다르다', streamed.length !== fibered.length);
+  t('걷어내면 같아진다', M.stripMarks(streamed) === M.stripMarks(fibered));
+  t('마커만 사라지고 본문은 그대로', M.stripMarks(streamed) === body + tail);
+
+  // 인용이 여러 개여도, genui 같은 다른 봉투가 섞여도
+  const many = body + pua('cite', 'a') + '가운데' + pua('genui', '{"x":1}') + tail + oai(3);
+  t('여러 봉투를 다 걷어낸다', M.stripMarks(many) === body + '가운데' + tail);
+  t('PUA 가 남지 않는다', !/[\uE200-\uE20F]/.test(M.stripMarks(many)));
+  t('contentReference 가 남지 않는다', !/contentReference/.test(M.stripMarks(many)));
+
+  t('마커가 없으면 그대로', M.stripMarks('평범한 본문') === '평범한 본문');
+  t('빈 값도 처리한다', M.stripMarks('') === '' && M.stripMarks(null) === '');
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

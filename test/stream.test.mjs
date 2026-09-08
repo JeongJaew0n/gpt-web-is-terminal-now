@@ -214,6 +214,52 @@ const finalText = (evs) => { const d = evs.filter((e) => e.kind === 'delta').pop
   t('end 는 한 번만', ev.filter((e) => e.kind === 'end').length === 1);
 }
 
+// --- 메타데이터 델타가 이어받을 경로를 오염시키지 않는다 ---
+//
+// 본문 사이사이에 /message/metadata/… 델타가 끼어든다(인용·safe_urls).
+// 경로를 생략한 델타는 직전 경로를 잇는데, 메타데이터 경로를 이어받으면
+// 그 본문이 조용히 버려진다.
+// docs/issue/2026-09-08-drift-warning-false-positive.md
+{
+  const meta = (path, v) => D({ p: path, o: 'append', v });
+  const out = await collect([
+    ...ENC,
+    addMsg('a1', 'assistant', 'text'),
+    append('첫 조각'),
+    cont(' 이어받은 조각'),                                    // parts/0 을 상속 — 정상
+    meta('/message/metadata/content_references', [{ type: 'grouped_webpages' }]),
+    cont(' 메타 뒤의 조각'),                                    // 여기가 문제였던 자리
+    meta('/message/metadata/safe_urls', ['x']),
+    cont(' 두 번째 메타 뒤의 조각'),
+    D({ type: 'message_stream_complete' })
+  ]);
+
+  const text = out.filter((m) => m.kind === 'delta' || m.kind === 'begin' || m.kind === 'end')
+    .reduce((acc, m) => (typeof m.payload.text === 'string' ? m.payload.text : acc), '');
+
+  t('메타 앞 본문이 들어간다', text.includes('첫 조각'));
+  t('경로 생략 조각이 들어간다', text.includes('이어받은 조각'));
+  t('메타데이터 뒤의 본문도 들어간다', text.includes('메타 뒤의 조각'));
+  t('두 번째 메타 뒤의 본문도 들어간다', text.includes('두 번째 메타 뒤의 조각'));
+  t('메타데이터 값이 본문에 새지 않는다', !/grouped_webpages/.test(text));
+  t('네 조각이 순서대로 이어진다',
+    text === '첫 조각 이어받은 조각 메타 뒤의 조각 두 번째 메타 뒤의 조각');
+}
+
+// --- 본문 경로가 여럿이면 마지막 본문 경로를 잇는다 ---
+{
+  const out = await collect([
+    ...ENC,
+    addMsg('b1', 'assistant', 'text'),
+    D({ p: '/message/content/parts/0', o: 'append', v: 'A' }),
+    D({ p: '/message/metadata/foo', o: 'append', v: 'M' }),
+    cont('B'),                                                  // parts/0 을 이어야 한다
+    D({ type: 'message_stream_complete' })
+  ]);
+  const text = out.reduce((acc, m) => (typeof m.payload.text === 'string' ? m.payload.text : acc), '');
+  t('메타 경로를 건너뛰고 본문 경로를 잇는다', text === 'AB');
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

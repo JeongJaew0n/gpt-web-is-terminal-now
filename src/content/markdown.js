@@ -334,5 +334,16 @@ GT.markdown = (function () {
     return frag;
   }
 
-  return { render, renderInto, inline, copyBtn, newCtx };
+  // 인용 마커를 걷어낸 텍스트. 두 표기를 같은 기준으로 비교할 때 쓴다.
+  //
+  // 같은 인용을 스트림은 PUA 봉투로, fiber 는 :contentReference 로 준다.
+  // 길이가 다르므로 그대로 비교하면 인용이 있는 대화마다 드리프트가 뜬다.
+  // docs/issue/2026-09-08-drift-warning-false-positive.md
+  function stripMarks(text) {
+    return String(text == null ? '' : text)
+      .replace(new RegExp(PUA_MARK.source, 'g'), '')
+      .replace(new RegExp(OAI_MARK.source, 'g'), '');
+  }
+
+  return { render, renderInto, inline, copyBtn, newCtx, stripMarks };
 })();

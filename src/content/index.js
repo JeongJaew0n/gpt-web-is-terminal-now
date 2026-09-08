@@ -175,20 +175,32 @@
     setTimeout(() => GT.toMain('verify', { id: p.id }), 400);
     if (GT.config.get('bell') === 'visual') flash();
   });
+  // fiber 가 스트림의 이만큼도 안 되면 '아직 안 그려진 것' 으로 본다.
+  // 접두사 검사로는 못 잡는다 — 인용 마커의 표기가 달라 첫 인용부터 갈라지고,
+  // 애초에 접두사가 아닌 조각도 온다(실측: 본문 2488자에 fiber 312자).
+  // docs/issue/2026-09-08-drift-warning-false-positive.md
+  const VERIFY_MIN_RATIO = 0.5;
+  const VERIFY_RETRIES = 3;
+
   GT.on('verify', (p) => {
     const rec = p.id && GT.store.state.byId.get(p.id);
     if (!rec || !p.text) return;
     const streamed = rec.text || '';
     const fiber = p.text;
 
-    // 원본이 아직 그리는 중이면 fiber 가 스트림보다 짧고, 스트림의 접두사다.
-    // 그걸 정답으로 삼으면 화면이 오히려 짧아지고 드리프트 경고까지 뜬다.
-    // 한 박자 뒤에 한 번만 다시 본다.
-    if (streamed && fiber.length < streamed.length && streamed.startsWith(fiber)) {
-      if (!rec.reverified) {
-        rec.reverified = true;
-        setTimeout(() => GT.toMain('verify', { id: p.id }), 900);
+    const strip = (GT.markdown && GT.markdown.stripMarks) || ((x) => x);
+    const sLen = strip(streamed).length;
+    const fLen = strip(fiber).length;
+    const tooShort = sLen > 0 && fLen < sLen * VERIFY_MIN_RATIO;
+
+    if (tooShort) {
+      rec.verifyTries = (rec.verifyTries || 0) + 1;
+      if (rec.verifyTries <= VERIFY_RETRIES) {
+        setTimeout(() => GT.toMain('verify', { id: p.id }), 900 * rec.verifyTries);
+        return;
       }
+      // 여러 번 다시 봐도 조각이면 그걸 정답이라 부르지 않는다. 스트림을 남긴다.
+      GT.log(`fiber 가 계속 짧다 (${fLen}/${sLen}) — 스트림 본문을 유지한다`);
       return;
     }
 

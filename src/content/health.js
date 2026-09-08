@@ -94,15 +94,23 @@ GT.health = (function () {
     reconcile(streamText, fiberText) {
       if (typeof fiberText !== 'string' || !fiberText) return;
       if (typeof streamText !== 'string') return;
-      const a = streamText.trim(), b = fiberText.trim();
+
+      // 인용 마커를 걷어내고 비교한다. 두 경로가 같은 인용을 다른 표기로 주기 때문에
+      // 그대로 재면 인용이 있는 대화마다 경고가 뜬다.
+      // docs/issue/2026-09-08-drift-warning-false-positive.md
+      const strip = (GT.markdown && GT.markdown.stripMarks) || ((x) => x);
+      const a = strip(streamText).trim(), b = strip(fiberText).trim();
       if (a === b) return;
       const pct = Math.round((Math.abs(a.length - b.length) / Math.max(b.length, 1)) * 100);
       const limit = Number(GT.config.get('drift.threshold')) || 8;
       if (pct < limit) return;
       CHECKS.schema.ok = false;
+
+      // 관측만 적는다. 원인을 단정하지 않는다 — 실측에서 스트림이 아니라 비교 대상
+      // (fiber) 쪽이 조각이었던 경우가 나왔다. 같은 문구로 두 가지 다른 일이 보고된다.
       GT.health.soft(
-        `스트림 본문이 원본과 ${pct}% 어긋난다 (스트림 ${a.length}자 / 원본 ${b.length}자). ` +
-        '화면은 원본 기준으로 교정했습니다. 델타 파서가 일부 op 를 놓치고 있다는 뜻입니다.'
+        `스트림 본문과 원본이 ${pct}% 다릅니다 (스트림 ${a.length}자 / 원본 ${b.length}자). ` +
+        '화면은 원본 기준으로 교정했습니다. :health 로 점검 상태를 확인하세요.'
       );
     }
   };
