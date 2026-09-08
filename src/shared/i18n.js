@@ -35,6 +35,16 @@ var GT_I18N = {
     'opt.drift.threshold.label': '본문 대조 경고 임계값 (%)',
     'opt.drift.threshold.help': '스트림으로 받은 본문과 원본이 이만큼 넘게 어긋나면 경고합니다. 화면은 항상 원본 쪽으로 교정되므로 경고일 뿐입니다.',
 
+    'opt.log.label': '콘솔 진단 로그',
+    'opt.log.help': '개발자 콘솔에 [gpt-term] 진단 줄을 남깁니다. :log off 로도 끕니다.',
+
+    'cmd.log.desc': '콘솔 진단 로그 — :log [on|off]',
+    'cmd.log.state.on': '콘솔 진단 로그: 켜짐 — :log off 로 끕니다',
+    'cmd.log.state.off': '콘솔 진단 로그: 꺼짐 — :log on 으로 켭니다',
+    'cmd.log.turnedOn': '콘솔 진단 로그를 켰습니다',
+    'cmd.log.turnedOff': '콘솔 진단 로그를 껐습니다',
+    'cmd.log.usage': ':log <on|off|toggle>',
+
     'opt.sidebar.visible.label': '대화 목록 표시',
     'opt.sidebar.visible.help': 'Ctrl+B 로도 토글합니다.',
     'opt.sidebar.width.label': '폭 (ch)',
@@ -99,6 +109,16 @@ var GT_I18N = {
 
     'opt.drift.threshold.label': 'Drift warning threshold (%)',
     'opt.drift.threshold.help': 'Warn when the streamed text differs from the original by more than this. The display is always corrected to the original, so this is only a warning.',
+
+    'opt.log.label': 'Console diagnostics',
+    'opt.log.help': 'Writes [gpt-term] diagnostic lines to the developer console. :log off turns it off too.',
+
+    'cmd.log.desc': 'Console diagnostics — :log [on|off]',
+    'cmd.log.state.on': 'Console diagnostics: on — :log off to turn off',
+    'cmd.log.state.off': 'Console diagnostics: off — :log on to turn on',
+    'cmd.log.turnedOn': 'Console diagnostics turned on',
+    'cmd.log.turnedOff': 'Console diagnostics turned off',
+    'cmd.log.usage': ':log <on|off|toggle>',
 
     'opt.sidebar.visible.label': 'Show chat list',
     'opt.sidebar.visible.help': 'Ctrl+B toggles it too.',

@@ -53,6 +53,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
     health: { CHECKS: {}, reasons: [] }, palette: {}, oai: {}, compose: {}
   };
   vm.createContext(sb);
+  vm.runInContext(fs.readFileSync('src/shared/i18n.js', 'utf8'), sb, { filename: 'i18n.js' });
   vm.runInContext(fs.readFileSync('src/content/commands.js', 'utf8'), sb, { filename: 'commands.js' });
   const C = sb.GT.commands;
 

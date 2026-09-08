@@ -35,7 +35,7 @@ GT.health = (function () {
     // 그 목록은 확장을 다시 로드해도 안 지워지고 제거해야 사라진다 —
     // 평범한 경고를 거기 남기면 이미 지나간 문제가 계속 떠 있는 것처럼 보인다.
     // 경고는 터미널 스크롤백과 배지로 이미 보이므로 콘솔은 debug 로만 남긴다.
-    console.debug('[gpt-term]', reason);
+    GT.log(reason);
     return true;
   }
 
@@ -63,7 +63,7 @@ GT.health = (function () {
       if (p === 'revert' && !reverted) {
         reverted = true;
         try { GT.tty.setMode('BROKEN'); GT.tty.hide(); } catch (_) {}
-        console.debug('[gpt-term] 원본 UI 로 복귀:', text);
+        GT.log('원본 UI 로 복귀:', text);
       }
       report();
     },

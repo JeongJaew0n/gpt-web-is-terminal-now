@@ -46,6 +46,14 @@ var GT = (function () {
         chrome.runtime.sendMessage(msg, () => void chrome.runtime.lastError);
       } catch (_) { /* 컨텍스트가 이미 죽었다 */ }
     },
-    log(...a) { console.debug('[gpt-term]', ...a); }
+    // 진단 로그. 설정으로 끌 수 있다(:log off).
+    //
+    // config 를 지연해서 읽는다 — protocol 은 config 보다 먼저 로드되므로
+    // 부팅 초반에는 GT.config 가 아직 없다. 그때는 찍는다. 부팅 진단을
+    // 조용히 잃는 것이 더 나쁘다.
+    log(...a) {
+      if (GT.config && typeof GT.config.get === 'function' && GT.config.get('log') === false) return;
+      console.debug('[gpt-term]', ...a);
+    }
   };
 })();

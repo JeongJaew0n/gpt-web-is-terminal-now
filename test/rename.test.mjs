@@ -21,6 +21,7 @@ function load(path) {
     picker: {}, navigate: {}, health: { CHECKS: {}, reasons: [] }, palette: {}, oai: {}, compose: {}
   };
   vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync('src/shared/i18n.js', 'utf8'), sandbox, { filename: 'i18n.js' });
   vm.runInContext(fs.readFileSync('src/content/commands.js', 'utf8'), sandbox, { filename: 'commands.js' });
   return { C: sandbox.GT.commands, calls, out };
 }

@@ -62,6 +62,14 @@ vm.createContext(sandbox);
 const files = JSON.parse(fs.readFileSync('manifest.json', 'utf8'))
   .content_scripts.find((c) => c.world === 'ISOLATED').js;
 
+// index.js 는 평가되자마자 boot() 를 띄운다. 이 스텁에는 진짜 DOM 이 없으므로
+// 그 비동기 작업은 뒤늦게 실패한다 — 하지만 이 파일이 보는 것은 '로드 시점' 이다.
+// 평가 중의 예외는 아래 try/catch 가 세고, 그 뒤의 비동기 실패는 여기서 받아
+// 종료 코드를 오염시키지 않게 한다. 무엇이 났는지는 그래도 보여준다.
+const late = [];
+process.on('unhandledRejection', (e) => late.push(String((e && e.message) || e)));
+process.on('uncaughtException', (e) => late.push(String((e && e.message) || e)));
+
 let bad = 0;
 for (const f of files) {
   try {
@@ -76,3 +84,12 @@ for (const f of files) {
   }
 }
 console.log(bad ? `\n로드 시점 예외 ${bad}건` : '\n로드 시점 예외 없음');
+
+// 부팅이 뒤늦게 실패한 것은 이 파일의 판정 대상이 아니다. 보이기만 한다.
+setTimeout(() => {
+  if (late.length) {
+    console.log(`  (로드 뒤 비동기 실패 ${late.length}건 — 이 파일의 판정 대상이 아니다)`);
+    console.log('   ' + late[0]);
+  }
+  process.exit(bad ? 1 : 0);
+}, 50);

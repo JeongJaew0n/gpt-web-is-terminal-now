@@ -335,6 +335,21 @@ GT.commands = (function () {
     info('이 값이 소스를 고친 뒤에도 그대로면 확장이 다시 로드되지 않은 것입니다 (chrome://extensions 의 ↻)');
   });
 
+  // 새로 넣는 명령의 문구는 사전에서 꺼낸다. 이 파일의 나머지 문구는
+  // 아직 옮기지 않았다 — docs/plan/2026-09-08-i18n.md 의 순서를 따른다.
+  def(':log', GT_T('cmd.log.desc'), async (args) => {
+    const a = (args[0] || '').toLowerCase();
+    const cur = GT.config.get('log') !== false;
+    if (!a) return info(GT_T(cur ? 'cmd.log.state.on' : 'cmd.log.state.off'));
+    let next;
+    if (a === 'on' || a === 'true' || a === '1') next = true;
+    else if (a === 'off' || a === 'false' || a === '0') next = false;
+    else if (a === 'toggle') next = !cur;
+    else return err(GT_T('cmd.log.usage'));
+    await GT.config.set('log', next);
+    info(GT_T(next ? 'cmd.log.turnedOn' : 'cmd.log.turnedOff'));
+  }, null, (prev) => (prev.length ? [] : ['on', 'off', 'toggle']));
+
   def(':options', '확장 설정 화면 열기', () => {
     GT.sendToSW({ kind: 'openOptions' });
     info('설정 탭을 엽니다');

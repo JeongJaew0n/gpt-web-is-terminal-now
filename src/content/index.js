@@ -84,7 +84,7 @@
     disposers.forEach((d) => { try { d(); } catch (_) {} });
     disposers.length = 0;
     try { GT.tty.destroy(); } catch (_) {}
-    console.debug('[gpt-term] 물러남:', why, '— 페이지를 새로고침하면 새 코드로 다시 붙는다');
+    GT.log('물러남:', why, '— 페이지를 새로고침하면 새 코드로 다시 붙는다');
     notifyGone();
   }
 

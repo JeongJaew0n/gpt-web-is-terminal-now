@@ -13,13 +13,16 @@ function makeWorld(cfg) {
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync('src/shared/defaults.js','utf8'), sandbox, {filename:'defaults'});
   // GT 스텁 — health 가 기대는 최소 표면만
+  const logged = [];
   sandbox.GT = {
     sendToSW() {},
+    log: (...a) => logged.push(a.join(' ')),      // health 가 진단을 GT.log 로 남긴다
     config: { get: (k) => (k in cfg ? cfg[k] : sandbox.GT_DEFAULTS[k]) },
-    tty: { system(){}, setMode(){}, hide(){ hidden.called = true; } }
+    tty: { system(){}, setMode(){}, hide(){ hidden.called = true; } },
+    markdown: { stripMarks: (x) => String(x == null ? '' : x) }
   };
   vm.runInContext(fs.readFileSync('src/content/health.js','utf8'), sandbox, {filename:'health'});
-  return { GT: sandbox.GT, hidden };
+  return { GT: sandbox.GT, hidden, logged };
 }
 
 const results = [];

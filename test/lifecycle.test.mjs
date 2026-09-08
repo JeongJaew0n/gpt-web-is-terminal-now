@@ -37,7 +37,8 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   const health = fs.readFileSync('src/content/health.js', 'utf8');
   // 주석 속 단어가 아니라 실제 호출만 본다
   t('health 는 console.warn 을 호출하지 않는다', !/console\.warn\s*\(/.test(health));
-  t('health 는 console.debug 로 남긴다', /console\.debug/.test(health));
+  // 흩어진 console.debug 를 GT.log 로 모았다 — :log off 로 끌 수 있어야 한다
+  t('health 는 GT.log 로 남긴다', /GT\.log\(/.test(health) && !/console\.debug/.test(health));
 }
 
 // 5. 빌드 스탬프로 staleness 를 눈으로 확인할 수 있어야 한다
@@ -55,7 +56,7 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('무엇을 해야 하는지 안내', /새로고침해주세요/.test(src));
   t('알림은 한 번만', /getElementById\('gpt-term-gone'\)\) return/.test(src));
   // 사유는 화면 문구에서 뺐지만 진단용으로는 남겨 둔다
-  t('사유는 콘솔에 남긴다', /console\.debug\([^)]*물러남[^)]*why/.test(src));
+  t('사유는 콘솔에 남긴다', /GT\.log\('물러남:', why/.test(src));
 }
 
 let bad = 0;

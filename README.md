@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 766](https://img.shields.io/badge/테스트-766_케이스-22C55E)
+![테스트 794](https://img.shields.io/badge/테스트-794_케이스-22C55E)
 
 </div>
 
@@ -144,6 +144,7 @@ tools/package.sh      # dist/scrollback-<version>.zip
 <tr><td><code>:set &lt;key&gt; &lt;value&gt;</code></td><td>설정 변경</td></tr>
 <tr><td><code>:options</code></td><td>확장 설정 화면 열기</td></tr>
 <tr><td><code>:health</code></td><td>점검 상태와 경고 목록</td></tr>
+<tr><td><code>:log [on|off|toggle]</code></td><td>콘솔 진단 로그 <sub>(인자 없으면 현재 상태)</sub></td></tr>
 <tr><td><code>:version</code></td><td>지금 실행 중인 코드의 빌드 시각</td></tr>
 <tr><td><code>:messup [횟수|clear]</code></td><td>화면에만 가짜 출력을 끼워 넣는다 <sub>(서버로 안 간다)</sub></td></tr>
 </table>
@@ -239,6 +240,7 @@ docs/issue/  docs/plan/               조사 기록 · 계획
 _locales/ko · _locales/en             매니페스트 이름·설명 (스토어 리스팅)
 docs/store/                           스토어 리스팅 · 개인정보처리방침 · 심사 노트
 docs/plans/                           작업 계획 (재개용)
+tools/test.sh                         테스트 전체 (종료 코드로 판정)
 tools/package.sh                      배포 zip
 test/                                 Node 테스트 (의존성 없음)
 ```
@@ -315,17 +317,21 @@ python3 tools/make-icons.py     다시 생성
 의존성 없음. Node 만 있으면 된다.
 
 ```bash
-for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
+tools/test.sh
 ```
 
+판정은 **종료 코드**로 한다. 예전에는 출력에서 `FAIL` 문자열만 찾았는데, 로드 중
+예외로 죽은 파일은 `FAIL` 을 찍지도 못해 **조용히 0건으로 집계됐다** — 실제로 네 파일이
+그렇게 빠진 적이 있다. 그래서 실패와 '죽음' 을 따로 센다.
+
 <details>
-<summary><b>28개 파일 · 766 케이스</b></summary>
+<summary><b>29개 파일 · 794 케이스</b></summary>
 
 <br>
 
 | 파일 | 케이스 | 무엇을 지키는가 |
 |---|--:|---|
-| `load` | 20 모듈 | 콘텐츠 스크립트를 매니페스트 순서대로 평가 — 로드 시점 예외 검출 |
+| `load` | 21 모듈 | 콘텐츠 스크립트를 매니페스트 순서대로 평가 — 로드 시점 예외 검출 |
 | `handshake` | 5 | MAIN↔ISOLATED 브리지 버퍼링과 `ready`/`pong` 핸드셰이크 |
 | `policy` | 17 | `onBreak` 정책과 드리프트 분류 |
 | `store` | 34 | 한 턴에 assistant 메시지가 여러 개 와도 한 줄만 남는가 · 보낸 질문이 두 줄이 되지 않는가 |
@@ -343,6 +349,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
 | `thinking` | 63 | 생각 중 표시 — 켜지는 자리, 끄는 문을 다 막았는가, 커서가 세 곳에서 같은가 |
+| `log` | 28 | 콘솔 진단 on/off — 껐을 때 정말 조용한가 |
 | `i18n` | 40 | 사전 — 로케일 간 키·자리표시자 일치, 스키마 키 존재, 매니페스트 _locales |
 | `store.listing` | 36 | 웹스토어 제출 상태 — 권한·외부 주소·토큰 취급·아이콘·문서·존댓말 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
@@ -393,7 +400,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 766 케이스 통과 (위 표) |
+| 순수 로직 | 794 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |
