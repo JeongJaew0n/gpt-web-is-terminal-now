@@ -8,18 +8,22 @@
 
   const stored = await chrome.storage.sync.get(GT_DEFAULTS);
   const current = { ...GT_DEFAULTS, ...stored };
+  GT_SET_LOCALE(current.locale);
+  // HTML 에 박아 둔 문구도 사전에서 채운다. 두 벌로 관리하지 않는다.
+  $('#reset').textContent = GT_T('opt.ui.resetAll');
+  $('#syncNote').textContent = GT_T('opt.ui.syncNote');
   const rows = new Map();
 
   function markSaved() {
     const t = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-    $('#saved').textContent = `저장됨 ${t}`;
+    $('#saved').textContent = GT_T('opt.ui.saved', t);
     clearTimeout(markSaved._t);
     markSaved._t = setTimeout(() => { $('#saved').textContent = ''; }, 2400);
   }
 
   function refreshCount() {
     const n = Object.keys(GT_DEFAULTS).filter((k) => current[k] !== GT_DEFAULTS[k]).length;
-    $('#count').textContent = n ? `기본값과 다른 항목 ${n}개` : '전부 기본값';
+    $('#count').textContent = n ? GT_T('opt.ui.dirty', n) : GT_T('opt.ui.allDefault');
     rows.forEach((row, k) => { row.dataset.dirty = current[k] !== GT_DEFAULTS[k] ? '1' : '0'; });
   }
 
@@ -29,6 +33,8 @@
     await chrome.storage.sync.set({ [key]: v });
     markSaved();
     refreshCount();
+    // 언어를 바꾸면 이 화면의 모든 문구가 바뀐다. 다시 그리는 게 가장 간단하다.
+    if (key === 'locale') location.reload();
     return v;
   }
 
@@ -49,7 +55,8 @@
 
     if (f.type === 'enum') {
       const sel = el('select');
-      f.choices.forEach(([v, label]) => {
+      f.choices.forEach((v) => {
+        const label = GT_CHOICE(f, v);
         const o = el('option', null, label); o.value = v;
         if (current[f.key] === v) o.selected = true;
         sel.appendChild(o);
@@ -74,13 +81,14 @@
   // ------------------------------------------------------------------ 렌더
   const sections = [];
   GT_SCHEMA.forEach((f) => {
-    let s = sections.find((x) => x.name === f.section);
-    if (!s) { s = { name: f.section, fields: [] }; sections.push(s); }
+    const title = GT_SECTION(f);
+    let s = sections.find((x) => x.name === title);
+    if (!s) { s = { name: title, fields: [] }; sections.push(s); }
     s.fields.push(f);
   });
 
   const nav = $('#nav');
-  nav.appendChild(el('div', 'navhead', 'SECTIONS'));
+  nav.appendChild(el('div', 'navhead', GT_T('opt.ui.sections')));
   const main = $('#fields');
 
   sections.forEach((s, i) => {
@@ -99,14 +107,15 @@
     s.fields.forEach((f) => {
       const row = el('div', 'row');
       const k = el('div', 'k');
-      k.appendChild(el('span', 'label', f.label));
+      k.appendChild(el('span', 'label', GT_LABEL(f)));
       k.appendChild(el('span', 'keyname', f.key));
       const v = el('div', 'v');
       const c = control(f);
       v.appendChild(c.node);
       const help = el('div', 'help');
-      if (f.help) help.appendChild(el('div', null, f.help));
-      const d = el('button', 'dflt', `기본값: ${String(f.def) === '' ? '(빈 값)' : f.def}`);
+      const hint = GT_HELP(f);
+      if (hint) help.appendChild(el('div', null, hint));
+      const d = el('button', 'dflt', GT_T('opt.ui.default', String(f.def) === '' ? GT_T('opt.ui.empty') : f.def));
       d.addEventListener('click', async () => { await save(f.key, f.def); c.set(f.def); });
       help.appendChild(d);
       row.appendChild(k); row.appendChild(v); row.appendChild(help);

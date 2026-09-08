@@ -41,6 +41,7 @@ function makeChrome({ tab, state, lastError, sync }) {
 const html = fs.readFileSync('src/popup/popup.html', 'utf8');
 const src = fs.readFileSync('src/popup/popup.js', 'utf8');
 const defaults = fs.readFileSync('src/shared/defaults.js', 'utf8');
+const i18n = fs.readFileSync('src/shared/i18n.js', 'utf8');
 
 async function run(opts) {
   const document = makeDom(html);
@@ -50,6 +51,7 @@ async function run(opts) {
   sandbox.window = sandbox; sandbox.globalThis = sandbox;
   sandbox.window.close = () => { c.sent.push({ closed: true }); };
   vm.createContext(sandbox);
+  vm.runInContext(i18n, sandbox, { filename: 'i18n.js' });
   vm.runInContext(defaults, sandbox, { filename: 'defaults.js' });
   vm.runInContext(src, sandbox, { filename: 'popup.js' });
   await new Promise((r) => setTimeout(r, 0));

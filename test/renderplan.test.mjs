@@ -92,7 +92,7 @@ const P = (...ks) => ks.map((k) => ({ key: k, sig: k + '@1' }));
   t('시각은 자리에서 갱신', /function refreshTimes/.test(tty) && /\.gt-stamp/.test(tty));
   t('경과시간도 자리에서', /\.gt-elapsed/.test(tty));
   t('설정이 바뀌면 epoch 증가', /epoch \+= 1/.test(tty));
-  t('설정 변경 후 다시 그린다', /applyConfig\(c\); GT\.tty\.render\(\)/.test(idx));
+  t('설정 변경 후 다시 그린다', /applyConfig\(c\);[\s\S]{0,120}?GT\.tty\.render\(\)/.test(idx));
   t('해체 시 풀도 비운다', /pool\.clear\(\)/.test(tty));
   t('id 없는 메시지를 버리지 않는다', /'i:' \+ i/.test(tty));
   t('여분 노드를 정리한다', /while \(ui\.scroll\.children\.length > next\.length\)/.test(tty));

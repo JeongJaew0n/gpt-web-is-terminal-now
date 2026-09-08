@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Scrollback — Terminal UI for ChatGPT",
+  "name": "__MSG_extName__",
   "version": "0.1.0",
-  "description": "ChatGPT 웹을 터미널처럼 씁니다. 키보드로 대화를 넘기고 명령으로 이름·보관·삭제까지. 원본 UI 는 지우지 않고 덮어 그립니다.",
+  "description": "__MSG_extDesc__",
   "minimum_chrome_version": "111",
   "icons": {
     "16": "icons/icon16.png",
@@ -17,7 +17,7 @@
     "https://chatgpt.com/*"
   ],
   "action": {
-    "default_title": "Scrollback",
+    "default_title": "__MSG_extShort__",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -53,6 +53,7 @@
       "world": "ISOLATED",
       "all_frames": false,
       "js": [
+        "src/shared/i18n.js",
         "src/shared/defaults.js",
         "src/content/protocol.js",
         "src/content/config.js",
@@ -75,5 +76,6 @@
         "src/content/index.js"
       ]
     }
-  ]
+  ],
+  "default_locale": "ko"
 }

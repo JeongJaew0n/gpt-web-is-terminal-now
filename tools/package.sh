@@ -26,6 +26,7 @@ INCLUDE=(
   icons/icon32.png
   icons/icon48.png
   icons/icon128.png
+  _locales
   src
 )
 
@@ -69,6 +70,16 @@ if missing:
     print('MISSING ' + ' '.join(missing), file=sys.stderr); sys.exit(1)
 PY
 if [ $? -eq 0 ]; then note "매니페스트가 가리키는 파일 전부 존재"; else bad "매니페스트가 없는 파일을 가리킨다"; fi
+
+# default_locale 을 선언하고 _locales 가 없으면 크롬이 확장을 아예 로드하지 않는다
+DL=$(python3 -c "import json;print(json.load(open('manifest.json')).get('default_locale',''))" 2>/dev/null || echo "")
+if [ -n "$DL" ]; then
+  if [ -f "_locales/$DL/messages.json" ]; then
+    note "default_locale=$DL · _locales/$DL/messages.json 존재"
+  else
+    bad "default_locale=$DL 인데 _locales/$DL/messages.json 이 없다 — 확장이 로드되지 않는다"
+  fi
+fi
 
 # 문법 검사 — 깨진 스크립트를 올리지 않는다
 if command -v node >/dev/null 2>&1; then

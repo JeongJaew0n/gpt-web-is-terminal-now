@@ -85,7 +85,9 @@
   });
 
   // ------------------------------------------------------------- 기본 동작
-  const stored = await chrome.storage.sync.get({ enabled: GT_DEFAULTS.enabled });
+  const stored = await chrome.storage.sync.get(
+    { enabled: GT_DEFAULTS.enabled, locale: GT_DEFAULTS.locale });
+  GT_SET_LOCALE(stored.locale);
   let defOn = !!stored.enabled;
   setSwitch(ui.swDef, defOn);
 

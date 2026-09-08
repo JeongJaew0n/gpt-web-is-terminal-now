@@ -1,75 +1,83 @@
 // gpt-term 빌드 스탬프.
 // 크롬은 언팩 확장 파일을 캐시한다. "고쳤는데 왜 그대로지?" 를 추측으로 풀지 않으려고 둔다.
 // 터미널 부팅 줄과 :version 에 찍힌다. 이 값이 안 바뀌면 확장이 다시 로드되지 않은 것이다.
-var GT_BUILD = '2026-09-08 09:40';
+var GT_BUILD = '2026-09-08 10:30';
 
 // gpt-term — 설정 스키마. 콘텐츠 스크립트와 옵션 화면이 같은 정의를 쓴다.
 // 여기가 유일한 출처다. 옵션 화면에 항목을 늘리려면 이 배열만 고치면 된다.
+//
+// 문구는 여기 없다. src/shared/i18n.js 의 사전에 있고, 키는 규칙으로 만든다.
+//   섹션      opt.section.<section>
+//   라벨      opt.<key>.label
+//   도움말    opt.<key>.help        (없어도 된다)
+//   선택지    opt.<key>.choice.<value>
+// 그래야 언어를 바꿀 때 배열이 아니라 사전만 갈아끼운다.
 var GT_SCHEMA = [
   {
-    section: '동작',
-    key: 'enabled', label: 'ChatGPT 를 열면 바로 터미널로', type: 'bool',
-    def: false,
-    help: '기본은 꺼짐 — 원본 UI 로 시작합니다. 툴바 아이콘이나 Ctrl+` 로 그때그때 켭니다.'
+    section: 'behavior',
+    key: 'locale', type: 'enum', def: 'auto',
+    choices: ['auto', 'ko', 'en']
   },
   {
-    section: '동작',
-    key: 'onBreak', label: '전제가 깨졌을 때', type: 'enum',
-    def: 'warn',
-    choices: [
-      ['warn', '터미널 유지 + 배지로 알림'],
-      ['revert', '원본 UI 로 자동 복귀'],
-      ['ignore', '무시 (콘솔에만 기록)']
-    ],
-    help: 'ChatGPT 내부 구조가 바뀌어 확장이 따라가지 못할 때의 처리.'
+    section: 'behavior',
+    key: 'enabled', type: 'bool', def: false
   },
   {
-    section: '동작',
-    key: 'drift.threshold', label: '본문 대조 경고 임계값 (%)', type: 'int',
-    def: 8, min: 1, max: 100,
-    help: '스트림으로 받은 본문과 원본이 이만큼 넘게 어긋나면 경고합니다. 화면은 항상 원본 쪽으로 교정되므로 경고일 뿐입니다.'
+    section: 'behavior',
+    key: 'onBreak', type: 'enum', def: 'warn',
+    choices: ['warn', 'revert', 'ignore']
+  },
+  {
+    section: 'behavior',
+    key: 'drift.threshold', type: 'int', def: 8, min: 1, max: 100
   },
 
-  { section: '사이드바', key: 'sidebar.visible', label: '대화 목록 표시', type: 'bool', def: true,
-    help: 'Ctrl+B 로도 토글합니다.' },
-  { section: '사이드바', key: 'sidebar.width', label: '폭 (ch)', type: 'int', def: 30, min: 16, max: 80 },
-  { section: '사이드바', key: 'sidebar.closeOnOpen', label: '대화를 열면 목록 닫기', type: 'bool', def: true,
-    help: '원본과 같은 동작입니다. 목록이 본문 위에 떠 있으므로 고르고 나면 비켜 줍니다. ≡ 로 다시 엽니다.' },
-  { section: '사이드바', key: 'sidebar.groups', label: '고정·프로젝트 그룹 표시', type: 'bool', def: true },
-  { section: '사이드바', key: 'sidebar.minColumns', label: '이보다 좁으면 처음에 접어둠 (칸)', type: 'int',
-    def: 100, min: 0, max: 400,
-    help: '0 이면 항상 표시합니다. 목록은 본문 위에 덮이므로 좁은 창에서는 기본값을 접어 둡니다. 손잡이로 열면 폭과 무관하게 열립니다.' },
+  { section: 'sidebar', key: 'sidebar.visible', type: 'bool', def: true },
+  { section: 'sidebar', key: 'sidebar.width', type: 'int', def: 30, min: 16, max: 80 },
+  { section: 'sidebar', key: 'sidebar.closeOnOpen', type: 'bool', def: true },
+  { section: 'sidebar', key: 'sidebar.groups', type: 'bool', def: true },
+  { section: 'sidebar', key: 'sidebar.minColumns', type: 'int', def: 100, min: 0, max: 400 },
 
-  { section: '표시', key: 'theme', label: '테마', type: 'enum', def: 'modern-dark',
-    choices: [['modern-dark', 'modern-dark'], ['crt-green', 'crt-green'], ['amber', 'amber']] },
-  { section: '표시', key: 'font.family', label: '폰트', type: 'text',
-    def: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
-    help: '설치돼 있지 않으면 뒤쪽 스택으로 폴백합니다.' },
-  { section: '표시', key: 'font.size', label: '글자 크기 (px)', type: 'int', def: 13, min: 10, max: 24 },
-  { section: '표시', key: 'line.height', label: '줄 간격', type: 'float', def: 1.62, min: 1, max: 3, step: 0.01 },
-  { section: '표시', key: 'wrap.columns', label: '본문 최대 너비 (ch)', type: 'int', def: 96, min: 0, max: 400,
-    help: '0 이면 창 전체 너비.' },
-  { section: '표시', key: 'gutter.markers', label: '응답 왼쪽 세로 바', type: 'bool', def: true },
-  { section: '표시', key: 'scanlines', label: '스캔라인', type: 'bool', def: false,
-    help: 'crt-green 테마에서만 권장.' },
+  { section: 'display', key: 'theme', type: 'enum', def: 'modern-dark',
+    choices: ['modern-dark', 'crt-green', 'amber'], rawChoices: true },
+  { section: 'display', key: 'font.family', type: 'text',
+    def: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace" },
+  { section: 'display', key: 'font.size', type: 'int', def: 13, min: 10, max: 24 },
+  { section: 'display', key: 'line.height', type: 'float', def: 1.62, min: 1, max: 3, step: 0.01 },
+  { section: 'display', key: 'wrap.columns', type: 'int', def: 96, min: 0, max: 400 },
+  { section: 'display', key: 'gutter.markers', type: 'bool', def: true },
+  { section: 'display', key: 'scanlines', type: 'bool', def: false },
 
-  { section: '커서와 알림', key: 'cursor.style', label: '커서 모양', type: 'enum', def: 'block',
-    choices: [['block', 'block'], ['bar', 'bar'], ['underline', 'underline']] },
-  { section: '커서와 알림', key: 'cursor.blink', label: '커서 깜빡임', type: 'bool', def: true },
-  { section: '커서와 알림', key: 'timestamps', label: '타임스탬프', type: 'enum', def: 'relative',
-    choices: [['relative', '상대 (3분 전)'], ['absolute', '절대 (14:22:01)'], ['off', '끄기']] },
-  { section: '커서와 알림', key: 'bell', label: '응답 완료 알림', type: 'enum', def: 'visual',
-    choices: [['visual', '상태줄 플래시'], ['off', '끄기']] }
+  { section: 'cursor', key: 'cursor.style', type: 'enum', def: 'block',
+    choices: ['block', 'bar', 'underline'], rawChoices: true },
+  { section: 'cursor', key: 'cursor.blink', type: 'bool', def: true },
+  { section: 'cursor', key: 'timestamps', type: 'enum', def: 'relative',
+    choices: ['relative', 'absolute', 'off'] },
+  { section: 'cursor', key: 'bell', type: 'enum', def: 'visual',
+    choices: ['visual', 'off'] }
 ];
 
-var GT_DEFAULTS = GT_SCHEMA.reduce((o, f) => { o[f.key] = f.def; return o; }, {});
+// 화면에 쓸 문구를 스키마에서 끌어낸다. 규칙이 한 곳에만 있어야 어긋나지 않는다.
+// rawChoices 인 항목(테마 이름, 커서 모양)은 값 자체가 이름이라 번역하지 않는다.
+var GT_LABEL = function (f) { return GT_T('opt.' + f.key + '.label'); };
+var GT_HELP = function (f) {
+  var k = 'opt.' + f.key + '.help';
+  var v = GT_T(k);
+  return v === k ? '' : v;          // 사전에 없으면 도움말이 없는 항목이다
+};
+var GT_SECTION = function (f) { return GT_T('opt.section.' + f.section); };
+var GT_CHOICE = function (f, value) {
+  return f.rawChoices ? value : GT_T('opt.' + f.key + '.choice.' + value);
+};
+
+var GT_DEFAULTS = GT_SCHEMA.reduce(function (o, f) { o[f.key] = f.def; return o; }, {});
 
 var GT_COERCE = function (key, raw) {
-  const f = GT_SCHEMA.find((x) => x.key === key);
+  var f = GT_SCHEMA.find(function (x) { return x.key === key; });
   if (!f) return raw;
-  if (f.type === 'int') { const n = parseInt(raw, 10); return Number.isFinite(n) ? n : f.def; }
-  if (f.type === 'float') { const n = parseFloat(raw); return Number.isFinite(n) ? n : f.def; }
+  if (f.type === 'int') { var n = parseInt(raw, 10); return Number.isFinite(n) ? n : f.def; }
+  if (f.type === 'float') { var g = parseFloat(raw); return Number.isFinite(g) ? g : f.def; }
   if (f.type === 'bool') return raw === true || raw === 'on' || raw === 'true' || raw === '1';
-  if (f.type === 'enum') return f.choices.some(([v]) => v === raw) ? raw : f.def;
+  if (f.type === 'enum') return f.choices.indexOf(raw) >= 0 ? raw : f.def;
   return String(raw);
 };

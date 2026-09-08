@@ -12,10 +12,23 @@ const ALL = SRC.map(src).join('\n');
 
 // --- 리스팅 문구 ---
 {
-  t('이름이 있다', typeof mf.name === 'string' && mf.name.length > 0);
-  t('이름이 75자 이내', mf.name.length <= 75);
-  t('설명이 132자 이내', (mf.description || '').length <= 132);
-  t("설명에 '개인용 언팩' 류 문구가 없다", !/개인용|언팩|unpacked/i.test(mf.description || ''));
+  // name·description 이 __MSG_ 로 바뀌었으므로 사전을 따라가서 실제 문구를 본다.
+  // 안 그러면 '__MSG_extDesc__' 의 길이를 재는, 늘 통과하는 검사가 된다.
+  const msg = (v, locale) => {
+    const m = /^__MSG_(\w+)__$/.exec(String(v || ''));
+    if (!m) return String(v || '');
+    const j = JSON.parse(fs.readFileSync(`_locales/${locale}/messages.json`, 'utf8'));
+    return (j[m[1]] && j[m[1]].message) || '';
+  };
+  const dl = mf.default_locale || 'ko';
+  const realName = msg(mf.name, dl);
+  const realDesc = msg(mf.description, dl);
+
+  t('이름이 있다', realName.length > 0);
+  t('이름이 75자 이내', realName.length <= 75);
+  t('설명이 있다', realDesc.length > 0);
+  t('설명이 132자 이내', realDesc.length <= 132);
+  t("설명에 '개인용 언팩' 류 문구가 없다", !/개인용|언팩|unpacked/i.test(realDesc));
   t('버전이 있다', /^\d+(\.\d+)*$/.test(mf.version || ''));
 }
 
@@ -92,7 +105,7 @@ const ALL = SRC.map(src).join('\n');
   const files = ['src/content/commands.js', 'src/content/sidebar.js', 'src/content/index.js',
     'src/content/health.js', 'src/content/tty.js', 'src/content/chats.js',
     'src/content/palette.js', 'src/content/picker.js', 'src/content/markdown.js',
-    'src/shared/defaults.js', 'src/main/tap.js',
+    'src/shared/defaults.js', 'src/shared/i18n.js', 'src/main/tap.js',
     'src/popup/popup.js', 'src/popup/popup.html', 'src/options/options.js', 'src/options/options.html'];
 
   // 반말 종결. 주석 줄은 빼고 문자열·태그 안쪽만 본다.

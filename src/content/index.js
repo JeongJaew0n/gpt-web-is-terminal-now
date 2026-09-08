@@ -13,6 +13,7 @@
   else ['config', 'oai', 'store', 'chats', 'conversation', 'convops', 'markdown', 'renderplan', 'theme', 'tty', 'palette', 'sidebar', 'compose', 'picker', 'navigate', 'commands', 'health']
     .forEach((k) => { if (!GT[k]) missing.push('GT.' + k); });
   if (typeof GT_DEFAULTS === 'undefined') missing.push('GT_DEFAULTS (shared/defaults.js)');
+  if (typeof GT_T !== 'function') missing.push('GT_T (shared/i18n.js)');
   if (!missing.length) return;
 
   console.error(
@@ -199,6 +200,7 @@
 
   // -------------------------------------------------------------- 부팅 시퀀스
   const cfg = await GT.config.load();
+  GT_SET_LOCALE(cfg.locale);        // 첫 렌더 전에 정해야 화면이 두 번 안 바뀐다
 
   const domReady = () => new Promise((r) => {
     if (document.body) return r();
@@ -209,7 +211,11 @@
 
   GT.tty.mount(cfg);
   GT.store.onChange(() => GT.tty.render());
-  GT.config.onChange((c) => { GT.tty.applyConfig(c); GT.tty.render(); });
+  GT.config.onChange((c) => {
+    GT_SET_LOCALE(c.locale);
+    GT.tty.applyConfig(c);          // epoch 이 올라가 모든 노드를 다시 만든다
+    GT.tty.render();
+  });
   // 추론 수준이 바뀌는 동안 상단바가 즉시 따라오게 한다 (1초 틱을 기다리지 않는다)
   if (GT.picker && GT.picker.onChange) GT.picker.onChange(() => GT.tty.renderChrome());
 

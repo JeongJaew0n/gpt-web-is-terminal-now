@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 701](https://img.shields.io/badge/테스트-701_케이스-22C55E)
+![테스트 742](https://img.shields.io/badge/테스트-742_케이스-22C55E)
 
 </div>
 
@@ -229,12 +229,14 @@ src/content/                          ← 매니페스트 주입 순서
   index.js                            부팅과 배선
 
 src/background/service-worker.js      배지
+src/shared/i18n.js                    화면 문구 사전 (ko · en)
 src/shared/defaults.js                설정 스키마 (콘텐츠 · 옵션 공용)
 src/popup/                            툴바 패널 (토글 둘)
 src/options/                          설정 화면 (스키마에서 생성)
 
 icons/  tools/make-icons.py           아이콘
 docs/issue/  docs/plan/               조사 기록 · 계획
+_locales/ko · _locales/en             매니페스트 이름·설명 (스토어 리스팅)
 docs/store/                           스토어 리스팅 · 개인정보처리방침 · 심사 노트
 docs/plans/                           작업 계획 (재개용)
 tools/package.sh                      배포 zip
@@ -317,7 +319,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 ```
 
 <details>
-<summary><b>27개 파일 · 701 케이스</b></summary>
+<summary><b>28개 파일 · 742 케이스</b></summary>
 
 <br>
 
@@ -341,6 +343,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | `renderplan` | 38 | 스크롤백 재구성 서명·재사용 |
 | `messup` | 28 | `:messup` — 서버로 안 가는가, 새 대화가 와도 제자리인가 |
 | `thinking` | 63 | 생각 중 표시 — 켜지는 자리, 끄는 문을 다 막았는가, 커서가 세 곳에서 같은가 |
+| `i18n` | 40 | 사전 — 로케일 간 키·자리표시자 일치, 스키마 키 존재, 매니페스트 _locales |
 | `store.listing` | 36 | 웹스토어 제출 상태 — 권한·외부 주소·토큰 취급·아이콘·문서·존댓말 |
 | `font` | 16 | 글씨 크기 — 물리 키(`e.code`)로 받는가 |
 | `complete` | 37 | 명령·인자 자동완성 · `parse` 가 인식하는 이름은 전부 실재하는가 |
@@ -363,7 +366,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | [대화 조작 (이름·고정·보관·삭제·이동·공유)](docs/plan/2026-09-01-conversation-ops.md) | 다중 선택 삭제 포함 · 보관 목록 보기는 TODO |
 | [모델 · 추론 수준 선택](docs/plan/2026-09-01-model-picker.md) | 둘 다 동작 |
 | [스크롤백 렌더 개선](docs/plan/2026-09-02-scrollback-render.md) | 스크롤백 확인 · 스트리밍 중 블록 안의 선택은 미해결 |
-| [다국어 도입 검토](docs/plan/2026-09-08-i18n.md) | 검토만 — 문구 295개 실측, 방안 비교, 권하는 순서 |
+| [다국어 도입](docs/plan/2026-09-08-i18n.md) | 뼈대 + 설정 화면 완료 (ko·en) · 명령·사이드바는 남음 |
 
 조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열한 건 중 아홉이 해결**됐다.
 매니페스트 캐시 건은 크롬 동작이라 감지만 하고, 선택 유실 건은 스크롤백 쪽만 고쳐졌다.
@@ -390,7 +393,7 @@ for f in test/*.test.mjs; do node "$f" || echo "FAIL $f"; done
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 701 케이스 통과 (위 표) |
+| 순수 로직 | 742 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |
