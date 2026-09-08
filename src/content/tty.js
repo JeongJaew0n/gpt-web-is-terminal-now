@@ -134,8 +134,11 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     ui.mode = el('span', 'gt-mode', 'NORMAL');
     ui.stat1 = el('span', 'gt-status-seg', '');
     ui.stat2 = el('span', 'gt-status-seg', '');
+    // 로그가 켜졌는지 꺼졌는지 화면 어디에도 없어서 알 수가 없었다.
+    ui.stat3 = el('span', 'gt-status-seg gt-log-state', '');
     ui.hint = el('span', 'gt-status-hint', '⌘K 팔레트   :help   esc·^C 중단');
     st.appendChild(ui.mode); st.appendChild(ui.stat1); st.appendChild(ui.stat2);
+    st.appendChild(ui.stat3);
     st.appendChild(el('span', 'gt-spacer')); st.appendChild(ui.hint);
     root.appendChild(st);
 
@@ -459,6 +462,10 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
 
     ui.stat1.textContent = `msg ${s.messages.length}`;
     ui.stat2.textContent = `~${(GT.store.approxChars() / 1000).toFixed(1)}k chars`;
+    const logOn = GT.config.get('log') !== false;
+    const buffered = typeof GT.logCount === 'function' ? GT.logCount() : 0;
+    ui.stat3.textContent = `log ${logOn ? 'on' : 'off'}${buffered ? ' (' + buffered + ')' : ''}`;
+    ui.stat3.dataset.on = logOn ? '1' : '0';
     ui.dot.dataset.state = s.streamingId ? 'stream' : 'ok';
     refreshChrome();
     setMode(s.streamingId ? 'STREAM' : mode === 'STREAM' ? 'NORMAL' : mode);

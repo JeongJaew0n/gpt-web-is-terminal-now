@@ -1,7 +1,20 @@
 // gpt-term — isolated world 전역 네임스페이스와 MAIN world 브리지.
+// 진단 줄을 메모리에만 쌓아 둔다. 저장하지 않는다 —
+// 개인정보처리방침의 '기기에 저장되는 것' 을 늘리지 않기 위해서다.
+// 지금 로그는 건수·상태만 담고 대화 본문을 담지 않는다.
 var GT = (function () {
   'use strict';
   const CH = '__gpt_term__';
+  const RING_MAX = 200;
+  const RING = [];
+
+  // 인자에 Error·객체가 올 수 있다. 버퍼에는 안전한 문자열만 넣는다.
+  const fmtArg = (x) => {
+    if (typeof x === 'string') return x;
+    if (x instanceof Error) return x.name + ': ' + x.message;
+    try { return JSON.stringify(x); } catch (_) { return String(x); }
+  };
+
   const handlers = new Map();
   // MAIN world 는 document_start 에 곧바로 ready 를 쏜다. 그때 isolated 쪽 핸들러가
   // 아직 안 붙어 있으면 postMessage 는 그냥 사라진다 — 핸드셰이크가 통째로 깨진다.
@@ -51,9 +64,27 @@ var GT = (function () {
     // config 를 지연해서 읽는다 — protocol 은 config 보다 먼저 로드되므로
     // 부팅 초반에는 GT.config 가 아직 없다. 그때는 찍는다. 부팅 진단을
     // 조용히 잃는 것이 더 나쁘다.
+    //
+    // console.debug 가 아니라 console.log 를 쓴다. debug 는 크롬 콘솔에서
+    // Verbose 레벨이라 기본 필터에 숨는다 — 켜 놓고도 안 보여서 켠 건지
+    // 끈 건지 알 수 없었다.
+    //
+    // 꺼져 있어도 링 버퍼에는 쌓는다. 나중에 :log dump 로 꺼내 본다.
+    // 콘솔 필터와 무관하게 '우리 로그만' 확인할 수 있는 유일한 길이다.
     log(...a) {
+      const line = a.map(fmtArg).join(' ');
+      RING.push({ at: Date.now(), line });
+      if (RING.length > RING_MAX) RING.shift();
       if (GT.config && typeof GT.config.get === 'function' && GT.config.get('log') === false) return;
-      console.debug('[gpt-term]', ...a);
-    }
+      console.log('[gpt-term]', ...a);
+    },
+
+    // 쌓아 둔 진단 줄. 최근 것이 뒤에 온다.
+    logs(n) {
+      const k = Math.max(1, Math.min(Number(n) || RING_MAX, RING_MAX));
+      return RING.slice(-k).map((r) => ({ at: r.at, line: r.line }));
+    },
+    logCount() { return RING.length; },
+    logClear() { const n = RING.length; RING.length = 0; return n; }
   };
 })();

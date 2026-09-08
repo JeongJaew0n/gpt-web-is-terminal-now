@@ -341,6 +341,17 @@ GT.commands = (function () {
     const a = (args[0] || '').toLowerCase();
     const cur = GT.config.get('log') !== false;
     if (!a) return info(GT_T(cur ? 'cmd.log.state.on' : 'cmd.log.state.off'));
+    // 콘솔 필터와 무관하게 '우리 로그만' 확인하는 길. 껐을 때도 쌓인다.
+    if (a === 'dump' || a === 'show') {
+      const rows = GT.logs(args[1]);
+      if (!rows.length) return info(GT_T('cmd.log.empty'));
+      GT.tty.system('info', null, table(rows.map((r) => [
+        new Date(r.at).toLocaleTimeString(undefined, { hour12: false }), r.line
+      ])));
+      return info(GT_T('cmd.log.dumped', rows.length, GT.logCount()));
+    }
+    if (a === 'clear') return info(GT_T('cmd.log.cleared', GT.logClear()));
+
     let next;
     if (a === 'on' || a === 'true' || a === '1') next = true;
     else if (a === 'off' || a === 'false' || a === '0') next = false;
@@ -348,7 +359,7 @@ GT.commands = (function () {
     else return err(GT_T('cmd.log.usage'));
     await GT.config.set('log', next);
     info(GT_T(next ? 'cmd.log.turnedOn' : 'cmd.log.turnedOff'));
-  }, null, (prev) => (prev.length ? [] : ['on', 'off', 'toggle']));
+  }, null, (prev) => (prev.length ? [] : ['on', 'off', 'toggle', 'dump', 'clear']));
 
   def(':options', '확장 설정 화면 열기', () => {
     GT.sendToSW({ kind: 'openOptions' });

@@ -7,7 +7,9 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
 function loadProtocol(cfg) {
   const debug = []; const error = [];
   const sb = {
-    console: { debug: (...a) => debug.push(a.join(' ')), error: (...a) => error.push(a.join(' ')), warn() {}, log() {} },
+    // console.log 으로 찍는다. debug 는 크롬 콘솔에서 Verbose 라 기본 필터에 숨는다.
+    console: { log: (...a) => debug.push(a.join(' ')), error: (...a) => error.push(a.join(' ')),
+      warn() {}, debug: (...a) => debug.push('DEBUG:' + a.join(' ')) },
     Object, Array, JSON, String, Number, Boolean, Promise, Error, Date, Map, Set,
     location: { origin: 'https://chatgpt.com' }, setTimeout
   };
@@ -59,6 +61,63 @@ function loadProtocol(cfg) {
   t('꺼진 사이의 줄만 빠진다', p.debug.every((x) => !/ b$/.test(x)));
 }
 
+// --- console.debug 가 아니라 console.log 로 찍는다 ---
+{
+  const p = loadProtocol({ get: () => true });
+  p.GT.log('한 줄');
+  t('Verbose 가 아니라 기본 레벨로 찍는다', p.debug.length === 1 && !/^DEBUG:/.test(p.debug[0]));
+  const src = fs.readFileSync('src/content/protocol.js', 'utf8');
+  // 주석에도 'console.debug' 라는 낱말이 있다. 코드만 본다.
+  t('소스에 console.debug 호출이 없다',
+    !/console\.debug/.test(src.replace(/\/\/[^\n]*/g, '')));
+  t('왜 바꿨는지 적어뒀다', /Verbose 레벨이라 기본 필터에 숨는다/.test(src));
+}
+
+// --- 꺼져 있어도 버퍼에는 쌓인다 ---
+{
+  const p = loadProtocol({ get: (k) => (k === 'log' ? false : undefined) });
+  p.GT.log('첫 줄'); p.GT.log('둘째 줄');
+  t('콘솔에는 안 찍는다', p.debug.length === 0);
+  t('버퍼에는 쌓는다', p.GT.logCount() === 2);
+  const got = p.GT.logs();
+  t('내용이 남는다', got[0].line === '첫 줄' && got[1].line === '둘째 줄');
+  t('시각도 남는다', typeof got[0].at === 'number' && got[0].at > 0);
+  t('최근 것이 뒤에 온다', got[got.length - 1].line === '둘째 줄');
+}
+
+// --- 버퍼 꺼내기·비우기 ---
+{
+  const p = loadProtocol({ get: () => true });
+  for (let i = 1; i <= 10; i += 1) p.GT.log('줄 ' + i);
+  t('개수를 센다', p.GT.logCount() === 10);
+  t('마지막 n 개만 꺼낸다', p.GT.logs(3).map((x) => x.line).join(',') === '줄 8,줄 9,줄 10');
+  t('인자 없으면 전부', p.GT.logs().length === 10);
+  t('범위를 넘겨도 있는 만큼', p.GT.logs(999).length === 10);
+  t('0 이나 음수는 최소 1개', p.GT.logs(0).length >= 1 && p.GT.logs(-5).length >= 1);
+  t('비우면 0', p.GT.logClear() === 10 && p.GT.logCount() === 0);
+}
+
+// --- 버퍼가 무한히 자라지 않는다 ---
+{
+  const p = loadProtocol({ get: () => false });
+  for (let i = 0; i < 500; i += 1) p.GT.log('x' + i);
+  t('상한을 지킨다', p.GT.logCount() === 200);
+  const got = p.GT.logs();
+  t('오래된 것부터 버린다', got[got.length - 1].line === 'x499');
+  t('앞쪽은 밀려났다', got[0].line === 'x300');
+}
+
+// --- 문자열이 아닌 인자도 안전하게 담는다 ---
+{
+  const p = loadProtocol({ get: () => false });
+  p.GT.log('오류:', new Error('터졌다'));
+  p.GT.log('객체:', { a: 1 });
+  const got = p.GT.logs();
+  t('Error 는 이름과 메시지로', /Error: 터졌다/.test(got[0].line));
+  t('객체는 JSON 으로', /\{"a":1\}/.test(got[1].line));
+  t('버퍼에는 문자열만 들어간다', got.every((x) => typeof x.line === 'string'));
+}
+
 // ---- :log 명령 ----
 function loadCommands(initial) {
   const store = { log: initial };
@@ -70,7 +129,12 @@ function loadCommands(initial) {
   vm.createContext(sb);
   vm.runInContext(fs.readFileSync('src/shared/i18n.js', 'utf8'), sb, { filename: 'i18n.js' });
   vm.runInContext(fs.readFileSync('src/shared/defaults.js', 'utf8'), sb, { filename: 'defaults.js' });
+  const ring = [{ at: 1_700_000_000_000, line: '첫 진단' }, { at: 1_700_000_001_000, line: '둘째 진단' }];
+  const nodes = [];
   sb.GT = {
+    logs: (n) => (n ? ring.slice(-Number(n)) : ring.slice()),
+    logCount: () => ring.length,
+    logClear: () => { const k = ring.length; ring.length = 0; return k; },
     theme: { names: () => ['modern-dark'] },
     config: {
       keys: () => Object.keys(sb.GT_DEFAULTS), DEFAULTS: sb.GT_DEFAULTS,
@@ -79,13 +143,14 @@ function loadCommands(initial) {
     },
     chats: { projects: () => [] },
     store: { state: { messages: [], superseded: 0, orphanDeltas: 0, conversationTitle: '' } },
-    tty: { system: (lvl, x) => said.push(lvl + ':' + x), applyConfig() {}, render() {}, ui: { input: {} } },
+    tty: { system: (lvl, x, node) => { said.push(lvl + ':' + x); if (node) nodes.push(node); },
+      applyConfig() {}, render() {}, ui: { input: {} } },
     sidebar: { chats: () => [], isOpen: () => false }, convops: {},
     conversation: { idFromPath: () => null }, picker: {}, navigate: {},
     health: { CHECKS: {}, reasons: [] }, palette: {}, oai: {}, compose: {}
   };
   vm.runInContext(fs.readFileSync('src/content/commands.js', 'utf8'), sb, { filename: 'commands.js' });
-  return { C: sb.GT.commands, store, said, T: sb.GT_T };
+  return { C: sb.GT.commands, store, said, nodes, T: sb.GT_T, ring };
 }
 
 {
@@ -123,6 +188,43 @@ function loadCommands(initial) {
     const c = a.C.complete(':log ').candidates;
     return ['on', 'off', 'toggle'].every((v) => c.includes(v));
   })());
+}
+
+// --- :log dump · clear ---
+{
+  const a = loadCommands(false);            // 꺼진 상태에서도 꺼내 볼 수 있어야 한다
+  await a.C.run(':log dump');
+  t('꺼져 있어도 꺼내 볼 수 있다', a.said.some((x) => /진단 줄 2개/.test(x)));
+  t('표로 그린다', a.nodes.length === 1);
+  t('버퍼 개수도 알려준다', a.said.some((x) => /버퍼에 2개/.test(x)));
+
+  await a.C.run(':log dump 1');
+  t('개수를 지정할 수 있다', a.said.some((x) => /진단 줄 1개/.test(x)));
+
+  t('상태를 바꾸지 않는다', a.store.log === false);
+
+  await a.C.run(':log clear');
+  t('비운다', a.said.some((x) => /2개를 비웠습니다/.test(x)) && a.ring.length === 0);
+
+  await a.C.run(':log dump');
+  t('비운 뒤에는 없다고 한다', a.said.some((x) => /쌓인 진단 줄이 없습니다/.test(x)));
+
+  t('자동완성이 dump·clear 도 준다', (() => {
+    const c = a.C.complete(':log ').candidates;
+    return ['on', 'off', 'toggle', 'dump', 'clear'].every((v) => c.includes(v));
+  })());
+}
+
+// --- 상태줄에 켜짐/꺼짐을 보여준다 ---
+{
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  const css = fs.readFileSync('src/content/theme.js', 'utf8');
+  t('상태줄에 칸이 있다', /ui\.stat3 = el\('span', 'gt-status-seg gt-log-state'/.test(tty));
+  t('chars 뒤에 온다', tty.indexOf('k chars') < tty.indexOf("log ${logOn ? 'on' : 'off'}"));
+  t('켜짐·꺼짐을 글자로 쓴다', /log \$\{logOn \? 'on' : 'off'\}/.test(tty));
+  t('쌓인 개수도 보여준다', /buffered \? ' \(' \+ buffered \+ '\)' : ''/.test(tty));
+  t('상태를 dataset 으로 표시', /ui\.stat3\.dataset\.on = logOn \? '1' : '0'/.test(tty));
+  t('꺼졌을 때 색이 다르다', /\.gt-log-state\[data-on="0"\]/.test(css) && /\.gt-log-state\[data-on="1"\]/.test(css));
 }
 
 // --- 설정 항목으로도 있다 ---

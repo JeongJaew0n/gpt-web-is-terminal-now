@@ -220,6 +220,10 @@ GT.theme = (function () {
 .gt-key { color: var(--gt-fg-dim); }
 .gt-key-hint { color: var(--gt-fg-faint); }
 
+/* ---- 상태줄의 로그 표시 ---- */
+.gt-log-state[data-on="0"] { color: var(--gt-fg-faint); }
+.gt-log-state[data-on="1"] { color: var(--gt-green); }
+
 /* ---- 생각 중 ---- */
 .gt-turn-thinking { padding: 2px 0; }
 .gt-thinking-live {

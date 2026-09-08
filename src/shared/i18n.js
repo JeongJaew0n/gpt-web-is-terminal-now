@@ -43,7 +43,10 @@ var GT_I18N = {
     'cmd.log.state.off': '콘솔 진단 로그: 꺼짐 — :log on 으로 켭니다',
     'cmd.log.turnedOn': '콘솔 진단 로그를 켰습니다',
     'cmd.log.turnedOff': '콘솔 진단 로그를 껐습니다',
-    'cmd.log.usage': ':log <on|off|toggle>',
+    'cmd.log.usage': ':log <on|off|toggle|dump [n]|clear>',
+    'cmd.log.empty': '쌓인 진단 줄이 없습니다',
+    'cmd.log.dumped': '진단 줄 $1개 (버퍼에 $2개)',
+    'cmd.log.cleared': '진단 줄 $1개를 비웠습니다',
 
     'opt.sidebar.visible.label': '대화 목록 표시',
     'opt.sidebar.visible.help': 'Ctrl+B 로도 토글합니다.',
@@ -118,7 +121,10 @@ var GT_I18N = {
     'cmd.log.state.off': 'Console diagnostics: off — :log on to turn on',
     'cmd.log.turnedOn': 'Console diagnostics turned on',
     'cmd.log.turnedOff': 'Console diagnostics turned off',
-    'cmd.log.usage': ':log <on|off|toggle>',
+    'cmd.log.usage': ':log <on|off|toggle|dump [n]|clear>',
+    'cmd.log.empty': 'No diagnostic lines buffered',
+    'cmd.log.dumped': '$1 lines ($2 in buffer)',
+    'cmd.log.cleared': 'Cleared $1 lines',
 
     'opt.sidebar.visible.label': 'Show chat list',
     'opt.sidebar.visible.help': 'Ctrl+B toggles it too.',
