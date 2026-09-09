@@ -625,7 +625,7 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     mount(cfg) { pageStyle(); build(); applyConfig(cfg); return root; },
     applyConfig, syncSidebar, refreshChrome, renderChrome, popup, closePopup, setSuggest,
     render, setMode, system, copy, tickSpin, syncCursorFocus,
-    clearSystem() { systemLog.length = 0; render(); },
+    clearSystem() { const n = systemLog.length; systemLog.length = 0; render(); return n; },
 
     // 화면에만 끼워 넣는 블록. 지금 마지막 메시지를 앵커로 잡는다.
     local(text) {

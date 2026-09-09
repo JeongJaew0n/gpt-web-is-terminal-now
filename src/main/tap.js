@@ -49,6 +49,11 @@
       // 이게 없으면 건너뛴 메시지의 본문 델타가 그대로 새어나온다.
       this.current = null;     // { id, accepted }
       this.sawAdd = false;
+      // 스트림이 중간에 멈출 때 어디서 멈췄는지 알기 위한 기록.
+      // 마커 전환과 '버리기로 해서 흘린 본문' 을 센다 — 둘 다 본문이 끊기는 경로다.
+      this.markers = [];       // ['user_visible_token:5032df', 'cot_token:b5841c', …]
+      this.droppedOps = 0;
+      this.droppedChars = 0;
     }
 
     line(raw) {
@@ -69,6 +74,11 @@
       }
       if (Array.isArray(json)) { json.forEach((x) => this.op(x)); return; }
       if (json && typeof json === 'object') this.op(json);
+    }
+
+    drop(v) {
+      this.droppedOps += 1;
+      this.droppedChars += String(v || '').length;
     }
 
     op(o) {
@@ -141,7 +151,7 @@
       // 본문 델타 — 경로가 content/parts 를 가리키고 값이 문자열일 때만 받는다
       if (typeof o.v === 'string' && /content\/parts\/\d+$/.test(path)) {
         // 지금 다루는 메시지를 건너뛰기로 했다면 그 본문도 버린다.
-        if (this.current && !this.current.accepted) return;
+        if (this.current && !this.current.accepted) { this.drop(o.v); return; }
 
         // add 를 아예 못 본 스트림에서만 자리를 만든다.
         // (add 를 보고 건너뛴 경우까지 만들면 건너뛴 이유가 무의미해진다)
@@ -160,7 +170,7 @@
 
       // 경로 생략 + 문자열 = 직전 경로 이어쓰기
       if (typeof o.v === 'string' && o.p === undefined && /content\/parts\/\d+$/.test(this.lastPath)) {
-        if (this.current && !this.current.accepted) return;
+        if (this.current && !this.current.accepted) { this.drop(o.v); return; }
         if (!this.messageId) return;
         this.text += o.v;
         post('delta', { id: this.messageId, text: this.text });
@@ -200,6 +210,8 @@
           const mk = o.marker;
           const mid = o.message_id;
           if (!mid) break;
+
+          this.markers.push(`${mk}:${String(mid).slice(0, 6)}`);
 
           const VISIBLE = mk === 'user_visible_token' || mk === 'final_channel_token';
           const HIDDEN = mk === 'cot_token';
@@ -258,7 +270,11 @@
         orphan: this.orphan,
         promoted: !!this.promoted,
         markerAnchored: !!this.markerAnchored,
-        skipped: [...new Set(this.skipped)]
+        skipped: [...new Set(this.skipped)],
+        // 스트림이 짧게 끝났을 때 이 둘이 이유를 말해 준다.
+        markers: this.markers,
+        droppedOps: this.droppedOps,
+        droppedChars: this.droppedChars
       });
     }
   }

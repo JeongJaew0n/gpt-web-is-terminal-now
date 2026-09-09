@@ -27,9 +27,44 @@ GT.markdown = (function () {
   const PUA_MARK = /\uE200([a-z_]+)(?:\uE202([\s\S]*?))?\uE201/;
   const OAI_MARK = /:contentReference\[oaicite:(\d+)\]\{index=(\d+)\}/;
 
+  // 봉투 안을 나누는 구분자. url 봉투는 이걸 두 번 쓴다.
+  const SEP = '\uE202';
+
   // 인용으로 볼 ref 타입. 모르는 타입은 각주를 매기지 않고 지운다 —
   // 무엇인지 모르는 것을 출처인 양 번호 매기면 안 된다.
   const CITE_TYPES = /^(grouped_webpages|webpage|webpage_extended|sources_footnote)$/;
+
+  // url 봉투는 인용이 아니라 '본문에 박힌 링크' 다. 실측(2026-09-09):
+  //
+  //   \uE200url\uE202docker.com\uE202<주소>\uE201
+  //           ^종류    ^보여줄 글자    ^여는 http 부터 봉투 끝까지
+  //
+  // cite 봉투와 달리 \uE202 가 두 번 들어간다. 번호를 매기지 않는다 —
+  // 원본도 [docker.com](주소) 로 문장 안에 그냥 깐다.
+  // docs/issue/2026-09-09-url-marker-dropped.md
+  const alt = /^\[([\s\S]*?)\]\((https?:\/\/[^\s)]+)\)\s*$/;
+
+  function urlLink(ref, payload) {
+    let label = '';
+    let href = '';
+    // 봉투가 직접 준 값이 먼저다. 스트리밍 중에는 refs 가 아직 없다.
+    const cut = typeof payload === 'string' ? payload.indexOf(SEP) : -1;
+    if (cut >= 0) {
+      label = payload.slice(0, cut);
+      href = payload.slice(cut + SEP.length);
+    } else if (ref && typeof ref.alt === 'string') {
+      // fiber 경로(:contentReference)에는 봉투가 없다. alt 에 완성된 링크가 들어 있다.
+      const m = alt.exec(ref.alt);
+      if (m) { label = m[1]; href = m[2]; }
+    }
+    if (!/^https?:\/\//i.test(href)) return null;
+    const a = el('a', 'gt-link', label || hostOf(href) || href);
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noreferrer noopener';
+    a.title = href;
+    return a;
+  }
 
   // 주소에서 사람이 알아볼 만한 부분만 뽑는다. www 는 정보가 아니다.
   // 주소가 이상하면 new URL 이 던진다 — 그때는 도메인 없이 번호만 남긴다.
@@ -54,9 +89,18 @@ GT.markdown = (function () {
     mode: (opts && opts.mode) || citeMode()
   });
 
-  // 마커 하나를 인용으로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
-  function mark(ctx, idx, kind) {
+  // 마커 하나를 인용이나 링크로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
+  function mark(ctx, idx, kind, payload) {
     const ref = ctx.refs[idx] || null;
+    const type = ref ? ref.type : kind;
+
+    if (type === 'url') {
+      const a = urlLink(ref, payload);
+      // 주소를 못 읽으면 지운다. 글자만 남기면 눌리지 않는 가짜 링크가 된다.
+      if (a) return a;
+      return document.createDocumentFragment();
+    }
+
     const isCite = ref ? CITE_TYPES.test(ref.type) : kind === 'cite';
     if (!isCite) return document.createDocumentFragment();
 
@@ -95,8 +139,9 @@ GT.markdown = (function () {
 
   const INLINE = [
     // 마커를 먼저 잡는다. 뒤의 규칙이 봉투 안의 JSON 을 물어뜯으면 안 된다.
-    { re: PUA_MARK, make: (m, ctx) => mark(ctx, ctx.seen++, m[1]) },
-    { re: OAI_MARK, make: (m, ctx) => { ctx.seen = Math.max(ctx.seen, +m[2] + 1); return mark(ctx, +m[2], 'cite'); } },
+    { re: PUA_MARK, make: (m, ctx) => mark(ctx, ctx.seen++, m[1], m[2]) },
+    // fiber 표기에는 봉투 속 값이 없다. 종류도 refs 를 봐야 안다.
+    { re: OAI_MARK, make: (m, ctx) => { ctx.seen = Math.max(ctx.seen, +m[2] + 1); return mark(ctx, +m[2], 'cite', null); } },
     { re: /`([^`\n]+)`/, make: (m) => el('span', 'gt-code-inline', m[1]) },
     { re: /\*\*([^*\n]+)\*\*/, make: (m) => el('strong', 'gt-strong', m[1]) },
     { re: /(?<![*\w])\*([^*\n]+)\*(?!\w)/, make: (m) => el('em', 'gt-em', m[1]) },

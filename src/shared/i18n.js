@@ -46,7 +46,7 @@ var GT_I18N = {
     'cmd.log.usage': ':log <on|off|toggle|dump [n]|clear>',
     'cmd.log.empty': '쌓인 진단 줄이 없습니다',
     'cmd.log.dumped': '진단 줄 $1개 (버퍼에 $2개)',
-    'cmd.log.cleared': '진단 줄 $1개를 비웠습니다',
+    'cmd.log.cleared': '진단 줄 $1개를 비웠습니다 (화면에서 $2줄을 걷어냈습니다)',
 
     'opt.sidebar.visible.label': '대화 목록 표시',
     'opt.sidebar.visible.help': 'Ctrl+B 로도 토글합니다.',
@@ -130,7 +130,7 @@ var GT_I18N = {
     'cmd.log.usage': ':log <on|off|toggle|dump [n]|clear>',
     'cmd.log.empty': 'No diagnostic lines buffered',
     'cmd.log.dumped': '$1 lines ($2 in buffer)',
-    'cmd.log.cleared': 'Cleared $1 lines',
+    'cmd.log.cleared': 'Cleared $1 buffered lines ($2 removed from the screen)',
 
     'opt.sidebar.visible.label': 'Show chat list',
     'opt.sidebar.visible.help': 'Ctrl+B toggles it too.',

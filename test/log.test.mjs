@@ -144,13 +144,16 @@ function loadCommands(initial) {
     chats: { projects: () => [] },
     store: { state: { messages: [], superseded: 0, orphanDeltas: 0, conversationTitle: '' } },
     tty: { system: (lvl, x, node) => { said.push(lvl + ':' + x); if (node) nodes.push(node); },
+      // 화면에 쌓인 진단 줄. :log clear 가 이것도 걷어내야 한다.
+      screen: 3,
+      clearSystem() { const n = this.screen; this.screen = 0; return n; },
       applyConfig() {}, render() {}, ui: { input: {} } },
     sidebar: { chats: () => [], isOpen: () => false }, convops: {},
     conversation: { idFromPath: () => null }, picker: {}, navigate: {},
     health: { CHECKS: {}, reasons: [] }, palette: {}, oai: {}, compose: {}
   };
   vm.runInContext(fs.readFileSync('src/content/commands.js', 'utf8'), sb, { filename: 'commands.js' });
-  return { C: sb.GT.commands, store, said, nodes, T: sb.GT_T, ring };
+  return { C: sb.GT.commands, store, said, nodes, T: sb.GT_T, ring, GT: sb.GT };
 }
 
 {
@@ -204,10 +207,17 @@ function loadCommands(initial) {
   t('상태를 바꾸지 않는다', a.store.log === false);
 
   await a.C.run(':log clear');
-  t('비운다', a.said.some((x) => /2개를 비웠습니다/.test(x)) && a.ring.length === 0);
+  t('버퍼를 비운다', a.said.some((x) => /2개를 비웠습니다/.test(x)) && a.ring.length === 0);
+  // 버퍼만 비우면 화면에 [info]·[warn] 이 그대로 남아 지워진 느낌이 없다
+  t('화면의 진단 줄도 걷어낸다', a.GT.tty.screen === 0);
+  t('걷어낸 줄 수를 알려준다', a.said.some((x) => /화면에서 3줄/.test(x)));
 
   await a.C.run(':log dump');
   t('비운 뒤에는 없다고 한다', a.said.some((x) => /쌓인 진단 줄이 없습니다/.test(x)));
+
+  const tty = fs.readFileSync('src/content/tty.js', 'utf8');
+  t('tty 가 화면 진단 줄을 비우는 길을 준다', /clearSystem\(\) \{ const n = systemLog\.length/.test(tty));
+  t('명령이 그걸 부른다', /GT\.tty\.clearSystem\(\)/.test(fs.readFileSync('src/content/commands.js', 'utf8')));
 
   t('자동완성이 dump·clear 도 준다', (() => {
     const c = a.C.complete(':log ').candidates;

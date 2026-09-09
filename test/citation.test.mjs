@@ -157,6 +157,79 @@ mode('number');
 }
 mode('number');
 
+// --- url 봉투는 본문 링크다 (인용 번호가 아니다) ---
+// docs/issue/2026-09-09-url-marker-dropped.md
+const URLREF = (over) => Object.assign({
+  type: 'url', matched_text: 'urldocker.comhttps://www.docker.com/',
+  alt: '[docker.com](https://www.docker.com/?utm_source=chatgpt.com)'
+}, over || {});
+const links2 = (frag) => frag.all((n) => n.tag === 'a' && /gt-link/.test(n.className || ''));
+{
+  mode('domain');
+  // 실측 모양: \uE200url\uE202<보여줄 글자>\uE202<주소>\uE201 — \uE202 가 두 번이다
+  const env = E200 + 'url' + E202 + 'docker.com' + E202 + 'https://www.docker.com/' + E201;
+  const frag = M.render('Docker 공식 사이트: ' + env, { refs: [URLREF()] });
+  const a = links2(frag)[0] || {};
+  t('url 봉투를 링크로 그린다', links2(frag).length === 1);
+  t('보여줄 글자가 링크 글자', a.textContent === 'docker.com');
+  t('봉투가 준 주소를 쓴다', a.href === 'https://www.docker.com/');
+  t('새 탭·noreferrer', a.target === '_blank' && /noreferrer/.test(a.rel || ''));
+  t('인용 번호를 매기지 않는다', cites(frag).length === 0);
+  t('본문에 봉투가 남지 않는다', !text(frag).includes(E200) && !text(frag).includes(E202));
+  t('앞 글자는 그대로', text(frag) === 'Docker 공식 사이트: docker.com');
+}
+{
+  mode('domain');
+  // refs 가 없는 순간(스트리밍 중)에도 봉투만으로 링크가 된다
+  const env = E200 + 'url' + E202 + 'kubernetes.io' + E202 + 'https://kubernetes.io/' + E201;
+  const frag = M.render('앞 ' + env, {});
+  const a = links2(frag)[0] || {};
+  t('refs 없이도 링크가 된다', a.href === 'https://kubernetes.io/');
+  t('글자도 봉투에서 온다', a.textContent === 'kubernetes.io');
+}
+{
+  mode('domain');
+  // fiber 표기에는 봉투가 없다. refs[n].alt 를 읽어야 한다
+  const frag = M.render('앞 ' + oai(0), { refs: [URLREF()] });
+  const a = links2(frag)[0] || {};
+  t('fiber 표기도 링크가 된다', links2(frag).length === 1);
+  t('alt 의 글자를 쓴다', a.textContent === 'docker.com');
+  t('alt 의 주소를 쓴다', a.href === 'https://www.docker.com/?utm_source=chatgpt.com');
+  t('여기서도 번호를 안 매긴다', cites(frag).length === 0);
+}
+{
+  mode('domain');
+  // 여러 개가 이어져도, cite 와 섞여도
+  const mk = (l, u) => E200 + 'url' + E202 + l + E202 + u + E201;
+  const refs = [URLREF(), URLREF({ alt: '[hub.docker.com](https://hub.docker.com/)' }), REF()];
+  const src = 'a ' + mk('docker.com', 'https://www.docker.com/')
+    + ' b ' + mk('hub.docker.com', 'https://hub.docker.com/')
+    + ' c ' + pua('cite', 'turn0search1');
+  const frag = M.render(src, { refs });
+  t('url 링크 둘', links2(frag).length === 2);
+  t('cite 는 여전히 번호', cites(frag).length === 1);
+  t('url 이 인용 번호를 밀지 않는다', (links(frag)[0] || {}).textContent === '[1 example.com]');
+}
+{
+  mode('domain');
+  // 주소를 못 읽으면 눌리지 않는 가짜 링크를 만들지 않는다
+  const bad = E200 + 'url' + E202 + 'docker.com' + E202 + 'javascript:alert(1)' + E201;
+  const frag = M.render('앞 ' + bad + ' 뒤', { refs: [URLREF({ alt: '' })] });
+  t('http(s) 아니면 링크로 만들지 않는다', links2(frag).length === 0);
+  t('글자만 남기지도 않는다', text(frag) === '앞  뒤');
+
+  const noPayload = E200 + 'url' + E201;   // 구분자가 아예 없는 봉투
+  const f2 = M.render('앞' + noPayload, { refs: [URLREF({ alt: '깨진 값' })] });
+  t('alt 가 링크 모양이 아니면 지운다', links2(f2).length === 0 && text(f2) === '앞');
+}
+{
+  mode('off');
+  const env = E200 + 'url' + E202 + 'docker.com' + E202 + 'https://www.docker.com/' + E201;
+  const frag = M.render('앞 ' + env, { refs: [URLREF()] });
+  t('citations off 여도 본문 링크는 남는다', links2(frag).length === 1);
+}
+mode('number');
+
 // --- 인용이 아닌 봉투는 지운다 ---
 {
   const frag = M.render('앞' + pua('genui', '{"suggest_automation":{"label":"x"}}') + '뒤');

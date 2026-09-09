@@ -350,7 +350,13 @@ GT.commands = (function () {
       ])));
       return info(GT_T('cmd.log.dumped', rows.length, GT.logCount()));
     }
-    if (a === 'clear') return info(GT_T('cmd.log.cleared', GT.logClear()));
+    // 버퍼만 비우면 화면에 남은 [info]·[warn] 줄이 그대로라 '지워졌다' 는 느낌이 없다.
+    // 스크롤백의 진단 줄까지 같이 걷어낸다. 대화는 건드리지 않는다.
+    if (a === 'clear') {
+      const buffered = GT.logClear();
+      const onScreen = GT.tty.clearSystem();
+      return info(GT_T('cmd.log.cleared', buffered, onScreen));
+    }
 
     let next;
     if (a === 'on' || a === 'true' || a === '1') next = true;

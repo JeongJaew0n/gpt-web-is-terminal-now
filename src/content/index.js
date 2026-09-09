@@ -171,6 +171,12 @@
     if (p.totalOps && p.unknownOps / p.totalOps > 0.2) {
       GT.health.soft(`알 수 없는 델타 op ${p.unknownOps}/${p.totalOps} — 스키마가 바뀌었을 수 있습니다`);
     }
+    // 스트림이 중간에 끊겼을 때 어디서 끊겼는지 남긴다. 경고는 아니다 —
+    // 드리프트 경고가 뜬 뒤 원인을 되짚을 수 있어야 한다.
+    if (p.droppedOps) {
+      GT.log(`본문 델타 ${p.droppedOps}개(${p.droppedChars}자)를 버렸다 — 대상 메시지를 건너뛰기로 한 상태였다`);
+    }
+    if (p.markers && p.markers.length) GT.log('마커 전환:', p.markers.join(' → '));
     // 스트림 결과를 fiber 원문과 대조한다
     setTimeout(() => GT.toMain('verify', { id: p.id }), 400);
     if (GT.config.get('bell') === 'visual') flash();
