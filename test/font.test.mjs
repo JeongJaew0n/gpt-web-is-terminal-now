@@ -58,6 +58,32 @@ t('범위가 스키마와 명령에서 같다', /min: 10, max: 24/.test(defs) &&
   t('본문 커서는 그대로', /if \(m\.streaming\) body\.appendChild\(cursorEl\(\)\)/.test(tty));
 }
 
+// --- 스크롤바 ---
+// 규칙이 없는 요소는 macOS 오버레이(둥근 알약)를 쓴다. 입력줄이 그래서 튀었다.
+{
+  const css = fs.readFileSync('src/content/theme.js', 'utf8');
+  const SCROLLERS = ['gt-scroll', 'gt-sb-list', 'gt-input', 'gt-palette-list', 'gt-code-body'];
+  SCROLLERS.forEach((c) => {
+    // \b 로 끝내면 ::-webkit-scrollbar-track 까지 매치해 폭 규칙이 없어도 통과한다.
+    // 셀렉터가 여기서 끝나는지(, 또는 {) 까지 봐야 한다.
+    t(`.${c} 에 스크롤바 규칙이 있다`, new RegExp('\\.' + c + '::-webkit-scrollbar\\s*[,{]').test(css));
+    t(`.${c} 의 thumb 색을 정한다`, new RegExp('\\.' + c + '::-webkit-scrollbar-thumb\\s*[,{]').test(css));
+    t(`.${c} 의 track 도 정한다`, new RegExp('\\.' + c + '::-webkit-scrollbar-track\\s*[,{]').test(css));
+  });
+  t('폭을 하나로 맞춘다', (css.match(/::-webkit-scrollbar \{ width: 6px; height: 6px; \}/g) || []).length === 1);
+  t('thumb 은 각지다', /scrollbar-thumb \{ background: var\(--gt-bg-3\); border-radius: 0/.test(css));
+  t('track 은 투명하다', /scrollbar-track \{ background: transparent/.test(css));
+  t('가로·세로가 만나는 모서리도 지운다', /scrollbar-corner \{ background: transparent/.test(css));
+
+  // 표준 속성을 같이 적으면 Chrome 121+ 가 위 규칙을 통째로 무시한다
+  t('scrollbar-width 를 쓰지 않는다', !/scrollbar-width\s*:/.test(css));
+  t('scrollbar-color 도 쓰지 않는다', !/scrollbar-color\s*:/.test(css));
+  t('왜 안 쓰는지 적어뒀다', /Chrome 121\+ 는 그쪽을 먼저 보고/.test(css));
+
+  // 예전처럼 요소별로 폭이 갈리면 통일이 깨진다
+  t('8px·10px 짜리가 남아 있지 않다', !/::-webkit-scrollbar \{ width: (8|10)px/.test(css));
+}
+
 let bad = 0;
 results.forEach(([n, ok]) => { if (!ok) bad++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${n}`); });
 console.log(bad ? `\n${bad}건 실패` : '\n전부 통과');

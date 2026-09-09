@@ -100,8 +100,6 @@ GT.theme = (function () {
 .gt-sb-filter input { flex: 1; background: transparent; border: 0; outline: 0;
   color: var(--gt-fg); font: inherit; }
 .gt-sb-list { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 6px 0; }
-.gt-sb-list::-webkit-scrollbar { width: 8px; }
-.gt-sb-list::-webkit-scrollbar-thumb { background: var(--gt-bg-3); }
 .gt-sb-head { display: flex; align-items: center; gap: 6px; padding: 8px 12px 3px;
   color: var(--gt-cyan); font-size: 11px; cursor: default; }
 .gt-sb-head:hover { color: var(--gt-fg); }
@@ -167,8 +165,6 @@ GT.theme = (function () {
 
 /* ---- scrollback ---- */
 .gt-scroll { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; padding: 22px 28px 8px; }
-.gt-scroll::-webkit-scrollbar { width: 10px; }
-.gt-scroll::-webkit-scrollbar-thumb { background: var(--gt-bg-3); }
 .gt-turn { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
 .gt-meta { display: flex; gap: 10px; font-size: 11.5px; color: var(--gt-fg-faint); align-items: center; }
 .gt-user-line { display: flex; gap: 10px; }
@@ -292,6 +288,45 @@ GT.theme = (function () {
 .gt-suggest-item { color: var(--gt-fg-dim); }
 .gt-suggest-item[data-first="1"] { color: var(--gt-cyan); }
 .gt-suggest-more, .gt-suggest-hint { color: var(--gt-fg-faint); }
+
+/* ---- 스크롤바 ---- */
+/*
+ * 기본 스크롤바는 둥글고 반투명한 알약이라 터미널 위에서 혼자 겉돈다.
+ * 특히 입력줄에서 눈에 걸렸다. 스크롤이 있는 모든 곳을 각진 막대로 통일한다.
+ *
+ * track 은 투명하게 둔다. 홈이 파여 보이면 창이 세로로 갈린 것처럼 보인다.
+ * 색은 테두리와 같은 --gt-bg-3 — 있다는 건 알겠고 읽는 데 방해가 안 되는 세기다.
+ *
+ * ::-webkit-scrollbar 만 쓴다. 표준 속성(scrollbar-width/color)을 같이 적으면
+ * Chrome 121+ 는 그쪽을 먼저 보고 아래 규칙을 통째로 무시한다 — 모양을 우리가
+ * 정하지 못하게 된다. 스크롤백에서 이미 동작을 확인한 방식이 이것이다.
+ *
+ * 규칙을 지정하는 것 자체가 macOS 의 오버레이(떠 있다 사라지는 알약) 대신
+ * 자리를 차지하는 스크롤바를 쓰게 만든다. 입력줄이 튀어 보였던 이유가 이것이다 —
+ * 스크롤백에는 규칙이 있었고 입력줄에는 없었다.
+ */
+.gt-scroll::-webkit-scrollbar,
+.gt-sb-list::-webkit-scrollbar,
+.gt-input::-webkit-scrollbar,
+.gt-palette-list::-webkit-scrollbar,
+.gt-code-body::-webkit-scrollbar { width: 6px; height: 6px; }
+.gt-scroll::-webkit-scrollbar-track,
+.gt-sb-list::-webkit-scrollbar-track,
+.gt-input::-webkit-scrollbar-track,
+.gt-palette-list::-webkit-scrollbar-track,
+.gt-code-body::-webkit-scrollbar-track { background: transparent; }
+.gt-scroll::-webkit-scrollbar-thumb,
+.gt-sb-list::-webkit-scrollbar-thumb,
+.gt-input::-webkit-scrollbar-thumb,
+.gt-palette-list::-webkit-scrollbar-thumb,
+.gt-code-body::-webkit-scrollbar-thumb { background: var(--gt-bg-3); border-radius: 0; }
+.gt-scroll::-webkit-scrollbar-thumb:hover,
+.gt-sb-list::-webkit-scrollbar-thumb:hover,
+.gt-input::-webkit-scrollbar-thumb:hover,
+.gt-palette-list::-webkit-scrollbar-thumb:hover,
+.gt-code-body::-webkit-scrollbar-thumb:hover { background: var(--gt-fg-faint); }
+/* 두 스크롤바가 만나는 모서리에 기본 회색 사각형이 남는다. 지운다. */
+.gt-code-body::-webkit-scrollbar-corner { background: transparent; }
 
 /* ---- composer ---- */
 .gt-composer { border-top: 1px solid var(--gt-bg-3); padding: 10px 28px 12px; flex: 0 0 auto; }
