@@ -244,6 +244,11 @@ GT.theme = (function () {
   color: var(--gt-cyan); font-size: 0.78em; vertical-align: super; line-height: 0;
   padding: 0 1px; user-select: none;
 }
+/* 도메인까지 보일 때는 위첨자로 얹지 않는다 — 작아서 못 읽는다. 본문 줄에 눕힌다. */
+.gt-cite[data-wide] {
+  font-size: 0.88em; vertical-align: baseline; line-height: inherit;
+  padding: 0 2px; white-space: nowrap;
+}
 .gt-cite-link { color: inherit; text-decoration: none; }
 .gt-cite-link:hover { text-decoration: underline; }
 .gt-cite-link:focus-visible { outline: 1px solid var(--gt-cyan); outline-offset: 1px; }

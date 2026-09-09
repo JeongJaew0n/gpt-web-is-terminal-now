@@ -24,15 +24,20 @@ function makeDom() {
 }
 
 function load() {
-  const sandbox = { console, Object, Array, String, Number, Boolean, JSON, Math, Promise, Error, RegExp, Date,
+  // URL 을 넣어야 도메인 추출이 실제로 돈다. 없으면 hostOf 의 catch 가 삼켜
+  // 늘 번호만 나오고, 그러면 이 파일이 아무것도 검증하지 못한다.
+  const sandbox = { console, Object, Array, String, Number, Boolean, JSON, Math, Promise, Error, RegExp, Date, URL,
     document: makeDom(), setTimeout };
   sandbox.window = sandbox; sandbox.globalThis = sandbox; sandbox.GT = {};
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync('src/content/markdown.js', 'utf8'), sandbox, { filename: 'markdown.js' });
-  return sandbox.GT.markdown;
+  return { M: sandbox.GT.markdown, GT: sandbox.GT };
 }
 
-const M = load();
+const loaded = load();
+const M = loaded.M;
+// 설정이 아예 없는 상태가 기본값 경로다. mode(v) 로 갈아 끼운다.
+const mode = (v) => { loaded.GT.config = v === null ? undefined : { get: (k) => (k === 'citations' ? v : undefined) }; };
 const results = []; const t = (n, ok) => results.push([n, ok]);
 const cls = (c) => (n) => new RegExp('(^| )' + c + '( |$)').test(n.className || '');
 const text = (frag) => frag.textContent;
@@ -42,6 +47,10 @@ const links = (frag) => frag.all((n) => n.tag === 'a' && /gt-cite-link/.test(n.c
 const REF = (over) => Object.assign({
   type: 'grouped_webpages', matched: '', title: '기사 제목', url: 'https://example.com/a', attribution: 'ZDNet'
 }, over || {});
+
+// 아래 블록들은 번호 매김·마커 처리를 본다. 표기는 number 로 고정해 둔다 —
+// 도메인이 붙고 안 붙고는 바로 아래 전용 블록에서 따로 본다.
+mode('number');
 
 // --- 두 표기 모두 각주가 된다 ---
 {
@@ -94,6 +103,59 @@ const REF = (over) => Object.assign({
   t('http(s) 아닌 주소는 링크로 만들지 않는다', links(frag).length === 0);
   t('번호는 남는다', cites(frag).length === 1);
 }
+
+// --- 도메인을 같이 보여준다 ---
+// 호버하기 전에는 어디로 가는지 알 수 없던 것을 고친 것이다.
+// docs/plan/2026-09-09-cite-label-and-history.md
+{
+  mode(null);   // 설정이 없는 상태 = 기본값
+  const frag = M.render('본문 ' + pua('cite', 'a'), { refs: [REF()] });
+  const one = links(frag)[0] || {};
+  t('기본값이 도메인이다', one.textContent === '[1 example.com]');
+  t('주소는 그대로 그 출처', one.href === 'https://example.com/a');
+  t('새 탭·noreferrer 도 그대로', one.target === '_blank' && /noreferrer/.test(one.rel || ''));
+  t('호버 문구는 여전히 이름 — 주소', /^ZDNet — https:/.test(one.title || ''));
+  t('위첨자를 푼다', (cites(frag)[0] || { dataset: {} }).dataset.wide === '1');
+}
+{
+  mode('domain');
+  const refs = [REF({ url: 'https://www.etnews.com/x' }), REF({ url: 'https://it.chosun.com/y' })];
+  const frag = M.render(pua('cite', 'a') + ' ' + pua('cite', 'b'), { refs });
+  const a = links(frag).map((n) => n.textContent);
+  t('www 는 뗀다', a[0] === '[1 etnews.com]');
+  t('서브도메인은 남긴다', a[1] === '[2 it.chosun.com]');
+}
+{
+  mode('domain');
+  // 주소가 깨졌거나 없으면 new URL 이 던진다 — 번호만 남고 위첨자로 돌아간다
+  const frag = M.render('본문 ' + pua('cite', 'a'), { refs: [REF({ url: 'http://' })] });
+  t('깨진 주소에 던지지 않는다', cites(frag).length === 1);
+  t('그때는 번호만', (cites(frag)[0] || {}).textContent === '[1]');
+  t('위첨자로 남는다', (cites(frag)[0] || { dataset: {} }).dataset.wide === undefined);
+
+  const streaming = M.render('본문 ' + pua('cite', 'a'));   // refs 가 아직 없다
+  t('스트리밍 중에는 번호만', (cites(streaming)[0] || {}).textContent === '[1]');
+}
+{
+  mode('off');
+  const frag = M.render('앞 ' + pua('cite', 'a') + ' 뒤 ' + pua('cite', 'b'), { refs: [REF(), REF()] });
+  t('off 면 아무것도 안 남는다', cites(frag).length === 0 && links(frag).length === 0);
+  t('마커는 지운다', !text(frag).includes(E200));
+  t('본문은 그대로', text(frag) === '앞  뒤 ');
+}
+{
+  mode('처음보는값');
+  const frag = M.render('본문 ' + pua('cite', 'a'), { refs: [REF()] });
+  t('모르는 값이면 기본값으로 돈다', (links(frag)[0] || {}).textContent === '[1 example.com]');
+}
+{
+  mode('domain');
+  // 한 응답 안에서 표기가 섞이면 안 된다 — 렌더 시작 때 한 번만 읽는다
+  const opts = { refs: [REF(), REF()], mode: 'number' };
+  const frag = M.render(pua('cite', 'a') + pua('cite', 'b'), opts);
+  t('opts.mode 가 설정을 이긴다', links(frag).map((n) => n.textContent).join('') === '[1][2]');
+}
+mode('number');
 
 // --- 인용이 아닌 봉투는 지운다 ---
 {
@@ -159,6 +221,22 @@ const REF = (over) => Object.assign({
   t('번호를 링크로 만든다', /el\('a', 'gt-cite-link'/.test(md));
   t('왜 목록을 안 두는지 적어뒀다', /논문 각주처럼 두 번 읽게 만들 이유가 없다/.test(md));
   t('링크 스타일이 있다', /\.gt-cite-link/.test(css));
+  t('도메인일 때 위첨자를 푸는 CSS 가 있다', /\.gt-cite\[data-wide\]/.test(css));
+  t('www 를 떼는 규칙이 있다', /replace\(\/\^www\\\.\/i, ''\)/.test(md));
+  t('citations 설정을 읽는다', /get\('citations'\)/.test(md));
+}
+
+// --- 설정 항목이 실제로 있다 ---
+{
+  const def = fs.readFileSync('src/shared/defaults.js', 'utf8');
+  const i18n = fs.readFileSync('src/shared/i18n.js', 'utf8');
+  t('스키마에 citations 가 있다', /key: 'citations', type: 'enum', def: 'domain'/.test(def));
+  t('세 값을 고를 수 있다', /choices: \['domain', 'number', 'off'\]/.test(def));
+  t('한국어 문구가 있다', /'opt\.citations\.choice\.domain': '번호 \+ 도메인/.test(i18n));
+  t('영어 문구도 있다', /'opt\.citations\.choice\.domain': 'Number \+ domain/.test(i18n));
+  const keys = ['label', 'help', 'choice.domain', 'choice.number', 'choice.off'];
+  const n = keys.filter((k) => (i18n.match(new RegExp("'opt\\.citations\\." + k.replace('.', '\\.') + "'", 'g')) || []).length === 2);
+  t('두 언어에 다섯 키가 다 있다', n.length === keys.length);
 }
 
 // --- 배선 ---

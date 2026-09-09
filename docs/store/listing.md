@@ -56,7 +56,7 @@ Ctrl+` 한 번이면 언제든 원본으로 돌아갑니다.
 · 모델과 추론 수준을 상단바에서 바로 바꿉니다
 · 모델이 생각하는 동안 "생각 중" 표시와 경과 시간
 · 코드블록과 응답 전체를 복사하는 버튼
-· 검색 인용은 번호가 곧 링크입니다 — 누르면 출처로 바로 갑니다
+· 검색 인용은 번호가 곧 링크입니다 — [1 zdnet.co.kr] 처럼 어디로 가는지 보입니다
 · 테마 · 글자 크기 · 줄 간격 · 본문 폭을 설정에서 바꿉니다
 
 ■ 어떻게 동작하나
@@ -100,7 +100,7 @@ from the extension's own state. Ctrl+` switches back at any time.
 · Switch model and reasoning effort from the top bar
 · A "thinking" indicator with elapsed time while the model reasons
 · Copy buttons for code blocks and for whole replies
-· Search citations where the number itself is the link
+· Search citations show the source domain — [1 zdnet.co.kr] — and link straight to it
 · Theme, font size, line height and wrap width in settings
 
 ■ How it works

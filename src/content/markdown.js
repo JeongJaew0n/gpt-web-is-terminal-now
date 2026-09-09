@@ -31,23 +31,48 @@ GT.markdown = (function () {
   // 무엇인지 모르는 것을 출처인 양 번호 매기면 안 된다.
   const CITE_TYPES = /^(grouped_webpages|webpage|webpage_extended|sources_footnote)$/;
 
+  // 주소에서 사람이 알아볼 만한 부분만 뽑는다. www 는 정보가 아니다.
+  // 주소가 이상하면 new URL 이 던진다 — 그때는 도메인 없이 번호만 남긴다.
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./i, ''); } catch (_) { return ''; }
+  }
+
+  // 인용을 어떻게 보일지. domain [1 zdnet.co.kr] · number [1] · off 안 보인다.
+  const citeMode = () => {
+    try {
+      const v = GT.config && GT.config.get && GT.config.get('citations');
+      return v === 'number' || v === 'off' || v === 'domain' ? v : 'domain';
+    } catch (_) { return 'domain'; }
+  };
+
   const newCtx = (opts) => ({
     refs: (opts && opts.refs) || [],
     seen: 0,        // 마커를 몇 개 지났나 (content_references 의 인덱스와 같다)
-    n: 0            // 인용 번호
+    n: 0,           // 인용 번호
+    // 렌더 한 번 동안 고정한다. 중간에 설정이 바뀌어도 한 응답 안에서
+    // 표기가 섞이면 안 된다. opts.mode 는 테스트가 직접 넣을 때 쓴다.
+    mode: (opts && opts.mode) || citeMode()
   });
 
-  // 마커 하나를 각주로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
+  // 마커 하나를 인용으로 바꾸거나 지운다. 지울 때는 빈 조각을 돌려준다.
   function mark(ctx, idx, kind) {
     const ref = ctx.refs[idx] || null;
     const isCite = ref ? CITE_TYPES.test(ref.type) : kind === 'cite';
     if (!isCite) return document.createDocumentFragment();
+
+    const mode = ctx.mode;
+    // 'off' 면 번호도 매기지 않는다. 매기면 [1] 다음이 [3] 이 되어 더 헷갈린다.
+    if (mode === 'off') return document.createDocumentFragment();
 
     ctx.n += 1;
     const n = ctx.n;
     const label = el('sup', 'gt-cite');
     const name = ref ? (ref.attribution || ref.title || '') : '';
     const url = ref && /^https?:\/\//i.test(String(ref.url || '')) ? ref.url : '';
+    const host = mode === 'domain' ? hostOf(url) : '';
+    const face = host ? `[${n} ${host}]` : `[${n}]`;
+    // 도메인이 붙으면 위첨자를 푼다. 열두 자를 0.78em 위첨자로 얹으면 읽을 수 없다.
+    if (host) label.dataset.wide = '1';
 
     // 번호 자체가 링크다. 아래에 출처 목록을 따로 두지 않는다 —
     // 논문 각주처럼 두 번 읽게 만들 이유가 없다. 이름은 호버로 보여준다.
@@ -55,14 +80,14 @@ GT.markdown = (function () {
     // 주소를 모르면 번호만 남긴다. 스트리밍 중에는 refs 가 아직 없어서
     // 늘 그 상태다 — 스트림이 끝나고 refs 가 붙으면 링크가 된다.
     if (url) {
-      const a = el('a', 'gt-cite-link', `[${n}]`);
+      const a = el('a', 'gt-cite-link', face);
       a.href = url;
       a.target = '_blank';
       a.rel = 'noreferrer noopener';
       a.title = name ? `${name} — ${url}` : url;
       label.appendChild(a);
     } else {
-      label.textContent = `[${n}]`;
+      label.textContent = face;
       if (name) label.title = name;
     }
     return label;
