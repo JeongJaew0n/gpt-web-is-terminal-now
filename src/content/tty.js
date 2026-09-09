@@ -279,19 +279,97 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     body.appendChild(GT.markdown.render(m.text || '', { refs: m.refs }));
     if (m.streaming) body.appendChild(cursorEl());
 
-    // tty 로 그릴 수 없는 파트는 자리표시자로 남긴다
-    const nonText = (m.parts || []).filter((t) => t && t !== 'text');
+    (m.images || []).forEach((im) => body.appendChild(imageBox(im)));
+
+    // tty 로 그릴 수 없는 파트는 자리표시자로 남긴다.
+    // 이미지는 위에서 그렸으므로 여기서 또 세지 않는다 — 같은 것을 두 번 알린다.
+    const drew = (m.images || []).length > 0;
+    const nonText = (m.parts || []).filter((t) => t && t !== 'text' && !(drew && t === 'image'));
     if (nonText.length) {
       const ph = el('div', 'gt-placeholder');
       ph.appendChild(el('span', null, '▤'));
       ph.appendChild(el('span', 'gt-spacer'));
-      ph.appendChild(el('span', null, `${nonText.join(', ')} — :q 로 원본에서 확인`));
+      ph.appendChild(el('span', null, `${nonText.join(', ')} — ^\` 로 원본에서 봅니다`));
       body.appendChild(ph);
     }
 
     shell.appendChild(body);
     wrap.appendChild(meta); wrap.appendChild(shell);
     return wrap;
+  }
+
+  // ------------------------------------------------------------------ 이미지
+  //
+  // 주소는 포인터를 한 번 더 물어봐야 나온다(서명 URL). 그래서 자리를 먼저 만들고
+  // 주소가 오면 그 자리를 채운다 — 렌더를 기다리게 하면 스크롤백 전체가 멈춘다.
+  //
+  // docs/plan/2026-09-09-image-generation.md
+  function imageBox(im) {
+    const box = el('div', 'gt-img');
+    const mode = GT.config.get('image');
+    const label = `${im.mime || 'image'} ${im.w}×${im.h}`;
+    const foot = (text) => {
+      const f = el('div', 'gt-img-foot');
+      f.appendChild(el('span', null, '▤'));
+      f.appendChild(el('span', 'gt-spacer'));
+      f.appendChild(el('span', null, text));
+      return f;
+    };
+
+    if (mode === 'off') {
+      box.appendChild(foot(GT_T('img.placeholder', label, GT.image.size(im.bytes) || '?')));
+      return box;
+    }
+
+    // 이미 주소를 받아 둔 그림이면 '불러옵니다' 를 거치지 않는다.
+    // 설정이 바뀌어 전체가 다시 그려질 때마다 깜빡이면 눈에 거슬린다.
+    box.appendChild(foot(GT.image.peek(im.pointer) ? label : GT_T('img.loading')));
+    fill(box, im, mode, label);
+    return box;
+  }
+
+  // 자리를 채운다. 실패하면 자리표시자로 떨어진다 — 빈 칸을 남기지 않는다.
+  function fill(box, im, mode, label) {
+    // 이 박스가 그 사이 화면에서 밀려났어도 그냥 채운다. 붙지 않은 노드를 채우는 것은
+    // 무해하고, isConnected 로 걸러내면 '아직 안 붙은 첫 렌더' 까지 함께 걸러진다.
+    const done = (node, text) => {
+      box.textContent = '';
+      if (node) box.appendChild(node);
+      const f = el('div', 'gt-img-foot');
+      f.appendChild(el('span', null, '▤'));
+      f.appendChild(el('span', 'gt-spacer'));
+      f.appendChild(el('span', null, text));
+      box.appendChild(f);
+    };
+
+    Promise.resolve(GT.image.resolve(im.pointer)).then((e) => {
+      if (!e || !e.url) return done(null, GT_T('img.failed'));
+      const cols = Number(GT.config.get('image.columns')) || 48;
+      const name = e.name || label;
+      const meta = `${name} · ${im.w}×${im.h}${e.bytes ? ' · ' + GT.image.size(e.bytes) : ''}`;
+
+      const img = new Image();
+      // 문자 블록은 canvas 로 픽셀을 읽어야 하고, 그러려면 CORS 를 켜고 받아야 한다.
+      if (mode === 'blocks') img.crossOrigin = 'anonymous';
+      img.alt = GT_T('img.alt');
+      img.onload = () => {
+        if (mode !== 'blocks') {
+          img.className = 'gt-img-pic';
+          img.style.width = `${cols}ch`;
+          return done(img, meta);
+        }
+        let node = null;
+        // getImageData 는 오리진이 어긋나면 던진다. 그때는 그림으로 떨어진다 —
+        // 못 그리는 것보다 원본을 보여주는 편이 낫다.
+        try { node = GT.image.blocks(img, cols); } catch (err) { GT.log('문자 블록 실패', err); }
+        if (node) return done(node, meta);
+        img.className = 'gt-img-pic';
+        img.style.width = `${cols}ch`;
+        done(img, meta);
+      };
+      img.onerror = () => done(null, GT_T('img.failed'));
+      img.src = e.url;
+    });
   }
 
   // 화면에만 있는 블록. 대화 기록이 아니라는 걸 메타줄에서 분명히 한다 —

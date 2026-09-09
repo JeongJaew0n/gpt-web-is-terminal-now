@@ -3,7 +3,7 @@ GT.store = (function () {
   'use strict';
 
   const state = {
-    messages: [],           // {id, role, model, text, streaming, parts, at}
+    messages: [],           // {id, role, model, text, streaming, parts, images, at}
     byId: new Map(),
     streamingId: null,      // 지금 토큰을 받고 있는 메시지
     slotId: null,           // 현재 턴이 차지한 assistant 레코드 (아래 설명)
@@ -45,7 +45,7 @@ GT.store = (function () {
       }
     }
 
-    const rec = { at: Date.now(), streaming: false, parts: null, ...m };
+    const rec = { at: Date.now(), streaming: false, parts: null, images: null, ...m };
     state.messages.push(rec);
     if (rec.id) state.byId.set(rec.id, rec);
     return rec;
@@ -59,7 +59,7 @@ GT.store = (function () {
   const supersede = (oldId, m) => {
     const old = state.byId.get(oldId);
     const idx = state.messages.indexOf(old);
-    const rec = { at: old ? old.at : Date.now(), parts: null, ...m, streaming: true };
+    const rec = { at: old ? old.at : Date.now(), parts: null, images: null, ...m, streaming: true };
     state.byId.delete(oldId);
     if (idx >= 0) state.messages[idx] = rec; else state.messages.push(rec);
     if (rec.id) state.byId.set(rec.id, rec);
@@ -126,9 +126,11 @@ GT.store = (function () {
         state.byId.clear();
         messages.forEach((m) => {
           const old = m.id && prev.get(m.id);
-          // 수확(DOM·fiber)에는 인용 출처가 없다. API 로 받아둔 것을 지키고 넘어간다 —
-          // 안 지키면 fiber 교정이 도는 순간 각주가 번호만 남는다.
-          const keep = old && old.refs && !m.refs ? { refs: old.refs } : null;
+          // 수확(DOM·fiber)에는 인용 출처도 이미지도 없다. API 로 받아둔 것을 지키고
+          // 넘어간다 — 안 지키면 fiber 교정이 도는 순간 각주가 번호만 남고 그림이 사라진다.
+          const keep = {};
+          if (old && old.refs && !m.refs) keep.refs = old.refs;
+          if (old && old.images && !m.images) keep.images = old.images;
           upsert({ at: old ? old.at : null, ...m, ...keep });
         });
         emit('harvest');
@@ -144,6 +146,7 @@ GT.store = (function () {
           if (m.model) rec.model = m.model;
           if (m.parts) rec.parts = m.parts;
           if (m.refs) rec.refs = m.refs;
+          if (m.images) rec.images = m.images;
         } else {
           upsert({ at: null, ...m });
           gained += 1;

@@ -289,6 +289,25 @@ GT.theme = (function () {
 .gt-suggest-item[data-first="1"] { color: var(--gt-cyan); }
 .gt-suggest-more, .gt-suggest-hint { color: var(--gt-fg-faint); }
 
+/* ---- 이미지 ---- */
+.gt-img { margin: 10px 0 4px; }
+.gt-img-pic {
+  display: block; max-width: 100%; border: 1px solid var(--gt-bg-3);
+  image-rendering: auto;
+}
+/* 문자 블록. 셀은 폭 1ch · 높이 2ch — 그러면 픽셀 하나가 정사각형이 된다.
+   inline-block 으로 폭을 못 박지 않으면 글리프 advance 만큼만 차지해 세로 틈이 생긴다. */
+.gt-img-blocks { display: inline-block; border: 1px solid var(--gt-bg-3); font-size: 1em; }
+.gt-img-row { height: 2ch; line-height: 2ch; white-space: nowrap; }
+.gt-img-blocks i {
+  display: inline-block; width: 1ch; height: 2ch; line-height: 2ch;
+  font-style: normal; overflow: hidden; vertical-align: top;
+}
+.gt-img-foot {
+  display: flex; gap: 8px; align-items: baseline;
+  margin-top: 5px; font-size: 0.9em; color: var(--gt-fg-dim);
+}
+
 /* ---- 스크롤바 ---- */
 /*
  * 기본 스크롤바는 둥글고 반투명한 알약이라 터미널 위에서 혼자 겉돈다.

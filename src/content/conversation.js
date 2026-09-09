@@ -11,14 +11,55 @@ GT.conversation = (function () {
     return m ? m[1] : null;
   };
 
+  // 이미지 파트. 실측(2026-09-09) — 생성한 그림은 role 'tool' 메시지로 온다.
+  //
+  //   tool → all · multimodal_text · parts=[image_asset_pointer]
+  //
+  // docs/plan/2026-09-09-image-generation.md
+  //
+  // author.name 이 't2uay3k.sj1i4kz' 였지만 판별자로 쓰지 않는다 — 바뀔 값이다.
+  // content_type 과 파트 모양만 본다.
+  const IMAGE_PART = 'image_asset_pointer';
+
+  function toImages(m) {
+    const parts = (m.content && m.content.parts) || [];
+    const out = [];
+    parts.forEach((p) => {
+      if (!p || typeof p !== 'object' || p.content_type !== IMAGE_PART) return;
+      const ptr = String(p.asset_pointer || '');
+      if (!ptr) return;
+      out.push({
+        pointer: ptr,
+        mime: String(p.mime_type || ''),
+        w: Number(p.width) || 0,
+        h: Number(p.height) || 0,
+        bytes: Number(p.size_bytes) || 0
+      });
+    });
+    return out;
+  }
+
   // 최종 응답만 고른다. 추론 조각(reasoning_recap)과 툴 호출은 화면에 그리지 않는다.
   // 판별자는 실측으로 확정했다 — content_type 이 'text' 이고 recipient 가 'all' 인 것만 본문이다.
+  //
+  // 이미지는 예외다. role 이 'tool' 이고 content_type 이 'multimodal_text' 인데,
+  // 그리지 않으면 그림을 만든 턴이 화면에서 통째로 사라진다.
+  //
+  // 한 장에 메시지가 둘 온다. 뒤엣것은 is_visually_hidden_from_conversation 사본으로
+  // 모델이 다음 턴에 참고하는 컨텍스트다 — 그리면 같은 그림이 두 번 나온다.
   function isVisible(m) {
     if (!m || !m.author) return false;
-    const role = m.author.role;
-    if (role !== 'user' && role !== 'assistant') return false;
+    if (m.metadata && m.metadata.is_visually_hidden_from_conversation) return false;
     if (m.recipient && m.recipient !== 'all') return false;
+
+    const role = m.author.role;
     const ct = m.content && m.content.content_type;
+
+    // 이미지를 실제로 들고 있을 때만 통과시킨다. multimodal_text 라는 이유만으로
+    // 열어 주면 web.run 결과 같은 다른 tool 메시지가 빈 줄로 쌓인다.
+    if (ct === 'multimodal_text') return toImages(m).length > 0;
+
+    if (role !== 'user' && role !== 'assistant') return false;
     return ct === 'text';
   }
 
@@ -69,16 +110,21 @@ GT.conversation = (function () {
       if (isReasoning(m)) { pendingThinking += 1; return; }
       if (!isVisible(m)) return;
       const parts = (m.content && m.content.parts) || [];
+      const images = toImages(m);
+      // 그림을 그린 tool 메시지는 화면에서 assistant 의 응답이다.
+      // role 을 그대로 쓰면 메타줄에 'tool' 이 찍히고 gutter 색도 갈린다.
+      const role = m.author.role === 'tool' ? 'assistant' : m.author.role;
       out.push({
         id: m.id,
-        role: m.author.role,
+        role,
         model: (m.metadata && m.metadata.model_slug) || null,
         text: parts.filter((p) => typeof p === 'string').join('\n'),
         at: m.create_time ? Math.round(m.create_time * 1000) : null,
-        thinking: m.author.role === 'assistant' && pendingThinking ? pendingThinking : 0,
-        refs: toRefs(m.metadata)
+        thinking: role === 'assistant' && pendingThinking ? pendingThinking : 0,
+        refs: toRefs(m.metadata),
+        images: images.length ? images : null
       });
-      if (m.author.role === 'assistant') pendingThinking = 0;
+      if (role === 'assistant') pendingThinking = 0;
     });
     return out;
   }

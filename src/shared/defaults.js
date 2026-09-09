@@ -1,7 +1,7 @@
 // gpt-term 빌드 스탬프.
 // 크롬은 언팩 확장 파일을 캐시한다. "고쳤는데 왜 그대로지?" 를 추측으로 풀지 않으려고 둔다.
 // 터미널 부팅 줄과 :version 에 찍힌다. 이 값이 안 바뀌면 확장이 다시 로드되지 않은 것이다.
-var GT_BUILD = '2026-09-09 17:30';
+var GT_BUILD = '2026-09-09 19:00';
 
 // gpt-term — 설정 스키마. 콘텐츠 스크립트와 옵션 화면이 같은 정의를 쓴다.
 // 여기가 유일한 출처다. 옵션 화면에 항목을 늘리려면 이 배열만 고치면 된다.
@@ -51,6 +51,9 @@ var GT_SCHEMA = [
   { section: 'display', key: 'wrap.columns', type: 'int', def: 96, min: 0, max: 400 },
   { section: 'display', key: 'citations', type: 'enum', def: 'domain',
     choices: ['domain', 'number', 'off'] },
+  { section: 'display', key: 'image', type: 'enum', def: 'inline',
+    choices: ['inline', 'blocks', 'off'] },
+  { section: 'display', key: 'image.columns', type: 'int', def: 48, min: 16, max: 160 },
   { section: 'display', key: 'gutter.markers', type: 'bool', def: true },
   { section: 'display', key: 'scanlines', type: 'bool', def: false },
 
