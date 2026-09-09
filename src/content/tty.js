@@ -249,7 +249,11 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     head.style.color = m.streaming ? 'var(--gt-cyan)' : 'var(--gt-magenta)';
     if (m.streaming) head.appendChild(el('span', 'gt-spin', SPIN[spinAt]));
     else head.appendChild(el('span', null, '⏺'));
-    head.appendChild(document.createTextNode(` ${m.model || 'assistant'}`));
+    // 그림을 그린 메시지에는 model_slug 가 없다(실측: image_gen_title 만 있다).
+    // 다른 메시지의 모델명을 물려주면 만들지 않은 모델 이름을 붙이는 셈이다.
+    // 무엇인지만 밝힌다.
+    const who = m.model || ((m.images || []).length ? 'image' : 'assistant');
+    head.appendChild(document.createTextNode(` ${who}`));
     meta.appendChild(head);
     if (m.streaming) {
       meta.appendChild(el('span', 'gt-faint', '·'));

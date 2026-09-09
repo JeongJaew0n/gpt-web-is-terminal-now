@@ -285,6 +285,9 @@ function loadImage(getImpl) {
   t('실패하면 그림으로 떨어진다', /GT\.log\('문자 블록 실패', err\)/.test(tty));
   t('블록 모드에서만 CORS 를 켠다', /if \(mode === 'blocks'\) img\.crossOrigin = 'anonymous'/.test(tty));
   t('캐시가 있으면 안 깜빡인다', /GT\.image\.peek\(im\.pointer\) \? label :/.test(tty));
+  // 이미지 메시지에는 model_slug 가 없다. 다른 메시지 것을 물려주면 거짓이 된다.
+  t('모델명이 없으면 image 로 밝힌다',
+    /m\.model \|\| \(\(m\.images \|\| \[\]\)\.length \? 'image' : 'assistant'\)/.test(tty));
   t('없는 명령을 안내하지 않는다', !/:q 로 원본/.test(tty) && !/:open 으로 원본/.test(i18n));
 }
 
