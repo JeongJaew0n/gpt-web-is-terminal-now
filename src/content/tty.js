@@ -411,6 +411,20 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     return wrap;
   }
 
+  // 그림을 만드는 동안. '생각 중' 과 같은 자리, 같은 회전자를 쓴다 —
+  // 둘 다 '답이 나올 자리에서 기다리는 중' 이라는 같은 뜻이다.
+  function drawingRow() {
+    const wrap = el('div', 'gt-turn gt-turn-thinking');
+    const row = el('div', 'gt-thinking-live');
+    row.appendChild(el('span', 'gt-spin', SPIN[spinAt]));
+    row.appendChild(el('span', 'gt-thinking-label', GT_T('img.drawing')));
+    row.appendChild(cursorEl());
+    row.appendChild(el('span', 'gt-spacer'));
+    row.appendChild(el('span', 'gt-faint gt-think-elapsed', `${GT.store.drawingElapsed().toFixed(1)}s`));
+    wrap.appendChild(row);
+    return wrap;
+  }
+
   function systemRow(rec) {
     const row = el('div', 'gt-sys');
     row.dataset.level = rec.level;
@@ -459,6 +473,10 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     if (GT.store.isThinking()) {
       next.push({ key: 'thinking', sig: JSON.stringify(['thinking', epoch]), thinking: true });
     }
+    // 그림을 만드는 중. 같은 자리에 대신 뜬다 — isThinking 이 이미 비켜 준다.
+    if (GT.store.isDrawing()) {
+      next.push({ key: 'drawing', sig: JSON.stringify(['drawing', epoch]), drawing: true });
+    }
 
     const prev = [...pool.entries()].map(([key, v]) => ({ key, sig: v.sig }));
     const plan = GT.renderplan.reconcile(prev, next);
@@ -475,7 +493,9 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
       if (!rec || rec.sig !== n.sig) {
         const node = n.m
           ? (n.m.role === 'user' ? turnUser(n.m) : turnAssistant(n.m))
-          : (n.thinking ? thinkingRow() : (n.local ? turnLocal(n.local) : systemRow(n.rec)));
+          : (n.thinking ? thinkingRow()
+            : (n.drawing ? drawingRow()
+              : (n.local ? turnLocal(n.local) : systemRow(n.rec))));
         if (rec && rec.el.parentElement) rec.el.remove();
         rec = { el: node, sig: n.sig, at: n.m ? n.m.at : null };
         pool.set(n.key, rec);
@@ -508,12 +528,16 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
   function tickSpin() {
     if (!root || !shadow) return;
     const s = GT.store.state;
-    if (!s.streamingId && !GT.store.isThinking()) return;
+    const drawing = GT.store.isDrawing();
+    if (!s.streamingId && !GT.store.isThinking() && !drawing) return;
     spinAt = (spinAt + 1) % SPIN.length;
     const f = SPIN[spinAt];
     shadow.querySelectorAll('.gt-spin').forEach((n) => { n.textContent = f; });
     const t = shadow.querySelector('.gt-think-elapsed');
-    if (t) t.textContent = `${GT.store.thinkingElapsed().toFixed(1)}s`;
+    if (t) {
+      const sec = drawing ? GT.store.drawingElapsed() : GT.store.thinkingElapsed();
+      t.textContent = `${sec.toFixed(1)}s`;
+    }
   }
 
   // 상단바·탭·입력줄 메타·상태줄. 싸므로 매 틱 돌아도 된다.

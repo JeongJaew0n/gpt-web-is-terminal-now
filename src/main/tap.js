@@ -104,6 +104,23 @@
       if (op === 'add' && o.v && o.v.message) {
         const m = o.v.message;
         const role = m.author && m.author.role;
+
+        // 그림을 만들기 시작했다. 실측(2026-09-09) — 생성 중에는 파트가 비어 있는
+        // multimodal_text 메시지가 먼저 만들어지고, 다 그려지면 그 안에
+        // image_asset_pointer 가 채워진다.
+        //
+        //   t:mult[]              ← 만드는 중 (여기)
+        //   t:mult[IMG]           ← 다 됐다 (대화 원본에서 읽는다)
+        //
+        // 원본은 이 메시지를 [data-message-id] 로 그리지 않아 DOM 수확으로는 못 본다.
+        // 스트림에서만 알 수 있으므로 여기서 알린다.
+        // docs/plan/2026-09-09-image-generation.md
+        if ((m.content && m.content.content_type) === 'multimodal_text') {
+          post('image', { id: m.id || null, phase: 'start' });
+          // 상태는 건드리지 않는다. 본문 메시지가 아니다.
+          return;
+        }
+
         // assistant 가 아닌 add(user·system·tool)는 스트림 상태를 건드리지 않는다.
         // 건드리면 이어지는 본문 델타가 엉뚱한 messageId 에 붙는다.
         if (role !== 'assistant') return;

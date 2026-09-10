@@ -99,8 +99,12 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('회전자 틱이 render 를 부르지 않는다',
     !/function tickSpin\(\)[\s\S]{0,400}?\brender\(\)/.test(tty));
   t('회전자 프레임이 여러 장', /const SPIN = \[[^\]]{20,}\]/.test(tty));
+  // 그림을 만드는 중에도 회전자는 돌아야 한다 (2026-09-10)
   t('돌 게 없으면 DOM 을 훑지 않는다',
-    /if \(!s\.streamingId && !GT\.store\.isThinking\(\)\) return;/.test(tty));
+    /if \(!s\.streamingId && !GT\.store\.isThinking\(\) && !drawing\) return;/.test(tty));
+  t('그리는 중에도 회전자가 돈다', /const drawing = GT\.store\.isDrawing\(\);/.test(tty));
+  t('경과 시각도 그쪽 것을 쓴다',
+    /drawing \? GT\.store\.drawingElapsed\(\) : GT\.store\.thinkingElapsed\(\)/.test(tty));
   t('스트리밍 블록도 같은 회전자를 쓴다', /el\('span', 'gt-spin'/.test(tty));
 
   t('틱이 등록돼 있다', /every\(90, \(\) => \{ if \(GT\.tty\.visible\(\)\) GT\.tty\.tickSpin\(\); \}\)/.test(idx));

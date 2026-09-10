@@ -150,6 +150,17 @@
   });
 
   GT.on('thinking', () => GT.store.thinking());
+
+  // 그림을 만들기 시작했다. 스트림에서만 오는 신호다 —
+  // 원본은 이 메시지를 [data-message-id] 로 그리지 않아 DOM 수확으로는 못 본다.
+  let drewThisTurn = false;
+  GT.on('image', (p) => {
+    if (p && p.phase === 'start') {
+      drewThisTurn = true;
+      if (GT.store.drawing(true)) GT.tty.render();
+      GT.log('그림을 만들기 시작했다', p.id || '');
+    }
+  });
   GT.on('user', (p) => GT.store.userSent(p.text, p.id));
   GT.on('begin', (p) => GT.store.begin(p));
   GT.on('delta', (p) => GT.store.delta(p.id, p.text));
@@ -177,6 +188,29 @@
       GT.log(`본문 델타 ${p.droppedOps}개(${p.droppedChars}자)를 버렸다 — 대상 메시지를 건너뛰기로 한 상태였다`);
     }
     if (p.markers && p.markers.length) GT.log('마커 전환:', p.markers.join(' → '));
+    // 그림은 스트림으로 오지 않는다(실측: 부분 이미지가 없다).
+    // 다 만들어졌으면 대화 원본을 다시 읽어야 화면에 뜬다 — 안 그러면
+    // 새로고침할 때까지 아무것도 안 보인다.
+    if (drewThisTurn) {
+      drewThisTurn = false;
+      // 스트림이 끝난 직후에는 원본에 아직 파트가 안 채워져 있을 수 있다.
+      // 몇 번 더 본다. 그림이 붙으면 멈춘다.
+      let tries = 0;
+      const chase = () => {
+        tries += 1;
+        pull(`image-${tries}`).then(() => {
+          const has = GT.store.state.messages.some((m) => m.images && m.images.length);
+          if (has || tries >= IMAGE_PULL_TRIES) {
+            if (GT.store.drawing(false)) GT.tty.render();
+            if (!has) GT.log('그림을 만들었다는 신호는 받았지만 원본에서 찾지 못했다');
+            return;
+          }
+          setTimeout(chase, IMAGE_PULL_WAIT_MS * tries);
+        });
+      };
+      setTimeout(chase, IMAGE_PULL_WAIT_MS);
+    }
+
     // 스트림 결과를 fiber 원문과 대조한다
     setTimeout(() => GT.toMain('verify', { id: p.id }), 400);
     if (GT.config.get('bell') === 'visual') flash();
@@ -187,6 +221,10 @@
   // docs/issue/2026-09-08-drift-warning-false-positive.md
   const VERIFY_MIN_RATIO = 0.5;
   const VERIFY_RETRIES = 3;
+
+  // 그림이 원본에 붙기까지 걸리는 시간은 그때그때 다르다. 간격을 늘려 가며 몇 번 본다.
+  const IMAGE_PULL_WAIT_MS = 700;
+  const IMAGE_PULL_TRIES = 4;
 
   GT.on('verify', (p) => {
     const rec = p.id && GT.store.state.byId.get(p.id);

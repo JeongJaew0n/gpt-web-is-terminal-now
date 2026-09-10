@@ -81,6 +81,7 @@ var GT_I18N = {
     'img.loading': '이미지를 불러옵니다…',
     'img.failed': '이미지 주소를 받지 못했습니다 — ^` 로 원본에서 봅니다',
     'img.alt': '생성된 이미지',
+    'img.drawing': '그림을 만드는 중',
 
     'opt.gutter.markers.label': '응답 왼쪽 세로 바',
     'opt.scanlines.label': '스캔라인',
@@ -177,6 +178,7 @@ var GT_I18N = {
     'img.loading': 'Loading image…',
     'img.failed': 'Could not get the image address — ^` to view in the original UI',
     'img.alt': 'Generated image',
+    'img.drawing': 'Drawing',
 
     'opt.gutter.markers.label': 'Vertical bar beside replies',
     'opt.scanlines.label': 'Scanlines',

@@ -11,6 +11,7 @@ GT.store = (function () {
     pendingThinking: 0,     // 다음 응답 앞에 쌓인 추론 조각 수
     thinkingSince: 0,       // 지금 추론이 진행 중이면 그 시작 시각 (0 이면 진행 중 아님)
     orphanDeltas: 0,        // add 없이 도착한 본문 델타 (스트림 해석이 어긋났다는 신호)
+    drawingSince: 0,        // 그림을 만들고 있으면 그 시작 시각 (0 이면 아님)
     startedAt: 0,
     conversationTitle: '',
     path: '/'
@@ -18,6 +19,10 @@ GT.store = (function () {
 
   // 한 번 켜지면 이만큼은 유지한다. 그보다 짧게 스치면 깜빡임으로 보인다.
   const MIN_THINKING_MS = 600;
+
+  // 그림 표시의 상한. 스트림이 끝을 알리지 않고 끊기면 회전자가 영영 돈다 —
+  // 실측에서 한 장에 40초쯤 걸렸다. 넉넉히 두되 무한은 아니게 한다.
+  const MAX_DRAWING_MS = 5 * 60 * 1000;
 
   const listeners = [];
   const emit = (why) => listeners.forEach((fn) => fn(state, why));
@@ -79,6 +84,8 @@ GT.store = (function () {
       state.superseded = 0;
       state.orphanDeltas = 0;
       state.thinkingSince = 0;
+      // 대화를 옮기면 그리던 것도 우리 일이 아니다.
+      state.drawingSince = 0;
       messages.forEach((m) => upsert({ at: null, ...m }));
       if (meta) {
         // 대화가 통째로 바뀌는 자리다. 제목이 비어 있으면 '모르는 것'이 아니라
@@ -211,9 +218,36 @@ GT.store = (function () {
       return true;
     },
 
+    // 그림을 만드는 중. 스트림에서만 알 수 있고(원본이 DOM 에 안 그린다),
+    // 다 되면 대화 원본을 다시 읽어 그림을 채운다.
+    // docs/plan/2026-09-09-image-generation.md
+    drawing(on) {
+      if (on) {
+        if (state.drawingSince) return false;
+        state.drawingSince = Date.now();
+        // 그림을 만드는 동안 '생각 중' 과 겹쳐 두 줄이 되면 산만하다.
+        // 더 구체적인 쪽(그림)만 남긴다.
+        state.thinkingSince = 0;
+        emit('drawing');
+        return true;
+      }
+      if (!state.drawingSince) return false;
+      state.drawingSince = 0;
+      emit('drawing');
+      return true;
+    },
+    isDrawing() {
+      if (!state.drawingSince) return false;
+      // 끝났다는 신호를 못 받은 채 너무 오래 돌면 스스로 접는다.
+      if (Date.now() - state.drawingSince > MAX_DRAWING_MS) { state.drawingSince = 0; return false; }
+      return true;
+    },
+    drawingElapsed() { return state.drawingSince ? (Date.now() - state.drawingSince) / 1000 : 0; },
+
     // 화면에 '생각 중' 줄을 띄울 조건.
     // 본문이 이미 흐르고 있으면 그 블록의 회전자가 같은 일을 한다 — 둘 다 띄우지 않는다.
-    isThinking() { return !!state.thinkingSince && !state.streamingId; },
+    // 그림을 만드는 중이면 그쪽 줄이 대신 뜬다.
+    isThinking() { return !!state.thinkingSince && !state.streamingId && !state.drawingSince; },
     thinkingElapsed() { return state.thinkingSince ? (Date.now() - state.thinkingSince) / 1000 : 0; },
 
     begin(m) {

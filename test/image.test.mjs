@@ -242,6 +242,66 @@ function loadImage(getImpl) {
   })());
 }
 
+// ---------------------------------------------------------------- 그리는 중 표시
+
+function loadStore(clock) {
+  const FakeDate = clock ? new Proxy(Date, { get: (o, k) => (k === 'now' ? () => clock.t : o[k]) }) : Date;
+  const sb = { console, Object, Array, Set, Map, String, Number, Boolean, JSON, Math, Date: FakeDate, Error };
+  sb.window = sb; sb.globalThis = sb; sb.GT = {};
+  vm.createContext(sb);
+  vm.runInContext(fs.readFileSync('src/content/store.js', 'utf8'), sb, { filename: 'store.js' });
+  return sb.GT.store;
+}
+
+{
+  const S = loadStore();
+  t('처음에는 안 그린다', S.isDrawing() === false);
+  t('켜면 true (다시 그려야 한다)', S.drawing(true) === true);
+  t('켜지 않았을 때 끄면 아무 일도 없다', loadStore().drawing(false) === false);
+}
+{
+  const S = loadStore();
+  S.drawing(true);
+  t('켜졌다', S.isDrawing() === true);
+  t('경과를 잰다', S.drawingElapsed() >= 0);
+  t('두 번 켜도 한 번만 true', S.drawing(true) === false);
+  t('끄면 true', S.drawing(false) === true);
+  t('꺼졌다', S.isDrawing() === false);
+  t('이미 꺼져 있으면 false', S.drawing(false) === false);
+  t('꺼지면 경과는 0', S.drawingElapsed() === 0);
+}
+{
+  // 그림 줄과 '생각 중' 줄이 같이 뜨면 산만하다. 더 구체적인 쪽만 남긴다.
+  const S = loadStore();
+  S.thinking();
+  t('생각 중이 떠 있다', S.isThinking() === true);
+  S.drawing(true);
+  t('그리기 시작하면 생각 중은 물러난다', S.isThinking() === false);
+  // isThinking() 이 drawingSince 를 보고 막아 주기도 하지만, 상태 자체도 비워야 한다.
+  // 안 비우면 그림이 끝나는 순간 '생각 중' 이 되살아난다.
+  t('생각 중 시계를 실제로 지운다', S.state.thinkingSince === 0);
+  t('그림 줄이 대신 뜬다', S.isDrawing() === true);
+  S.drawing(false);
+  t('그림이 끝나도 생각 중이 되살아나지 않는다', S.isThinking() === false);
+}
+{
+  // 끝났다는 신호를 못 받아도 영영 돌면 안 된다
+  const clock = { t: 1_000_000 };
+  const S = loadStore(clock);
+  S.drawing(true);
+  clock.t += 4 * 60 * 1000;
+  t('4분은 버틴다', S.isDrawing() === true);
+  clock.t += 2 * 60 * 1000;
+  t('상한을 넘기면 스스로 접는다', S.isDrawing() === false);
+  t('상태도 정리된다', S.state.drawingSince === 0);
+}
+{
+  const S = loadStore();
+  S.drawing(true);
+  S.replaceAll([], { path: '/x', title: '' });
+  t('대화를 옮기면 꺼진다', S.isDrawing() === false);
+}
+
 // ---------------------------------------------------------------- 배선 (정적)
 
 {
@@ -276,7 +336,8 @@ function loadImage(getImpl) {
   t('셀 높이가 2ch 다', /height: 2ch/.test(css));
   t('셀 폭을 못 박는다 (틈 방지)', /width: 1ch; height: 2ch/.test(css));
 
-  const keys = ['opt.image.label', 'opt.image.columns.label', 'img.placeholder', 'img.failed', 'img.loading'];
+  const keys = ['opt.image.label', 'opt.image.columns.label', 'img.placeholder', 'img.failed',
+    'img.loading', 'img.drawing'];
   const both = keys.filter((k) => (i18n.match(new RegExp("'" + k.replace(/\./g, '\\.') + "'", 'g')) || []).length === 2);
   t('두 언어에 문구가 다 있다', both.length === keys.length);
 
@@ -286,6 +347,23 @@ function loadImage(getImpl) {
   t('블록 모드에서만 CORS 를 켠다', /if \(mode === 'blocks'\) img\.crossOrigin = 'anonymous'/.test(tty));
   t('캐시가 있으면 안 깜빡인다', /GT\.image\.peek\(im\.pointer\) \? label :/.test(tty));
   // 이미지 메시지에는 model_slug 가 없다. 다른 메시지 것을 물려주면 거짓이 된다.
+  // --- 2단계: 그리는 중 표시와 뒤이은 재조회 ---
+  const tap = fs.readFileSync('src/main/tap.js', 'utf8');
+  const idx = fs.readFileSync('src/content/index.js', 'utf8');
+  t('tap 이 multimodal_text add 를 신호로 보낸다',
+    /content_type\) === 'multimodal_text'\)/.test(tap) && /post\('image', \{ id: m\.id \|\| null, phase: 'start' \}\)/.test(tap));
+  t('그 메시지로 스트림 상태를 바꾸지 않는다',
+    /post\('image'[\s\S]{0,160}?return;/.test(tap));
+  t('신호를 받으면 표시를 켠다', /GT\.store\.drawing\(true\)/.test(idx));
+  // 부분 이미지가 없으므로 끝난 뒤 원본을 다시 읽어야 그림이 뜬다
+  t('끝나면 원본을 다시 읽는다', /pull\(`image-\$\{tries\}`\)/.test(idx));
+  t('그림이 붙을 때까지 몇 번 본다', /tries >= IMAGE_PULL_TRIES/.test(idx));
+  t('찾으면 표시를 끈다', /GT\.store\.drawing\(false\)/.test(idx));
+  t('못 찾으면 그 사실을 남긴다', /원본에서 찾지 못했다/.test(idx));
+  t('그리는 중 줄을 그리는 함수가 있다', /function drawingRow\(/.test(tty));
+  t('생각 중과 같은 자리에 붙는다', /GT\.store\.isDrawing\(\)[\s\S]{0,120}key: 'drawing'/.test(tty));
+  t('회전자 서명에 경과를 넣지 않는다', /sig: JSON\.stringify\(\['drawing', epoch\]\)/.test(tty));
+
   t('모델명이 없으면 image 로 밝힌다',
     /m\.model \|\| \(\(m\.images \|\| \[\]\)\.length \? 'image' : 'assistant'\)/.test(tty));
   t('없는 명령을 안내하지 않는다', !/:q 로 원본/.test(tty) && !/:open 으로 원본/.test(i18n));
