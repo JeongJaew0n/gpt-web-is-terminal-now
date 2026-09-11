@@ -379,6 +379,7 @@ tools/test.sh
 | [다국어 도입](docs/plan/2026-09-08-i18n.md) | 뼈대 + 설정 화면 완료 (ko·en) · 명령·사이드바는 남음 |
 | [인용에 출처 표시 · ↑↓ 프롬프트 기록](docs/plan/2026-09-09-cite-label-and-history.md) | 1번(도메인 표시) 구현 · 2번(기록) 대기 |
 | [이미지 생성 — 결과와 과정](docs/plan/2026-09-09-image-generation.md) | 1·2단계 구현 · 2단계는 브라우저 확인 대기 |
+| [Google 확장 개발 에이전트 도구 검토](docs/plan/2026-09-11-modern-web-guidance.md) | 분석만 — `reload_extension` 도입 권고 |
 
 조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열네 건 중 열하나가 해결**됐고 한 건은 반쯤 해결됐다.
 매니페스트 캐시 건은 크롬 동작이라 감지만 하고, 선택 유실 건은 스크롤백 쪽만 고쳐졌다.
