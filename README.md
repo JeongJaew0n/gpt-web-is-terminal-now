@@ -237,6 +237,7 @@ src/popup/                            툴바 패널 (토글 둘)
 src/options/                          설정 화면 (스키마에서 생성)
 
 icons/  tools/make-icons.py           아이콘
+CLAUDE.md                             작업 지침 (git 규칙 · 검증 절차)
 docs/issue/  docs/plan/               조사 기록 · 계획
 _locales/ko · _locales/en             매니페스트 이름·설명 (스토어 리스팅)
 docs/store/                           스토어 리스팅 · 개인정보처리방침 · 심사 노트
