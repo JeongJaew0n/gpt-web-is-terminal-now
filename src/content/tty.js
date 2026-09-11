@@ -159,11 +159,31 @@ html:not(.${HIDE_CLASS}) #${HOST_ID} { display: none; }
     // 목록은 본문 위에 떠 있다. 바깥을 누르면 비켜난다 — 오버레이의 기본 동작이다.
     // 목록 자신·손잡이·메뉴·팔레트를 누른 것은 '바깥'이 아니다.
     const INSIDE_OVERLAY = '.gt-sidebar, .gt-burger, .gt-ctx, .gt-palette, .gt-scrim';
+
+    // 안쪽인지는 composedPath 로 판단한다. closest 로 보면 안 된다 —
+    // 누른 행이 그 사이에 DOM 에서 떨어져 나갔으면 조상이 끊겨 null 이 나오고,
+    // 그러면 '바깥을 눌렀다' 로 잘못 읽는다.
+    //
+    // 실제로 그랬다: 선택 모드에서 행을 누르면 togglePick 이 곧바로 목록을
+    // 다시 그려(listEl.textContent = '') 누른 행이 사라지고, 뒤이어 올라온
+    // 이 핸들러가 사이드바를 닫아 버렸다.
+    //
+    // composedPath 는 이벤트가 났을 때의 경로라 노드가 떨어져도 그대로 남는다.
+    const insideOverlay = (e) => {
+      const path = (e.composedPath && e.composedPath()) || [];
+      for (let i = 0; i < path.length; i += 1) {
+        const n = path[i];
+        if (n && n.nodeType === 1 && n.matches && n.matches(INSIDE_OVERLAY)) return true;
+      }
+      // composedPath 가 없는 환경에서는 예전처럼 본다
+      const el = hit(e);
+      return !!(el && el.closest && el.closest(INSIDE_OVERLAY));
+    };
+
     root.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
       if (!GT.sidebar || !GT.sidebar.isOpen || !GT.sidebar.isOpen()) return;
-      const el = hit(e);
-      if (el && el.closest && el.closest(INSIDE_OVERLAY)) return;
+      if (insideOverlay(e)) return;
       GT.sidebar.dismiss();
     });
 

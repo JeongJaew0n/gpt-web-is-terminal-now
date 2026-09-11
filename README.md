@@ -16,7 +16,7 @@
 ![Chrome 111+](https://img.shields.io/badge/Chrome-111%2B-5A6570)
 ![웹스토어 준비](https://img.shields.io/badge/배포-웹스토어_준비-8B5CF6)
 ![의존성 0](https://img.shields.io/badge/의존성-0-22C55E)
-![테스트 1034](https://img.shields.io/badge/테스트-1034_케이스-22C55E)
+![테스트 1043](https://img.shields.io/badge/테스트-1043_케이스-22C55E)
 
 </div>
 
@@ -326,7 +326,7 @@ tools/test.sh
 그렇게 빠진 적이 있다. 그래서 실패와 '죽음' 을 따로 센다.
 
 <details>
-<summary><b>30개 파일 · 1034 케이스</b></summary>
+<summary><b>30개 파일 · 1043 케이스</b></summary>
 
 <br>
 
@@ -343,7 +343,7 @@ tools/test.sh
 | `stream` | 37 | SSE 판별 — 추론·툴·숨김 본문이 새지 않는가 |
 | `lifecycle` | 22 | 확장 재로드 시 자진 해체 |
 | `replay` | 3 | 녹화한 실제 스트림을 `tap.js` 에 재생 |
-| `sidebar` | 46 | 목록 손잡이·표시 규칙·오버레이 |
+| `sidebar` | 55 | 목록 손잡이·표시 규칙·오버레이 |
 | `picker` | 58 | 모델·추론 수준 선택 (원본 메뉴 조작) |
 | `focus` | 17 | 클릭·타이핑이 입력창으로 가는가 |
 | `convops` | 33 | 대화 조작 — 되돌릴 수 없는 것은 확인 후에만 |
@@ -379,7 +379,7 @@ tools/test.sh
 | [인용에 출처 표시 · ↑↓ 프롬프트 기록](docs/plan/2026-09-09-cite-label-and-history.md) | 1번(도메인 표시) 구현 · 2번(기록) 대기 |
 | [이미지 생성 — 결과와 과정](docs/plan/2026-09-09-image-generation.md) | 1·2단계 구현 · 2단계는 브라우저 확인 대기 |
 
-조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열세 건 중 열이 해결**됐고 한 건은 반쯤 해결됐다.
+조사·수정 기록은 [`docs/issue/`](docs/issue/README.md) 에 있다. **열네 건 중 열하나가 해결**됐고 한 건은 반쯤 해결됐다.
 매니페스트 캐시 건은 크롬 동작이라 감지만 하고, 선택 유실 건은 스크롤백 쪽만 고쳐졌다.
 
 ### 아직 안 된 것
@@ -404,7 +404,7 @@ tools/test.sh
 | 생각 중 표시 · 회전자 | 실제 테마 CSS 로 세 상태(추론 중 · 스트리밍 · 완료)를 렌더해 확인 |
 | 툴바 패널 글자 대비 | 계산 — 전부 4.5:1 이상 (도움말은 2.3 → 7.8) |
 | 인용 마커 | 실측 — API·SSE·fiber 세 경로의 표기를 각각 확인하고, 실제 응답 데이터로 렌더 |
-| 순수 로직 | 1034 케이스 통과 (위 표) |
+| 순수 로직 | 1043 케이스 통과 (위 표) |
 | 녹화 스트림 재생 | 실제 SSE 1건을 `tap.js` 에 재생 (`test/replay.test.mjs`) |
 | ProseMirror 주입 · 전송 버튼 활성화 | 실제 페이지에서 확인 |
 | SSE 가로채기 (`res.body.tee()`) | 실제 페이지에서 확인 |

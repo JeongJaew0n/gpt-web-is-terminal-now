@@ -166,12 +166,49 @@ const results = []; const t = (n, ok) => results.push([n, ok]);
   t('본문 mousedown 에서 dismiss 한다', /GT\.sidebar\.dismiss\(\)/.test(block));
   t('열려 있을 때만 동작', /isOpen\(\)\) return;/.test(block));
   t('좌클릭만', /e\.button !== 0\) return;/.test(block));
-  t('목록 자신을 누른 건 바깥이 아니다', /\.gt-sidebar/.test(tty) && /INSIDE_OVERLAY/.test(block));
+  // INSIDE_OVERLAY 는 핸들러 앞에서 정의된다 — block 이 아니라 파일 전체에서 본다
+  t('목록 자신을 누른 건 바깥이 아니다',
+    /const INSIDE_OVERLAY = '\.gt-sidebar/.test(tty) && /INSIDE_OVERLAY/.test(tty));
   t('손잡이를 누른 것도 제외', /\.gt-burger/.test(tty.slice(tty.indexOf('INSIDE_OVERLAY'), tty.indexOf('INSIDE_OVERLAY') + 160)));
   t('메뉴·팔레트도 제외', /gt-ctx/.test(tty) && /gt-palette/.test(tty));
-  t('shadow 를 뚫고 실제 대상을 본다', /hit\(e\)/.test(block));
+  t('shadow 를 뚫고 실제 대상을 본다', /composedPath/.test(tty) && /hit\(e\)/.test(tty));
   t('Escape 로도 닫힌다', /Escape' && GT\.sidebar\.isOpen\(\)/.test(idx));
   t('팔레트가 열려 있으면 Escape 는 팔레트 몫', /!GT\.palette\.isOpen\(\)/.test(idx));
+
+  // 선택 모드에서 행을 누르면 togglePick 이 곧바로 목록을 다시 그린다.
+  // 누른 행은 그 순간 DOM 에서 떨어지고, closest 로 보면 조상이 끊겨 null 이 나와
+  // '바깥을 눌렀다' 로 읽혔다 — 실제로 사이드바가 닫혔다 (2026-09-11).
+  t('안쪽 판단을 composedPath 로 한다', /const insideOverlay = \(e\) => \{/.test(tty));
+  t('경로를 훑어 오버레이를 찾는다', /n\.matches\(INSIDE_OVERLAY\)\) return true;/.test(tty));
+  t('핸들러가 그 함수를 쓴다', /if \(insideOverlay\(e\)\) return;/.test(block));
+  t('closest 를 1차 판단으로 쓰지 않는다', !/el\.closest\(INSIDE_OVERLAY\)\) return;/.test(block));
+  t('왜 그런지 적어뒀다', /조상이 끊겨 null 이 나오고/.test(tty));
+  t('목록을 다시 그리면 행이 떨어진다는 사실을 적어뒀다',
+    /listEl\.textContent = ''\) 누른 행이 사라지고/.test(tty));
+}
+
+// --- 7-1. 떨어져 나간 노드로도 안쪽을 알아본다 (위 버그의 핵심) ---
+{
+  // 실제 DOM 의 동작을 그대로 흉내낸다: 붙어 있으면 closest 가 찾고, 떼면 못 찾는다.
+  const mk = (cls) => ({
+    nodeType: 1, className: cls, parent: null, children: [],
+    matches(sel) { return sel.split(',').some((s) => s.trim() === '.' + this.className); },
+    closest(sel) { let n = this; while (n) { if (n.matches(sel)) return n; n = n.parent; } return null; },
+    add(c) { c.parent = this; this.children.push(c); return c; },
+    empty() { this.children.forEach((c) => { c.parent = null; }); this.children = []; }
+  });
+  const side = mk('gt-sidebar');
+  const row = side.add(mk('gt-sb-row'));
+  const path = [row, side];              // 이벤트가 났을 때의 경로
+  side.empty();                          // draw() 가 목록을 비웠다
+
+  const SEL = '.gt-sidebar, .gt-burger, .gt-ctx, .gt-palette, .gt-scrim';
+  const byClosest = !!row.closest(SEL);
+  const byPath = path.some((n) => n && n.nodeType === 1 && n.matches && n.matches(SEL));
+
+  t('떨어진 행은 closest 로 못 찾는다', byClosest === false);
+  t('그래도 경로에는 사이드바가 남아 있다', byPath === true);
+  t('두 방법의 답이 갈린다 — 이것이 버그의 원인이었다', byClosest !== byPath);
 }
 
 let bad = 0;
